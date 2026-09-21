@@ -1,0 +1,244 @@
+{
+  "repo": "DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation",
+  "generated_at": "2026-09-21T05:05:27.205Z",
+  "issues_dir": "docs/issues",
+  "count": 18,
+  "issues": [
+    {
+      "number": 1,
+      "slug": "01-env-setup",
+      "title": "[环境] 搭建 Python 3.11 + PyTorch(CUDA) 环境，产出 GPU 自检报告",
+      "milestone": "M0 脚手架与地基",
+      "labels": [
+        "优先级:P0",
+        "类型:环境",
+        "难度:入门",
+        "good first issue"
+      ],
+      "file": "01-env-setup.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/1"
+    },
+    {
+      "number": 2,
+      "slug": "02-repo-skeleton",
+      "title": "[脚手架] 建立仓库目录结构、配置系统与工程规范",
+      "milestone": "M0 脚手架与地基",
+      "labels": [
+        "优先级:P0",
+        "类型:环境",
+        "难度:入门"
+      ],
+      "file": "02-repo-skeleton.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/2"
+    },
+    {
+      "number": 3,
+      "slug": "03-data-pipeline",
+      "title": "[数据] 下载评测数据集 + 构建 toy 训练集 + 冻结 manifest 契约",
+      "milestone": "M0 脚手架与地基",
+      "labels": [
+        "优先级:P0",
+        "类型:数据",
+        "难度:中等"
+      ],
+      "file": "03-data-pipeline.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/3"
+    },
+    {
+      "number": 4,
+      "slug": "04-background-survey",
+      "title": "[文档] 背景知识地图与文献综述 docs/BACKGROUND.md",
+      "milestone": "M0 脚手架与地基",
+      "labels": [
+        "优先级:P0",
+        "类型:文档",
+        "难度:入门",
+        "good first issue"
+      ],
+      "file": "04-background-survey.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/4"
+    },
+    {
+      "number": 5,
+      "slug": "05-zeroshot-baseline",
+      "title": "[基线] 用预训练模型跑通 1:1 人脸验证评测（E0）",
+      "milestone": "M1 基线与评测",
+      "labels": [
+        "优先级:P0",
+        "类型:评测",
+        "难度:中等"
+      ],
+      "file": "05-zeroshot-baseline.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/5"
+    },
+    {
+      "number": 6,
+      "slug": "06-arcface-training",
+      "title": "[训练] 实现 ArcFace 训练管线（E1：只用真实数据）",
+      "milestone": "M1 基线与评测",
+      "labels": [
+        "优先级:P0",
+        "类型:训练",
+        "难度:进阶"
+      ],
+      "file": "06-arcface-training.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/6"
+    },
+    {
+      "number": 7,
+      "slug": "07-evaluator",
+      "title": "[评测] 统一评测器：1:1 / 1:N / 分桶鲁棒性 / 公平性 + 结果 schema",
+      "milestone": "M1 基线与评测",
+      "labels": [
+        "优先级:P0",
+        "类型:评测",
+        "难度:中等"
+      ],
+      "file": "07-evaluator.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/7"
+    },
+    {
+      "number": 8,
+      "slug": "08-classic-augmentation",
+      "title": "[实验] 传统数据增强对照组（E2）：翻转/裁剪/色彩/模糊/降质",
+      "milestone": "M2 生成与筛选",
+      "labels": [
+        "优先级:P1",
+        "类型:实验",
+        "难度:入门"
+      ],
+      "file": "08-classic-augmentation.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/8"
+    },
+    {
+      "number": 9,
+      "slug": "09-unconditional-generation",
+      "title": "[生成] 生成管线 A：无条件生成，打通「生成→入库→训练→评测」闭环（E3）",
+      "milestone": "M2 生成与筛选",
+      "labels": [
+        "优先级:P1",
+        "类型:生成",
+        "难度:中等"
+      ],
+      "file": "09-unconditional-generation.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/9"
+    },
+    {
+      "number": 10,
+      "slug": "10-identity-preserving-generation",
+      "title": "[生成] 生成管线 B ★核心：身份保持生成（同一个人，不同姿态/光照）",
+      "milestone": "M2 生成与筛选",
+      "labels": [
+        "优先级:P0",
+        "类型:生成",
+        "难度:进阶"
+      ],
+      "file": "10-identity-preserving-generation.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/10"
+    },
+    {
+      "number": 11,
+      "slug": "11-generation-filtering",
+      "title": "[筛选] 生成质量与身份一致性门禁（漏斗）★核心",
+      "milestone": "M2 生成与筛选",
+      "labels": [
+        "优先级:P0",
+        "类型:筛选",
+        "难度:中等"
+      ],
+      "file": "11-generation-filtering.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/11"
+    },
+    {
+      "number": 12,
+      "slug": "12-synth-detection-report",
+      "title": "[合规] 合成人脸可检测性报告：我们的图能被认出来是 AI 生成的吗？",
+      "milestone": "M2 生成与筛选",
+      "labels": [
+        "优先级:P2",
+        "类型:合规",
+        "难度:中等"
+      ],
+      "file": "12-synth-detection-report.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/12"
+    },
+    {
+      "number": 13,
+      "slug": "13-attribute-controlled-generation",
+      "title": "[生成] 生成管线 C（加分）：属性可控与跨域定向生成",
+      "milestone": "M2 生成与筛选",
+      "labels": [
+        "优先级:P2",
+        "类型:生成",
+        "难度:进阶"
+      ],
+      "file": "13-attribute-controlled-generation.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/13"
+    },
+    {
+      "number": 14,
+      "slug": "14-mix-ratio-matrix",
+      "title": "[实验] ★核心：混合比例消融实验矩阵（E5）与批量执行",
+      "milestone": "M3 实验矩阵与结论",
+      "labels": [
+        "优先级:P0",
+        "类型:实验",
+        "难度:进阶"
+      ],
+      "file": "14-mix-ratio-matrix.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/14"
+    },
+    {
+      "number": 15,
+      "slug": "15-results-conclusion",
+      "title": "[文档] 结果汇总、结论与局限 docs/RESULTS.md",
+      "milestone": "M3 实验矩阵与结论",
+      "labels": [
+        "优先级:P0",
+        "类型:文档",
+        "难度:中等"
+      ],
+      "file": "15-results-conclusion.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/15"
+    },
+    {
+      "number": 16,
+      "slug": "16-site-skeleton",
+      "title": "[网站] 静态展示站骨架：Vite + React + ECharts + 数据契约",
+      "milestone": "M4 网站与发布",
+      "labels": [
+        "优先级:P1",
+        "类型:网站",
+        "难度:中等"
+      ],
+      "file": "16-site-skeleton.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/16"
+    },
+    {
+      "number": 17,
+      "slug": "17-site-content",
+      "title": "[网站] 展示内容页：方法图、图库对比、指标看板、公平性与失败案例",
+      "milestone": "M4 网站与发布",
+      "labels": [
+        "优先级:P1",
+        "类型:网站",
+        "难度:中等"
+      ],
+      "file": "17-site-content.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/17"
+    },
+    {
+      "number": 18,
+      "slug": "18-ethics-and-release",
+      "title": "[合规] 伦理与许可文档 + README/LICENSE + v0.1 发布",
+      "milestone": "M4 网站与发布",
+      "labels": [
+        "优先级:P1",
+        "类型:合规",
+        "难度:入门"
+      ],
+      "file": "18-ethics-and-release.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/18"
+    }
+  ]
+}
