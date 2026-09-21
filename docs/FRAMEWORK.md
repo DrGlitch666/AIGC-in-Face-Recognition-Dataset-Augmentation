@@ -13,8 +13,9 @@
 
 | 线 | 内容 | 什么时候做 |
 |---|---|---|
-| **学习线** | 搞懂 5 个概念：人脸 embedding、ArcFace 训练、1:1 验证 vs 1:N 识别、身份保持生成、域差距（domain gap） | 边做边学，每个 Sprint 开始前 1~2 小时 |
+| **学习线** | 六个阶段 L0~L6：从「两张脸怎么比」到「扩散模型条件注入」到「实验方法与统计」——**完整路线、材料、动手练习、自测题见 [`LEARNING.md`](LEARNING.md)** | 边做边学，每阶段开始前集中 2~3 小时 |
 | **工程线** | 把「数据 → 生成 → 筛选 → 训练 → 评测 → 网站」这条流水线搭起来 | 按 Milestone 推进 |
+| **协作线** | 两人两机：档位分工、分支与评审、数据与产物同步 | 见 §11 与 [`WORKFLOW.md`](WORKFLOW.md) §7 |
 
 **最重要的心态**：
 1. 你不需要发明新算法。这个项目的价值在于**把别人的方法串起来、把数字诚实地测出来、把结论清楚地讲出来**。
@@ -29,7 +30,7 @@
 
 系统性地回答一个具体问题：
 
-> 在**消费级硬件（单张 8 GB 显存笔记本 GPU）**和**小规模数据**的现实约束下，用 AIGC 生成的人脸图像来扩充人脸识别训练集，**能带来多少收益？收益从哪里来？代价是什么？**
+> 在**消费级硬件**（两台配置不同的开发机：从小显存笔记本 GPU 到无独显的机器都可能）和**小规模数据**的现实约束下，用 AIGC 生成的人脸图像来扩充人脸识别训练集，**能带来多少收益？收益从哪里来？代价是什么？**
 
 ### 1.2 三层交付物
 
@@ -43,7 +44,7 @@
 
 范围控制比努力更重要。以下内容**明确不做**，如果有人（包括你自己）提议，先回到这一节：
 
-- ❌ 不追求 SOTA 精度，不下载/训练 MS1M、WebFace260M 这类工业级数据集（8 GB 显存跑不动，也没有必要）。
+- ❌ 不追求 SOTA 精度，不下载/训练 MS1M、WebFace260M 这类工业级数据集（消费级显存跑不动，也没有必要）。
 - ❌ **不做换脸、不做真人身份克隆**。不使用名人或他人照片去驱动生成模型「伪造某个具体的人」。生成只使用生成模型自身的身份先验（随机身份）或公开研究数据集中的身份，用于**研究用途**。
 - ❌ 不做线上服务、不做实时系统、不做产品化的人脸识别 SDK。
 - ❌ 不做 3D 人脸重建、不做视频生成、不做语音/多模态。
@@ -61,7 +62,7 @@
 | **RQ2** | 身份保持生成（同一身份、不同姿态光照）比无条件生成强多少？ | 身份保持生成明显更强，无条件生成接近「噪声/正则化」效果 | E3 vs E4 | 对比柱状图 + 图库 | #9, #10, #14 |
 | **RQ3** | 收益来自「图片数量」还是「多样性」？ | 主要来自多样性；单纯重复采样真实图收益接近于 0 | E2 vs E4（控制图片总数） | 消融表 | #8, #14 |
 | **RQ4** | 代价是什么？（域差距 / 公平性 / 可检测性） | 合成图会带来域偏移，且生成器自身存在人群偏向 | 分桶评测 + 公平性 + 检测器 | 公平性页 + 失败案例页 | #7, #12, #13 |
-| **RQ5** | 8 GB 显存 + 小数据的**最低可行配方**是什么？ | 存在一个「够用」的配置：512×512、SD1.5 级别模型、数百张合成图 | 全流程记录 | 复现指南页 | #1, #9, #10, #16 |
+| **RQ5** | 消费级硬件上的**最低可行配方**是什么？不同硬件档位分别能跑到哪一步？ | 存在一个「够用」的配置：512×512、SD1.5 级别模型、数百张合成图；B 档机器也能完成全部核心实验 | 全流程记录 + 档位矩阵 | 复现指南页 | {{#01-env-setup}}, {{#09-unconditional-generation}}, {{#10-identity-preserving-generation}}, {{#20-hardware-profiles}}, {{#16-site-skeleton}} |
 
 > 💡 **写论文/报告的纪律**：RQ4 和 RQ5 是这个项目区别于「调包跑个 demo」的地方。哪怕 RQ1 的结果是「提升不明显」，只要测出来了、解释清楚了，就是合格的项目结论。
 
@@ -175,6 +176,7 @@ flowchart TD
 - 一个实验 = 一个 YAML 配置（`configs/exp/*.yaml`）+ 一个输出目录（`results/runs/<exp_id>/`）。
 - `exp_id` 命名规范：`{阶段}-{生成器}-{比例}-{seed}`，例：`e4-ipadapter-r25-seed0`。
 - 配置里必须显式写 `seed`、`data.manifest`、`train.real_only|mix_ratio`、`eval.benchmarks`。
+- 配置分三层（**科学设定 / 档位资源设定 / 机器私有设定**），详见 §4.3 与 {{#20-hardware-profiles}}；`metrics.json` 里必须记录实际生效的档位与 batch。
 
 ### 3.4 为什么这样分层（设计依据）
 
@@ -190,41 +192,82 @@ flowchart TD
 
 ## 4. 技术选型
 
-> ⚠️ 以下版本信息在 issue #1 里会被**实际验证并回填**（`reports/env_report.md`）。不要盲信文档，以你机器上的实测为准。
+> ⚠️ 以下版本信息在 {{#01-env-setup}} 里会被**实际验证并回填**（`reports/env_report.md`）。不要盲信文档，以**你自己那台机器**上的实测为准。
+>
+> 🔧 **本项目由两人在两台不同配置的机器上开发**，所以本节的原则是：**"科学设定"统一，"资源设定"随机器；能用同一套代码，不要写死任何机器相关的参数。**
 
-| 模块 | 首选 | 理由 | 备选 |
+| 模块 | 首选 | 跨机器 / 跨平台注意 | 备选 |
 |---|---|---|---|
-| Python 环境 | Conda/Miniconda + **Python 3.11** | 3.11 的 wheel 覆盖最全，生成/识别生态都稳 | 3.12；**不建议 3.13+**（本机默认 3.14 会踩 wheel 缺失的坑） |
-| 深度学习框架 | **PyTorch ≥ 2.7 + CUDA 12.8 轮子（cu128）** | RTX 5060 是 Blackwell 架构（compute capability sm_120），**2.7.0 起才提供 cu128 支持** | 更低版本（会报 no kernel image）；CPU（仅作降级） |
-| 识别基线（不训练） | **insightface + ONNX Runtime**（`buffalo_l`/`antelopev2` 预训练包） | 开箱即用，几行代码拿到 LFW 级精度，先建立直觉 | `facenet-pytorch` |
-| 识别模型（训练） | 自己实现的 **ResNet(iresnet) + ArcFace**（PyTorch） | 全流程可控、可改、能在 8 GB 上跑 | insightface 的 PyTorch 训练脚本（较重） |
-| 生成（A 轨·主力） | **Arc2Face**（SD1.5 + 纯 ArcFace embedding 条件） 或 **IP-Adapter-FaceID（SD1.5）** | 512×512、显存友好，8 GB 实测可跑，代码许可宽松（Arc2Face 为 MIT） | IDiff-Face（128² 隐扩散，CC BY-NC-SA）、DCFace（112~128²，权重在 GDrive） |
-| 生成（B 轨·保底） | 直接下载**已公开的合成人脸数据集**：DigiFace-1M（122 万张 / 11 万身份）、DCFace、IDiff-Face、CemiFace、Digi2Real | **完全不占显存、不花时间**，能立刻验证「合成数据有没有用」这条路是否成立 | 无条件 SD 生成（issue #9） |
+| Python 环境 | Conda / Miniconda + **Python 3.11 或 3.12** | **两人必须用同一个 Python 次版本**（3.11 或 3.12 二选一），否则依赖解析结果会不同。不建议 3.13+（wheel 覆盖不全） | uv / venv（若两人都同意） |
+| 深度学习框架 | **PyTorch**，轮子版本**按各自机器的 CUDA 选** | 不是所有人都要 cu128：老卡选 cu121/cu126，新卡（RTX 50 系 = sm_120）必须 **cu128 且 PyTorch ≥ 2.7**；没有独显就用 CPU 轮子 | 统一走 CPU（仅作降级，速度差几十倍） |
+| ONNX Runtime | `onnxruntime-gpu`（Windows/Linux + NVIDIA） | **macOS 用 CoreML EP、无独显用 `onnxruntime`（CPU）**；GPU 版与 CPU 版**不要同时装** | 直接用 PyTorch 推理 |
+| 识别基线（不训练） | **insightface + ONNX Runtime**（`buffalo_l`/`antelopev2`） | 模型包仅限**非商业研究**；`FaceAnalysis` 的 provider 顺序因平台而异，**必须打印 providers 确认** | `facenet-pytorch` |
+| 识别模型（训练） | 自己实现的 **ResNet(iresnet) + ArcFace**（PyTorch） | 显存不同 → **batch 由 profile 决定**（见 §4.3），不是写死在代码里 | insightface `arcface_torch`（较重） |
+| 生成（A 轨·主力） | **Arc2Face**（SD1.5 + 纯 ArcFace embedding 条件）或 **IP-Adapter-FaceID（SD1.5）** | 512×512、显存友好；**显存 < 8 GB 时降到 384×384 或改用 B 轨** | IDiff-Face（128²，CC BY-NC-SA）、DCFace（112~128²） |
+| 生成（B 轨·保底） | 直接下载**已公开的合成人脸数据集**：DigiFace-1M（122 万张 / 11 万身份）、DCFace、CemiFace、Digi2Real | **完全不占显存、不挑机器**——这正是两人机器不一致时最该先做的一条 | 无条件 SD 生成 |
+| 图像质量/分布指标 | `clean-fid`(FID) / `torchmetrics`(KID) / `pyiqa`(NIQE, BRISQUE) | pyiqa 为 **PolyForm Noncommercial**（非商业） | 自己实现 Laplacian 方差 |
+| 实验管理 | **文件即记录**（配置 + JSON + CSV） | 跨机器协作时，**文件比服务可靠**（不要依赖某个人的本地 MLflow） | MLflow（可选） |
+| 网站 | **Vite + React + TypeScript + ECharts**，纯静态 | 谁都能 build；Node 版本写进 `.nvmrc`/`engines` | 手写 HTML + ECharts CDN |
+| 测试 | `pytest` | 契约测试**必须跨机器通过**，这是两人协作的安全网 | — |
 
-> **生成层采用「双轨制」，这是本框架的重要决策**：B 轨（下载现成合成数据）几乎零成本，先跑通「合成数据 → 训练 → 评测」的因果链；A 轨（本地身份条件生成）才是本项目的 AIGC 主线。**先 B 后 A**，可以保证即使 A 轨受限于显存或时间失败，项目依然有完整结论。
+> **生成层采用「双轨制」，这是本框架的重要决策**：B 轨（下载现成合成数据）几乎零成本、不挑机器，先跑通「合成数据 → 训练 → 评测」的因果链；A 轨（本地身份条件生成）才是本项目的 AIGC 主线。**先 B 后 A**，可以保证即使 A 轨在某台机器上受限，项目依然有完整结论。
 >
 > ⚠️ **不可行/需降级的选项（已核实）**：PhotoMaker 官方要求 ≥11 GB 显存；PuLID-FLUX 需 11~16 GB；InstantID 与 IP-Adapter-FaceID-SDXL 走 SDXL 路线，必须开 `enable_model_cpu_offload()` + VAE 分块，速度较慢——都不作为首选。
 >
-> ⚠️ **许可陷阱（写进 issue #18）**：Arc2Face / InstantID / IP-Adapter-FaceID / PuLID 都依赖 insightface 的人脸模型（`antelopev2`/`buffalo_l`），而这些**模型包仅限非商业研究用途**；InstantID 与 IP-Adapter-FaceID 的权重本身也是 research-only。**「代码是 MIT」不等于「整条链路可商用」。**
-| 图像质量/分布指标 | `clean-fid`(FID) / `torchmetrics`(KID) / `pyiqa`(NIQE, BRISQUE, 美学分) | 都是成熟库，避免自己实现 | 自己实现 Laplacian 方差 |
-| 实验管理 | **文件即记录**（配置 + JSON + CSV） | 前期不要上 MLflow/W&B，避免过度工程 | MLflow（可选，issue #14 时再评估） |
-| 网站 | **Vite + React + TypeScript + ECharts**，纯静态 | 部署到 GitHub Pages 零成本；图表生态好 | 手写 HTML + ECharts CDN |
-| 测试 | `pytest` | 校验数据契约、指标实现是否正确 | — |
+> ⚠️ **许可陷阱（写进 {{#18-ethics-and-release}}）**：Arc2Face / InstantID / IP-Adapter-FaceID / PuLID 都依赖 insightface 的人脸模型（`antelopev2`/`buffalo_l`），而这些**模型包仅限非商业研究用途**；InstantID 与 IP-Adapter-FaceID 的权重本身也是 research-only。**「代码是 MIT」不等于「整条链路可商用」。**
 
-### 4.1 硬件现实与预算（这是设计约束，不是抱怨）
+### 4.1 硬件分层：三档配置档案（A / B / C）
 
-本机：**NVIDIA RTX 5060 Laptop，8 GB 显存**。据此定下的硬性规则：
+既然两台机器不一样，就**不要按机器写代码，而是按"能力档位"配置**。每台机器在 `reports/env_report.md` 里声明自己属于哪一档（{{#01-env-setup}} 的产出），之后所有参数都由档位推导（{{#20-hardware-profiles}}）。
 
-| 约束 | 具体做法 |
+| 档位 | 典型机器 | 能跑什么 | 生成默认 | 训练默认 | 不能做什么 |
+|---|---|---|---|---|---|
+| **A 档**<br/>大显存独显 | ≥ 12 GB 显存（如 RTX 3060 12G / 4060Ti 16G / 4070+） | 全部，含 SDXL 路线 | 512×512（可用 SDXL），batch 2~4 | 112×112，batch 128~256，AMP | — |
+| **B 档**<br/>小显存独显 | 6~8 GB 显存（如 RTX 5060 Laptop 8G / 3050 6G） | A 轨（SD1.5 路线）+ 全部训练 | 512×512，batch 1~2，fp16，必要时 CPU offload | 112×112，batch 64~128，AMP + 梯度累积 | SDXL 路线（InstantID / PhotoMaker / PuLID）、大分辨率生成 |
+| **C 档**<br/>无独显 / macOS / 集显 | CPU 或 Apple Silicon | **B 轨全部**、数据管线、评测（小规模）、网站、文档 | 不建议本地生成（或极小规模试跑） | 极小规模训练或直接用预训练模型 | A 轨生成、任何正规训练 |
+
+**档位使用规则**：
+1. **A/B 档都能跑完整实验**；C 档的成员负责**数据层、评测层、网站、文档与实验分析**，不承担重训练（见 {{#19-collaboration-protocol}} 的分工）。
+2. 一切"能不能跑"的判断**问档位，不问机器型号**——这样换机器、加机器都不用改代码。
+3. 从 C 档升到 A 档、或 A 换 B，只需要换 profile 文件，**不改任何一行代码**。
+
+### 4.2 环境泛化规则（两人两机必须遵守）
+
+| 规则 | 原因 |
 |---|---|
-| 显存 8 GB | 生成：512×512、fp16、batch=1~2、必要时 `enable_model_cpu_offload()`；训练：112×112 输入、batch 64~128、AMP 混合精度、必要时梯度累积 |
-| 注意力实现 | **用 PyTorch 自带的 SDPA**。xformers 直到 0.0.33 才支持 Blackwell，Windows 上没有 FlashAttention，不要按旧教程去装 |
-| 生成与训练**错峰** | 同一时刻只跑一个吃显存的活；生成阶段先把图落盘，再关掉生成进程去训练 |
-| 生成量级 | MVP：**50~100 张**；标准：**每个身份 5~10 张 × 20~50 个身份**；不追求百万级 |
-| 数据量级 | 真实训练数据：**20~100 个身份、每身份 15~50 张**（从 LFW 多图身份子集构建） |
-| 时间预算 | 见 `WORKFLOW.md`，总计约 4~6 周业余时间，允许三档降级 |
+| **Python 次版本两人统一**（都 3.11 或都 3.12） | 不同次版本会导致依赖解析与部分库行为不一致 |
+| **依赖分两层写**：`environment.yml`（通用、入库）+ `environment.local.yml`（机器私有、**不入库**） | 通用层保证一致，私有层容纳 CUDA 变体、平台差异 |
+| 代码里**禁止出现绝对路径**，统一走配置与 `pathlib` | 两人盘符/目录结构必然不同 |
+| 路径、缓存目录、显存上限等**只写在 `configs/local.<machine>.yaml`** 且**不入库** | 机器私有设定不该污染仓库 |
+| 注意力实现统一用 **PyTorch 自带的 SDPA** | Windows 无 FlashAttention；xformers 对 Blackwell 的支持很晚才到，别按旧教程装 |
+| 数据与权重**不入库**，靠下载脚本 + 校验和复现 | 两台机器各自下载，避免几十 GB 的传输 |
+| 每台机器跑完都**回填 `reports/env_report.md`** | 出问题时能快速判断"是谁的环境" |
 
-### 4.2 数据与算力的务实取舍
+### 4.3 配置分层（把"泛化"落到工程上）
+
+配置分三层，**越往下越私有、越不影响科学结论**：
+
+```
+configs/
+├─ base.yaml                  # ① 科学设定：数据来源、模型、loss、epoch、评测集、seed —— 两人必须一致
+├─ profiles/
+│  ├─ a.yaml                  # ② 资源设定：batch / 分辨率 / AMP / num_workers / offload
+│  ├─ b.yaml                  #    按档位选，可以不同，但必须被记录进 metrics.json
+│  └─ cpu.yaml
+└─ local.<machine>.yaml       # ③ 机器私有：【不入库】路径、缓存、显存上限、线程数
+```
+
+**三条硬规则**：
+1. **①科学设定不许因机器而变**——变了就不是同一个实验。
+2. **②资源设定可以变，但必须记录**：`metrics.json` 里要写 `hardware_profile`、`batch_size`、`amp`、`torch_version`、`gpu_name`（契约 B 已含）。
+3. **③机器私有设定绝不允许影响结果**：只放路径与性能参数，不许放超参。
+
+> ⚠️ **跨机器可比性（关键）**：`batch size` 会**真实影响**训练结果（尤其小数据集 + 归一化层）。因此：
+> **同一组对比实验（如同一张消融矩阵）必须尽量在同一台机器上、用同一个 profile 跑完。**
+> 若确实要跨机器，则必须**固定 batch 与精度**，并在报告里标注两台机器的差异。
+> 详见 [`WORKFLOW.md`](WORKFLOW.md) §3.4。
+
+### 4.4 数据与算力的务实取舍
 
 - **用 LFW 构建 toy 闭集训练集**：LFW 有 1680 个身份，其中一部分身份有 15 张以上图片，足以做小规模闭集分类训练，且可公开下载。
 - **评测集只用公开可下载的**：LFW / CFP-FP / AgeDB-30 / CALFW / CPLFW / RFW（各 issue 里会给出下载方式与许可注意）。
@@ -296,11 +339,17 @@ flowchart TD
 
 ```
 AIGC-in-Face-Recognition-Dataset-Augmentation/
-├─ configs/           # 所有 YAML 配置（data / gen / train / exp）
+├─ configs/           # YAML 配置（三层，见 §4.3）
+│  ├─ base.yaml       #   ① 科学设定：两人必须一致
+│  ├─ profiles/       #   ② 档位资源设定：a.yaml / b.yaml / cpu.yaml
+│  ├─ local.*.yaml    #   ③ 机器私有：【不进 Git】路径、缓存、显存上限
+│  ├─ data/ gen/ train/ filter/ eval/   # 各层参数
+│  └─ exp/            #   实验配置 + matrix.yaml
 ├─ data/              # 【不进 Git】raw → interim → processed + manifests
-├─ docs/              # 文档：FRAMEWORK / WORKFLOW / BACKGROUND / RESULTS / ETHICS / issues
+├─ docs/              # 文档：FRAMEWORK / WORKFLOW / LEARNING / REFERENCES / BACKGROUND / RESULTS / ETHICS / issues
 ├─ notebooks/         # 探索性分析（不参与复现链路）
 ├─ results/           # 【进 Git】runs/<exp_id>/metrics.json + 图表 + summary.csv
+├─ reports/           # 【进 Git】env_report.md / 各类分析报告与图表
 ├─ scripts/           # 一键入口：setup / download / generate / filter / train / eval / export
 ├─ src/aigcfr/        # 核心包
 │  ├─ data/           # 下载、对齐、manifest 读写与校验
@@ -329,8 +378,9 @@ class FaceGenerator:              # 伪代码，见 issue #9 / #10
 
 | # | 风险 | 概率 | 影响 | 对策 |
 |---|---|---|---|---|
-| R1 | Python/驱动/torch 版本不匹配（sm_120 不支持） | 高 | 卡住 1~2 天 | issue #1 单独做「环境自检脚本」并落报告；优先 cu128 |
-| R2 | 8 GB 显存 OOM | 高 | 生成/训练失败 | 512×512、fp16、batch=1、CPU offload、错峰运行 |
+| R1 | 环境装不上（Python/驱动/torch 版本不匹配、新架构不支持） | 高 | 卡住 1~2 天 | {{#01-env-setup}} 单独做「环境自检 + 档位判定」并落报告；按机器的 CUDA 版本选轮子 |
+| R2 | 显存不足（OOM） | 高 | 生成/训练失败 | 由**档位**决定 batch/分辨率（{{#20-hardware-profiles}}）；fp16、CPU offload、错峰运行 |
+| R10 | **两人机器不一致导致结果不可比** | 中 | 结论不可信 | 科学设定统一；同一组对比实验在同一台机器同一 profile 上跑完；`metrics.json` 记录档位与 batch |
 | R3 | 生成质量差/身份漂移 | 高 | 实验无意义 | 筛选门禁（#11）+ 人工抽检；先小批量验证再放量 |
 | R4 | 数据集下载链接失效或需申请 | 中 | 进度受阻 | 每个数据集准备 2 个来源；实在不行只保留 LFW + CFP-FP |
 | R5 | 数据/license 违规（把原始人脸数据提交到仓库） | 中 | 严重（隐私/法律） | `.gitignore` 硬隔离 `data/`；`docs/ETHICS.md`（#18）；只发布生成图与指标 |
@@ -355,11 +405,11 @@ class FaceGenerator:              # 伪代码，见 issue #9 / #10
 
 | Milestone | 名称 | 核心交付 | 详细任务 |
 |---|---|---|---|
-| **M0** | 脚手架与地基 | 环境能跑、数据能下、契约定稿、背景读懂 | #1 #2 #3 #4 |
-| **M1** | 基线与评测 | 有真实数据基线数字 + 统一评测器 | #5 #6 #7 |
-| **M2** | 生成与筛选 | 生成→筛选→入库闭环跑通（含传统增强对照） | #8 #9 #10 #11 #12 #13 |
-| **M3** | 实验矩阵与结论 | 混合比例消融跑完，结论与局限写清楚 | #14 #15 |
-| **M4** | 网站与发布 | 静态展示站上线 + 伦理文档 + v0.1 | #16 #17 #18 |
+| **M0** | 脚手架与地基 | 环境能跑、**档位与分工定下来**、数据能下、契约定稿、背景读懂 | {{#01-env-setup}} {{#02-repo-skeleton}} {{#03-data-pipeline}} {{#04-background-survey}} {{#19-collaboration-protocol}} {{#20-hardware-profiles}} {{#21-learning-path}} |
+| **M1** | 基线与评测 | 有真实数据基线数字 + 统一评测器 | {{#05-zeroshot-baseline}} {{#06-arcface-training}} {{#07-evaluator}} |
+| **M2** | 生成与筛选 | 生成→筛选→入库闭环跑通（含传统增强对照） | {{#08-classic-augmentation}} {{#09-unconditional-generation}} {{#10-identity-preserving-generation}} {{#11-generation-filtering}} {{#12-synth-detection-report}} {{#13-attribute-controlled-generation}} |
+| **M3** | 实验矩阵与结论 | 混合比例消融跑完，结论与局限写清楚 | {{#14-mix-ratio-matrix}} {{#15-results-conclusion}} |
+| **M4** | 网站与发布 | 静态展示站上线 + 伦理文档 + v0.1 | {{#16-site-skeleton}} {{#17-site-content}} {{#18-ethics-and-release}} |
 
 ---
 
@@ -379,6 +429,80 @@ class FaceGenerator:              # 伪代码，见 issue #9 / #10
 | **TAR@FAR** | 在允许的误报率（FAR）下能达到的正确接受率（TAR）；比单纯 Accuracy 更贴近实用 |
 | **消融实验（Ablation）** | 一次只改一个因素，看它单独贡献了多少 |
 | **合成人脸检测** | 判断一张图是不是 AI 生成的；既是安全对策，也是本项目的一个评测维度 |
+
+---
+
+## 11. 双人协作规范（两台不同配置的机器）
+
+> 两人两机最大的风险不是"人手不够"，而是**做出来的东西对不上**：环境不同、配置不同、结果不可比。
+> 对策不是"多沟通"，而是**把不确定性压到契约和档位里**（§3.3、§4.1）。
+
+### 11.1 分工原则：按「能力档位」分，不按「人」分
+
+| 职责域 | 需要的档位 | 建议主导 | 主要产出 |
+|---|---|---|---|
+| 数据层（下载 / 对齐 / manifest / 校验） | 任意档位（吃磁盘和网络） | 谁有带宽谁做 | `data/manifests/*`、`reports/data_stats.md` |
+| **B 轨**：下载现成合成数据集 | **任意档位** | **弱机器一方**（零显存） | 可直接训练的数据集 |
+| **A 轨**：本地身份条件生成 | A / B 档（≥6 GB 独显） | **有独显一方** | `data/manifests/synth_e4.jsonl` |
+| 训练层 | A / B 档 | **有独显一方** | `results/runs/*/metrics.json` |
+| 评测层 | 任意档位（小规模 CPU 可跑） | **弱机器一方** | `metrics.json`、图表 |
+| 筛选层 | 任意档位（推理为主，CPU 也能跑但慢） | 弱机器一方 | 筛选清单与漏斗报告 |
+| 网站 / 文档 / 伦理 / 汇总 | 任意档位 | **弱机器一方** | `site/`、`docs/` |
+| 实验矩阵的**整组**实验 | A / B 档 + 大量机器时间 | 按机器分配**整组**，不按 seed 拆 | `results/summary.csv` |
+
+> 💡 **核心原则**：**一台机器的强弱不影响它能不能做贡献**——C 档机器照样能承担数据、评测、筛选、网站和文档，这些恰恰占了项目工作量的一半以上。
+
+### 11.2 接口即协作：为什么契约先行在两人项目里更重要
+
+一个人做项目时，"接口"可以存在脑子里；两个人做就不行。所以：
+
+1. **契约先行**：`manifest.jsonl` 与 `metrics.json` 的字段先冻结（§3.3），两人各自实现都能对接。
+2. **每人认领目录**：尽量让两个人的工作落在**不同目录**里，物理上避免冲突。
+3. **冲突热点与对策**：
+
+| 冲突热点 | 对策 |
+|---|---|
+| `configs/exp/matrix.yaml` | **一人维护**，另一人通过 PR 提改动 |
+| `results/summary.csv` | **脚本生成，禁止手工编辑**；冲突时删掉重新生成 |
+| `docs/RESULTS.md` | 一人主笔，另一人只提意见 |
+| `site/public/data/*.json` | 脚本生成，不入库手工改动 |
+| `configs/local.*.yaml` | 已在 `.gitignore` 里，天然不冲突 |
+| `environment.yml` | 改动需两人确认（会同时影响两台机器） |
+
+### 11.3 三个「不」
+
+1. **不在各自机器上各跑一半的同一组对比实验**——跨机器/跨 batch 不可比（§4.3）。
+2. **不把"只在我机器上能跑"的脚本合进 main**——合并前必须在一台**干净的**环境里验证过。
+3. **不同时改同一个文件**——除约好的情况外，先 pull、再改、早 push。
+
+### 11.4 沟通节奏（宁短而规律）
+
+| 节奏 | 内容 | 时长 |
+|---|---|---|
+| 每日 | push 前先 pull；有阻塞就在 Issue 里留言 | — |
+| 每周一次同步 | 上周完成 / 本周计划 / 卡点 / 是否需要换分工 | 15 分钟 |
+| 每周一次互讲 | 学习线内容互相讲一遍（费曼技巧，见 [`LEARNING.md`](LEARNING.md) §0） | 15 分钟 |
+| 每个 Milestone 结束 | 一起过一遍出口条件（[`WORKFLOW.md`](WORKFLOW.md) §5）并决定是否降级 | 30 分钟 |
+
+**约定**：所有结论落在 **Issue 评论**里，不要只留在聊天记录里——三个月后你只会记得 Issue。
+
+---
+
+## 12. 学习路线总览
+
+完整的六阶段路线（概念 → 材料 → 动手 → 自测）在 [`LEARNING.md`](LEARNING.md)。速览：
+
+| 阶段 | 主题 | 时间 | 学完能做什么 |
+|---|---|---|---|
+| **L0** | 两张脸到底怎么比 | 2~3 h | 说清 embedding / 余弦 / 阈值的关系，并亲手算过一次 |
+| **L1** | 人脸识别基础 | 1~2 天 | 独立实现 1:1 验证评测，理解 ArcFace 与 10 折协议 |
+| **L2** | 生成模型基础 | 2~3 天 | 跑通 SD 最小示例，说清四种条件注入方式的差别 |
+| **L3** | 身份保持生成 | 2~3 天 | 理解身份保真 vs 类内多样性的矛盾，并能量化它 |
+| **L4** | 实验方法与统计 | 1~2 天 | 会设计对照组、算 TAR@FAR、用误差棒判断"是否显著" |
+| **L5** | 伦理、法律与许可 | 半天 | 能逐条核对数据集/模型的许可并写出声明 |
+| **L6** | 论文精读（持续） | 每周 2 篇 | 产出 15 篇摘要卡与 3 张对照表 ← {{#04-background-survey}} |
+
+每个阶段都有**自测题**（含答案要点）。**自测过不了就不进下一阶段**——这不是形式主义，而是因为 L1/L4 没弄懂就去跑实验，跑出来的数字一定是错的。
 
 ---
 

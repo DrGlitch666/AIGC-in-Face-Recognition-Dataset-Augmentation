@@ -1,11 +1,11 @@
 # Issue 索引（自动生成，请勿手工修改）
 
-> 由 `tools/file_issues.mjs` 于 2026-09-21T05:05:27.205Z 生成，共 18 条。
+> 由 `tools/file_issues.mjs` 于 2026-09-21T05:19:32.145Z 生成，共 21 条。
 > 重新生成：`GH_TOKEN=<token> node tools/file_issues.mjs`（已存在的 Issue 会自动跳过）。
 
 | # | 标题 | 里程碑 | 标签 | 任务卡 |
 |---|---|---|---|---|
-| [#1](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/1) | [环境] 搭建 Python 3.11 + PyTorch(CUDA) 环境，产出 GPU 自检报告 | M0 脚手架与地基 | 优先级:P0 类型:环境 难度:入门 good first issue | [`01-env-setup.md`](01-env-setup.md) |
+| [#1](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/1) | [环境] 跨机器可复现环境 + 硬件档位自检（每台机器各做一次） | M0 脚手架与地基 | 优先级:P0 类型:环境 难度:入门 good first issue | [`01-env-setup.md`](01-env-setup.md) |
 | [#2](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/2) | [脚手架] 建立仓库目录结构、配置系统与工程规范 | M0 脚手架与地基 | 优先级:P0 类型:环境 难度:入门 | [`02-repo-skeleton.md`](02-repo-skeleton.md) |
 | [#3](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/3) | [数据] 下载评测数据集 + 构建 toy 训练集 + 冻结 manifest 契约 | M0 脚手架与地基 | 优先级:P0 类型:数据 难度:中等 | [`03-data-pipeline.md`](03-data-pipeline.md) |
 | [#4](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/4) | [文档] 背景知识地图与文献综述 docs/BACKGROUND.md | M0 脚手架与地基 | 优先级:P0 类型:文档 难度:入门 good first issue | [`04-background-survey.md`](04-background-survey.md) |
@@ -23,3 +23,6 @@
 | [#16](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/16) | [网站] 静态展示站骨架：Vite + React + ECharts + 数据契约 | M4 网站与发布 | 优先级:P1 类型:网站 难度:中等 | [`16-site-skeleton.md`](16-site-skeleton.md) |
 | [#17](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/17) | [网站] 展示内容页：方法图、图库对比、指标看板、公平性与失败案例 | M4 网站与发布 | 优先级:P1 类型:网站 难度:中等 | [`17-site-content.md`](17-site-content.md) |
 | [#18](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/18) | [合规] 伦理与许可文档 + README/LICENSE + v0.1 发布 | M4 网站与发布 | 优先级:P1 类型:合规 难度:入门 | [`18-ethics-and-release.md`](18-ethics-and-release.md) |
+| [#19](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/19) | [协作] 双人协作规范：分工认领、PR 评审、数据与产物同步 | M0 脚手架与地基 | 优先级:P0 类型:环境 难度:入门 good first issue | [`19-collaboration-protocol.md`](19-collaboration-protocol.md) |
+| [#20](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/20) | [环境] 硬件档位判定、配置分层与自适应降级（A/B/C profile） | M0 脚手架与地基 | 优先级:P0 类型:环境 难度:中等 | [`20-hardware-profiles.md`](20-hardware-profiles.md) |
+| [#21](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/21) | [学习] 按 LEARNING.md 走完六阶段学习线（含自测与每周互讲） | M0 脚手架与地基 | 优先级:P0 类型:文档 难度:入门 good first issue | [`21-learning-path.md`](21-learning-path.md) |

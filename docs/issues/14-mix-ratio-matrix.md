@@ -105,6 +105,14 @@ milestone: "M3 实验矩阵与结论"
 
 详细版见 [`docs/REFERENCES.md`](../REFERENCES.md) 第 7 节。
 
+## 附：两人两机的执行约定（**跑批阶段的头号风险**）
+
+- **按"整组实验"分配机器，绝不按 seed 拆分。** 例如「E4 × 5 个比例 × 3 seed = 15 个 run」整组交给同一台机器。理由：batch/精度/硬件不同会让结果出现 0.1%~0.5% 的系统性偏移，足以把你的曲线结论搞反（详见 [`WORKFLOW.md`](../WORKFLOW.md) §3.4）。
+- **`summary.csv` 必须带 `profile` 列**（来自 `metrics.json` 的 `hardware` 块）。若同一张图里混了不同档位的结果，图表要能区分（不同标记/分面）。
+- **分工建议**：强机一方负责 `run_matrix.py` 的执行与监控；弱机一方负责 `summarize.py`、图表与 `docs/RESULTS.md` 初稿。两人**不要同时改 `matrix.yaml`**（约定一人维护）。
+- **跑批期间另一台机器不要闲着**：弱机可以并行做 {{#12-synth-detection-report}}、{{#16-site-skeleton}}，或推进 [`LEARNING.md`](../LEARNING.md) L6 的论文精读。
+- **每个 run 落盘时必须包含**：`config.resolved.yaml`（三层合并后的最终配置）、`metrics.json`（含 hardware 块）、日志。缺任何一项，另一台机器就无法判断这个结果能不能用。
+
 ## 新手提示 / 卡住了怎么办
 
 - **先把批量脚本调通再放量**：用 1 个 epoch、2 个身份把 15 个组合全"跑"一遍（每个几秒），确认目录、命名、跳过逻辑都对，再改成真实配置。

@@ -84,6 +84,16 @@ milestone: "M1 基线与评测"
 
 详细版见 [`docs/REFERENCES.md`](../REFERENCES.md) 第 7 节。
 
+## 附：两人两机补充（评测器是"跨机器一致性"的关键）
+
+评测器是**唯一一把尺子**，因此它必须做到"在谁的机器上跑都得到同样的结果"：
+
+- [ ] **机器无关**：设备选择、批大小、线程数、路径全部走配置（{{#20-hardware-profiles}}），不许出现 `cuda` 硬编码；无 GPU 时自动退到 CPU。
+- [ ] **跨机器测试**：`tests/test_metrics.py` 用**固定的假 embedding** 做输入，任何一台机器上都必须得到**完全相同的数值**——这是两台机器"结果对得上"的安全网。
+- [ ] **`metrics.json` 增加 `hardware` 块**（`profile`、`gpu_name`、`vram_total`、`batch_size`、`amp`、`torch_version`、`platform`），并在汇总时输出：跨机器的 run 一眼能区分。
+- [ ] **公平性/分桶测评是弱机器的好任务**：推理为主、CPU 也能跑，非常适合由弱机器一方主导；但注意 CPU 上跑 RFW 这类多组评测会较慢，建议分批并缓存 embedding。
+- [ ] 本任务的动手环节与 [`LEARNING.md`](../LEARNING.md) **L4**（手算 TAR@FAR、多 seed 波动）合并完成。
+
 ## 新手提示 / 卡住了怎么办
 
 - **测试先行**：先写 `test_metrics.py`（用 3 个向量手工算余弦相似度，人工确定正确答案），再写实现。这是防止指标算错最省事的办法。

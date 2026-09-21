@@ -61,6 +61,21 @@ milestone: "M0 脚手架与地基"
 - [Python 官方 `.gitignore` 模板](https://github.com/github/gitignore/blob/main/Python.gitignore)
 - [choosealicense.com](https://choosealicense.com/) 选许可证
 
+## 附：两人两机的补充要求（配置与环境的泛化）
+
+由于项目由**两人在两台不同配置的机器**上开发，骨架必须从一开始就容纳这种差异：
+
+- [ ] 目录里预留配置三层（详细实现见 {{#20-hardware-profiles}}）：
+      `configs/base.yaml`（科学设定）、`configs/profiles/{a,b,cpu}.yaml`（档位资源设定）、`configs/local.template.yaml`（机器私有模板）
+- [ ] `.gitignore` **必须**包含 `configs/local.*.yaml`（保留 `local.template.yaml`）、`environment.local.yml`、`reports/env_report.*.md` 中的机器私有部分（如需要）
+- [ ] 增加 `reports/` 目录（放 `env_report.<machine>.md`、各类分析报告与图表），**入库**
+- [ ] 加 `.github/pull_request_template.md`：必填「在哪台机器/哪个档位验证过」+「复现命令」（见 {{#19-collaboration-protocol}}）
+- [ ] 代码里**禁止出现绝对路径**；一切路径走配置，且路径类配置只允许出现在 `local.*.yaml`
+- [ ] `environment.yml` 只写**通用层**（两台机器共有），机器私有依赖放 `environment.local.yml`（不入库）
+- [ ] `README.md` 里加一节「两台机器怎么各自上手」，指向 `docs/SETUP.md` 与 onboarding 清单（[`WORKFLOW.md`](../WORKFLOW.md) §7.4）
+
+> 相关依赖：本任务与 {{#19-collaboration-protocol}}、{{#20-hardware-profiles}} 三者共同构成 M0 的地基，建议由一人主建骨架、另一人同步搭建自己的 `local.*.yaml`，**当天就验证一次"两人都能跑"**。
+
 ## 新手提示 / 卡住了怎么办
 
 - 目录先建空壳就行，**不要**在这一步写业务逻辑。

@@ -1,13 +1,13 @@
 {
   "repo": "DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation",
-  "generated_at": "2026-09-21T05:05:27.205Z",
+  "generated_at": "2026-09-21T05:19:32.145Z",
   "issues_dir": "docs/issues",
-  "count": 18,
+  "count": 21,
   "issues": [
     {
       "number": 1,
       "slug": "01-env-setup",
-      "title": "[环境] 搭建 Python 3.11 + PyTorch(CUDA) 环境，产出 GPU 自检报告",
+      "title": "[环境] 跨机器可复现环境 + 硬件档位自检（每台机器各做一次）",
       "milestone": "M0 脚手架与地基",
       "labels": [
         "优先级:P0",
@@ -239,6 +239,47 @@
       ],
       "file": "18-ethics-and-release.md",
       "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/18"
+    },
+    {
+      "number": 19,
+      "slug": "19-collaboration-protocol",
+      "title": "[协作] 双人协作规范：分工认领、PR 评审、数据与产物同步",
+      "milestone": "M0 脚手架与地基",
+      "labels": [
+        "优先级:P0",
+        "类型:环境",
+        "难度:入门",
+        "good first issue"
+      ],
+      "file": "19-collaboration-protocol.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/19"
+    },
+    {
+      "number": 20,
+      "slug": "20-hardware-profiles",
+      "title": "[环境] 硬件档位判定、配置分层与自适应降级（A/B/C profile）",
+      "milestone": "M0 脚手架与地基",
+      "labels": [
+        "优先级:P0",
+        "类型:环境",
+        "难度:中等"
+      ],
+      "file": "20-hardware-profiles.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/20"
+    },
+    {
+      "number": 21,
+      "slug": "21-learning-path",
+      "title": "[学习] 按 LEARNING.md 走完六阶段学习线（含自测与每周互讲）",
+      "milestone": "M0 脚手架与地基",
+      "labels": [
+        "优先级:P0",
+        "类型:文档",
+        "难度:入门",
+        "good first issue"
+      ],
+      "file": "21-learning-path.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/21"
     }
   ]
 }

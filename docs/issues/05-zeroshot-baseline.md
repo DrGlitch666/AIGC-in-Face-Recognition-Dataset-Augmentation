@@ -80,6 +80,15 @@ milestone: "M1 基线与评测"
 - ⚠️ `FaceAnalysis()` 的 provider 顺序是 CoreML → CUDA → CPU，**务必打印 providers 确认真的在用 GPU**。
 - 详细版见 [`docs/REFERENCES.md`](../REFERENCES.md) 第 2 节。
 
+## 附：两人两机补充（本任务很适合弱机器承担）
+
+- **两台机器都要能跑这个评测**：评测以推理为主，**C 档（CPU）也能跑**，只是慢——所以这一块非常适合由**弱机器一方主导**（见 [`FRAMEWORK.md`](../FRAMEWORK.md) §11.1 分工表）。
+- **ONNX Runtime 的 provider 按平台不同**：Windows/Linux + NVIDIA 用 CUDA EP，macOS 用 CoreML EP，无独显用 CPU EP。**必须打印实际 providers**，因为在另一台机器上"看起来装了 GPU 版但实际跑在 CPU"是非常常见的坑。
+- **本任务产出的打分代码将被所有后续实验复用**（{{#07-evaluator}} 会把它泛化），因此：
+  - 代码里**不许出现机器相关假设**（设备、路径、线程数一律走 {{#20-hardware-profiles}} 的配置）；
+  - 加一个**跨机器都通过的测试**（用固定的假 embedding 验证相似度与阈值逻辑），这样另一台机器改坏了会立刻被发现。
+- 本任务的动手环节与 [`LEARNING.md`](../LEARNING.md) **L1** 合并完成（跑通评测 → 手写一次 10 折 → 画分布图 → 回答自测题）。
+
 ## 新手提示 / 卡住了怎么办
 
 - 先用 **10 对图片**人工验证：同一人的两张图相似度应明显高于不同人；这一步花 10 分钟能省一天。

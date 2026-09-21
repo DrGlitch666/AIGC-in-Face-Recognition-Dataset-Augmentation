@@ -62,6 +62,17 @@ milestone: "M0 脚手架与地基"
 - 关键词组合（用于检索）：`synthetic face dataset face recognition`、`identity-preserving face generation`、`synthetic-to-real domain gap face recognition`、`demographic bias synthetic faces`
 - 检索入口：[arXiv](https://arxiv.org/list/cs.CV/recent)、[Papers with Code](https://paperswithcode.com/)、[Semantic Scholar](https://www.semanticscholar.org/)
 
+## 附：学习线与本任务的关系（怎么把"读论文"变成真的学会）
+
+本任务负责**论文产出**（`docs/BACKGROUND.md`）；**学习过程与自测**由 {{#21-learning-path}} 负责，两者互补、共用同一份阅读清单。
+
+- **阅读顺序**、**每篇该抓什么**、**配套的动手练习与自测题**，见 [`LEARNING.md`](../LEARNING.md) 的 **L1~L6** 各阶段；本任务的 15 篇摘要卡对应 L6。
+- 建议的**分工做法（两人时很有效）**：
+  - 每人负责一半论文，各写摘要卡，然后**互相讲给对方听**（每人每周 15 分钟）。
+  - 讲不清楚的地方 = 没读懂的地方，回去重读那一节。
+- **摘要卡四段式**（`方法一句话 / 用了什么数据 / 关键结论（带数字）/ 与本项目的关系`）是硬要求，它同时服务于三处：本任务的 `BACKGROUND.md`、{{#10-identity-preserving-generation}} 的选型依据、{{#15-results-conclusion}} 的文献对照。
+- 遇到"读不懂但很重要"的论文，**不要卡住**：先记一句"这里没懂 + 为什么重要"，在本 Issue 下建一条评论，继续往下读；很多概念会在 L2/L3 动手之后自然就懂了。
+
 ## 新手提示 / 卡住了怎么办
 
 - **摘要卡四段式**是硬要求：读完一篇立刻写，不要攒着最后写，否则等于没读。

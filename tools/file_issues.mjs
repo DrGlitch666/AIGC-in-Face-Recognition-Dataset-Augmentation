@@ -181,13 +181,25 @@ async function main() {
   const existing = await api('GET', `/repos/${REPO}/issues?state=all&per_page=100`);
   const byTitle = new Map((existing.json || []).filter((i) => !i.pull_request).map((i) => [i.title, i.number]));
 
+  // 3.1) 上次生成的索引（slug → 编号）：标题被改写后仍能对上，避免重复创建
+  const slugFromIndex = new Map();
+  const indexPath = path.join(ISSUES_DIR, '00-index.json');
+  if (fs.existsSync(indexPath)) {
+    try {
+      const idx = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+      for (const it of idx.issues || []) if (it.slug && it.number) slugFromIndex.set(it.slug, it.number);
+    } catch { console.log('  ! 00-index.json 解析失败，退化为按标题匹配'); }
+  }
+  const numberBySlugOrTitle = (card) =>
+    byTitle.get(card.title) ?? slugFromIndex.get(card.slug) ?? null;
+
   // 4) 建 Issue（正文先保留 {{#slug}} 占位符）
   const created = [];
   for (const card of cards) {
-    if (byTitle.has(card.title)) {
-      const n = byTitle.get(card.title);
-      console.log(`  = #${n} ${card.title}（已存在${UPDATE ? '，稍后同步内容' : '，跳过'}）`);
-      created.push({ ...card, number: n, existing: true, url: `${API.replace('api.', '')}/${REPO}/issues/${n}` });
+    const known = numberBySlugOrTitle(card);
+    if (known) {
+      console.log(`  = #${known} ${card.title}（已存在${UPDATE ? '，稍后同步内容' : '，跳过'}）`);
+      created.push({ ...card, number: known, existing: true, url: `${API.replace('api.', '')}/${REPO}/issues/${known}` });
       continue;
     }
     const payload = {
