@@ -1,6 +1,6 @@
 # Issue 索引（自动生成，请勿手工修改）
 
-> 由 `tools/file_issues.mjs` 于 2026-09-21T05:19:32.145Z 生成，共 21 条。
+> 由 `tools/file_issues.mjs` 于 2026-09-22T09:01:22.693Z 生成，共 22 条。
 > 重新生成：`GH_TOKEN=<token> node tools/file_issues.mjs`（已存在的 Issue 会自动跳过）。
 
 | # | 标题 | 里程碑 | 标签 | 任务卡 |
@@ -26,3 +26,4 @@
 | [#19](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/19) | [协作] 双人协作规范：分工认领、PR 评审、数据与产物同步 | M0 脚手架与地基 | 优先级:P0 类型:环境 难度:入门 good first issue | [`19-collaboration-protocol.md`](19-collaboration-protocol.md) |
 | [#20](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/20) | [环境] 硬件档位判定、配置分层与自适应降级（A/B/C profile） | M0 脚手架与地基 | 优先级:P0 类型:环境 难度:中等 | [`20-hardware-profiles.md`](20-hardware-profiles.md) |
 | [#21](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/21) | [学习] 按 LEARNING.md 走完六阶段学习线（含自测与每周互讲） | M0 脚手架与地基 | 优先级:P0 类型:文档 难度:入门 good first issue | [`21-learning-path.md`](21-learning-path.md) |
+| [#22](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/22) | [环境] 受限网络下的资源获取：连通性预检、镜像路线与离线缓存 | M0 脚手架与地基 | 优先级:P0 类型:环境 难度:入门 good first issue | [`22-offline-mirrors.md`](22-offline-mirrors.md) |

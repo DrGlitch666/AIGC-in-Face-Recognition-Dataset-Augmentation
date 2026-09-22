@@ -12,11 +12,13 @@
 
 | 文档 | 内容 |
 |---|---|
+| [`docs/PERSONAL_PLAN.md`](docs/PERSONAL_PLAN.md) | ⭐ **个性化执行方案**：基于「60 人时预算 + 全程镜像 + 一人 GPU/一人 CPU」裁剪的六周排期、分工、砍掉清单、汇报包与止损点。**当它与其他文档冲突时，以它为准** |
 | [`docs/FRAMEWORK.md`](docs/FRAMEWORK.md) | **项目框架**：目标与边界、研究问题、系统架构、层间数据契约、技术选型、**硬件档位（A/B/C）与配置分层**、实验设计、风险、**双人协作规范**、术语表 |
 | [`docs/WORKFLOW.md`](docs/WORKFLOW.md) | **工作流**：6 个 Sprint 路线图与**按档位的分工**、每个 Issue 的标准流程、实验记录纪律、**跨机器可比性规则**、Go/No-Go 卡点、降级策略、**双人协作节奏**、常见坑 |
 | [`docs/LEARNING.md`](docs/LEARNING.md) | **学习路线**：L0~L6 六阶段（概念 → 材料 → 动手 → **自测题与答案要点**）、数学补丁、阅读顺序、学习产出物、10 个新手误区 |
 | [`docs/REFERENCES.md`](docs/REFERENCES.md) | **预置参考资料**：训练/评测工具箱、基线模型与期望数字、数据集可得性、生成方法、检测器与画质指标、法律与许可 |
-| [`docs/issues/`](docs/issues/) | **21 张任务卡**（同 GitHub Issues），每张含背景、任务清单、验收标准、依赖、预估工时与参考 |
+| [`docs/MIRRORS.md`](docs/MIRRORS.md) | **受限网络下的资源获取**：镜像配置命令、资源→路线对照表、连通性预检端点、实测结果表、止损路线 |
+| [`docs/issues/`](docs/issues/) | **22 张任务卡**（同 GitHub Issues），每张含背景、任务清单、验收标准、依赖、预估工时与参考 |
 | [`docs/issues/00-INDEX.md`](docs/issues/00-INDEX.md) | Issue 索引（自动生成，含编号、里程碑、标签） |
 
 ## 🎯 研究问题

@@ -1,8 +1,8 @@
 {
   "repo": "DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation",
-  "generated_at": "2026-09-21T05:19:32.145Z",
+  "generated_at": "2026-09-22T09:01:22.693Z",
   "issues_dir": "docs/issues",
-  "count": 21,
+  "count": 22,
   "issues": [
     {
       "number": 1,
@@ -280,6 +280,20 @@
       ],
       "file": "21-learning-path.md",
       "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/21"
+    },
+    {
+      "number": 22,
+      "slug": "22-offline-mirrors",
+      "title": "[环境] 受限网络下的资源获取：连通性预检、镜像路线与离线缓存",
+      "milestone": "M0 脚手架与地基",
+      "labels": [
+        "优先级:P0",
+        "类型:环境",
+        "难度:入门",
+        "good first issue"
+      ],
+      "file": "22-offline-mirrors.md",
+      "url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/22"
     }
   ]
 }

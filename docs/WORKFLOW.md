@@ -150,7 +150,7 @@ python scripts/summarize.py      --runs results/runs --out results/summary.csv
 python scripts/export_site_data.py --results results --out site/public/data
 ```
 
-**配置三层**（详见 [`FRAMEWORK.md`](FRAMEWORK.md) §4.3 与 {{#20-hardware-profiles}}）：
+**配置三层**（详见 [`FRAMEWORK.md`](FRAMEWORK.md) §4.3 与 #20）：
 
 ```bash
 # 每次运行都是「科学设定 + 档位资源设定 + 机器私有设定」三层叠加
@@ -238,7 +238,7 @@ python scripts/train.py --config configs/exp/e4-ipadapter-r25-seed0.yaml \
 
 ### S0 出口判断
 - 环境自检报告里有 GPU / CPU 信息，并**明确写出本机档位（A/B/C）**？→ 否则**先解决再往下走**（这是唯一不能绕过的卡点）
-- 两台机器的档位都判定完，且 `docs/` 里写清了谁负责哪一域？→ 否则先做 {{#19-collaboration-protocol}} 与 {{#20-hardware-profiles}}
+- 两台机器的档位都判定完，且 `docs/` 里写清了谁负责哪一域？→ 否则先做 #19 与 #20
 - 数据集下载成功且 manifest 能校验通过？→ 否则降级为「只用 LFW 一个数据集」
 
 ### S1 出口判断
@@ -280,7 +280,7 @@ python scripts/train.py --config configs/exp/e4-ipadapter-r25-seed0.yaml \
 | Python 版本不一致 | 两人依赖解析结果不同、行为有细微差异 | 约定同一个次版本（都 3.11 或都 3.12）；写进 `environment.yml` |
 | 照抄别人的 torch 安装命令 | `no kernel image is available` / 装成 CPU 版 | 按**自己机器**的 CUDA 版本选轮子（新卡 RTX 50 系需 cu128 + torch ≥ 2.7）；先 `torch.cuda.get_arch_list()` 确认 |
 | 跨平台差异 | macOS/Linux 上 ONNX/OpenCV 行为不同 | ONNX Runtime 按平台选 EP（CUDA / CoreML / CPU）；路径统一 `pathlib` |
-| 显存不够 | `CUDA out of memory` | 由**档位**决定 batch/分辨率（{{#20-hardware-profiles}}）；fp16、CPU offload、生成与训练错峰 |
+| 显存不够 | `CUDA out of memory` | 由**档位**决定 batch/分辨率（#20）；fp16、CPU offload、生成与训练错峰 |
 | Windows 路径 | 中文/空格路径导致库报错 | 项目路径保持英文；Python 里统一用 `pathlib` |
 | 数据集路径写死 | 换机器跑不了 | 全部走 YAML 配置；机器私有路径只写在 `configs/local.<machine>.yaml`（不入库） |
 | 对齐方式不一致 | 评测数字莫名偏低 | 训练与评测必须用**同一套** 5 点对齐模板（112×112） |
@@ -335,23 +335,23 @@ python scripts/train.py --config configs/exp/e4-ipadapter-r25-seed0.yaml \
 
 ### 7.4 新机器 / 新人 onboarding 清单（半天内完成）
 
-- [ ] 按 {{#01-env-setup}} 建环境，产出本机的 `reports/env_report.md` 并判定档位（A/B/C）
-- [ ] 按 {{#20-hardware-profiles}} 建好自己的 `configs/local.<machine>.yaml`（**不要提交**）
+- [ ] 按 #1 建环境，产出本机的 `reports/env_report.md` 并判定档位（A/B/C）
+- [ ] 按 #20 建好自己的 `configs/local.<machine>.yaml`（**不要提交**）
 - [ ] `pytest -q` 全绿（契约测试是跨机器一致性的安全网）
 - [ ] 能跑通两条最小命令：`scripts/evaluate.py --run <别人的 run>`、`scripts/summarize.py`
 - [ ] 读一遍 [`FRAMEWORK.md`](FRAMEWORK.md) §3.3（契约）、§4.3（配置分层）、§11（协作）
-- [ ] 在 {{#19-collaboration-protocol}} 下评论认领自己的职责域
-- [ ] 从 `good first issue` 里挑第一张卡（推荐 {{#03-data-pipeline}} 或 {{#21-learning-path}}）
+- [ ] 在 #19 下评论认领自己的职责域
+- [ ] 从 `good first issue` 里挑第一张卡（推荐 #3 或 #21）
 
 ---
 
 ## 8. 下一步（现在就做这几件事）
 
-1. **两人各自**跑 {{#01-env-setup}}，把 `reports/env_report.md` 提交上去，确认各自的档位（A/B/C）。
-2. 按 {{#19-collaboration-protocol}} 在 Issue 里**认领职责域**，并把分工写进仓库文档。
-3. 按 {{#20-hardware-profiles}} 建配置分层的骨架（`base.yaml` + `profiles/*` + `.gitignore` 里的 `local.*`）。
-4. 按 {{#02-repo-skeleton}} 把仓库骨架建起来（目录 + `.gitignore` + 配置文件模板）。
-5. 打开 [`LEARNING.md`](LEARNING.md) 走 **L0**（2~3 小时，两人各做一遍），然后按 {{#21-learning-path}} 排学习节奏。
+1. **两人各自**跑 #1，把 `reports/env_report.md` 提交上去，确认各自的档位（A/B/C）。
+2. 按 #19 在 Issue 里**认领职责域**，并把分工写进仓库文档。
+3. 按 #20 建配置分层的骨架（`base.yaml` + `profiles/*` + `.gitignore` 里的 `local.*`）。
+4. 按 #2 把仓库骨架建起来（目录 + `.gitignore` + 配置文件模板）。
+5. 打开 [`LEARNING.md`](LEARNING.md) 走 **L0**（2~3 小时，两人各做一遍），然后按 #21 排学习节奏。
 6. 在 GitHub 上把 Milestone M0 建成看板，把 M0 的 7 张卡拖进 Todo。
 
 > 记住附录 A（MVP 闭环）的定义：**先用最小成本把整条线走通一次**，再回来加厚。你已经有了完整的任务拆解，接下来只需要每天推进一张卡。
