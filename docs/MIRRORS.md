@@ -89,15 +89,36 @@ setx HF_ENDPOINT "https://hf-mirror.com"
 
 ## 4. 实测结果（**由 #22 回填**）
 
-| 资源 | 路线 | 实测结果 | 实测人 | 日期 |
+### 4.1 原始探测（8 个端点，单点超时 5s）
+
+| 端点 | 用途 | 结果 | 耗时 |
+|---|---|---|---|
+| `pypi.tuna.tsinghua.edu.cn/simple/` | pip 源 | ✅ 200 | 635 ms |
+| `mirrors.aliyun.com/pytorch-wheels/` | PyTorch 轮子镜像 | ✅ 200 | 173 ms |
+| `download.pytorch.org/whl/cu128` | PyTorch 官方索引 | ✅ 200 | 1411 ms |
+| `hf-mirror.com` | HF 模型/数据集 | ✅ 200 | 421 ms |
+| `www.modelscope.cn` | 国内模型社区 | ✅ 200 | 662 ms |
+| `zenodo.org` | 合成数据集托管 | ✅ 200 | 747 ms |
+| `github.com` | 代码与 Releases | ✅ 200 | 255 ms |
+| `arxiv.org` | 论文 | ✅ 200 | 338 ms |
+
+**结论**：**8/8 可访问**，无需启用 §5 的止损路线。
+
+### 4.2 按资源的实际使用结果
+
+| 资源 | 实际走的路线 | 结果 | 实测人 | 日期 |
 |---|---|---|---|---|
-| pip 源 | 清华 tuna | 待测 | — | — |
-| PyTorch cu128 | 阿里云 / 官方 | 待测 | — | — |
-| HF 模型 | hf-mirror | 待测 | — | — |
-| 合成数据集 | Zenodo | 待测 | — | — |
-| insightface 模型包 | 加速前缀 / HF 镜像 | 待测 | — | — |
+| pip 源 | 清华 tuna | ✅ 实测可用（注：裸浏览器 UA 探测会返回 403，但 pip 本身正常，**不要被这个 403 误导**） | A | 2026-09-23 |
+| PyTorch cu128 | 官方索引 `download.pytorch.org/whl/cu128` | ✅ 装上 `torch 2.11.0+cu128`，`sm_120` 在架构列表里 | A | 2026-09-23 |
+| HF 模型 | hf-mirror（配合 `HF_ENDPOINT`） | ✅ 连通；尚未实际下载大模型（W3/W4 才用） | A | 2026-09-23 |
+| insightface 模型包 | insightface 自动下载（走 GitHub Releases） | ✅ `buffalo_l` 下载成功，无需加速前缀 | A | 2026-09-23 |
+| 合成数据集 | Zenodo | ✅ 连通；尚未实际下载（W3 才用） | A | 2026-09-23 |
+| conda 包 | 官方源 `repo.anaconda.com` | ✅ 未配镜像也能用（282 ms），**因此本项目不配 conda 镜像，少一个出错点** | A | 2026-09-23 |
 
 > 每次成功或失败都记一行。**这是你们项目里最容易被忽略、但最省时间的一份文档。**
+>
+> ⚠️ 注意：这台机器的网络**比预期好得多**（境外源基本都能通）。B 的机器**未必一样**，
+> 所以 B 必须自己跑一遍 §3 的探测并在这里补一行 —— **不要假设两台机器的网络环境相同**。
 
 ---
 
