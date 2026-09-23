@@ -1,6 +1,6 @@
 # Issue 索引（自动生成，请勿手工修改）
 
-> 由 `tools/file_issues.mjs` 于 2026-09-22T09:01:22.693Z 生成，共 22 条。
+> 由 `tools/file_issues.mjs` 于 2026-09-23T10:12:50.767Z 生成，共 22 条。
 > 重新生成：`GH_TOKEN=<token> node tools/file_issues.mjs`（已存在的 Issue 会自动跳过）。
 
 | # | 标题 | 里程碑 | 标签 | 任务卡 |

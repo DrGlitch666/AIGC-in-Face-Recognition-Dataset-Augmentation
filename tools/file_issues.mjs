@@ -83,11 +83,14 @@ function parseFrontMatter(raw) {
   if (!raw.startsWith('---')) return { data: {}, body: raw };
   const end = raw.indexOf('\n---', 3);
   if (end === -1) return { data: {}, body: raw };
-  const fm = raw.slice(3, end);
+  // ⚠️ 必须先把 \r 去掉：CRLF 文件在切片后最后一行会留下一个尾部 \r，
+  //    而 JS 正则里的 `.` **不匹配 \r**（\r 也是行终止符），会导致该行解析失败、
+  //    字段静默变成 undefined。这是真实踩过的坑（曾导致任务卡的 milestone 丢失）。
+  const fm = raw.slice(3, end).replace(/\r/g, '');
   const body = raw.slice(raw.indexOf('\n', end + 1) + 1).replace(/^\s*\n/, '');
   const data = {};
-  for (const line of fm.split(/\r?\n/)) {
-    const m = line.match(/^([A-Za-z_][\w-]*):\s*(.*)$/);
+  for (const line of fm.split('\n')) {
+    const m = line.trimEnd().match(/^([A-Za-z_][\w-]*):\s*(.*)$/);
     if (!m) continue;
     const key = m[1];
     const value = m[2].trim();
