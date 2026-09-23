@@ -1,0 +1,25 @@
+# ============================================================
+# profile CPU —— 无独显 / macOS / 集显  ← B 的机器属于这一档
+# 能做：数据管线、评测（小规模，慢）、筛选、网站、文档
+# 不做：本地生成、正规训练
+# ============================================================
+
+runtime:
+  device: cpu
+  num_workers: 4
+  max_vram_gb: 0
+  # 本档位本来就只有 CPU（B 的机器）
+  onnx_providers: [CPUExecutionProvider]
+  onnx_det_size: 320        # CPU 上 320 比 640 快约 4 倍，评测够用
+
+train:
+  batch_size: 16
+  grad_accum: 8
+  amp: false               # CPU 上 AMP 收益有限，且容易出兼容问题
+
+gen:
+  image_size: 384
+  batch: 1
+  fp16: false
+  cpu_offload: false
+  enabled: false           # 默认关闭本地生成，需要时显式打开

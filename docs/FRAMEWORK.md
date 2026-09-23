@@ -192,7 +192,7 @@ flowchart TD
 
 ## 4. 技术选型
 
-> ⚠️ 以下版本信息在 #1 里会被**实际验证并回填**（`reports/env_report.md`）。不要盲信文档，以**你自己那台机器**上的实测为准。
+> ⚠️ 以下版本信息在 #1 里会被**实际验证并公示**（结果贴到 Issue #1 评论；环境自检工具是一次性脚手架，**不进仓库**）。不要盲信文档，以**你自己那台机器**上的实测为准。
 >
 > 🔧 **本项目由两人在两台不同配置的机器上开发**，所以本节的原则是：**"科学设定"统一，"资源设定"随机器；能用同一套代码，不要写死任何机器相关的参数。**
 
@@ -200,7 +200,7 @@ flowchart TD
 |---|---|---|---|
 | Python 环境 | Conda / Miniconda + **Python 3.11 或 3.12** | **两人必须用同一个 Python 次版本**（3.11 或 3.12 二选一），否则依赖解析结果会不同。不建议 3.13+（wheel 覆盖不全） | uv / venv（若两人都同意） |
 | 深度学习框架 | **PyTorch**，轮子版本**按各自机器的 CUDA 选** | 不是所有人都要 cu128：老卡选 cu121/cu126，新卡（RTX 50 系 = sm_120）必须 **cu128 且 PyTorch ≥ 2.7**；没有独显就用 CPU 轮子 | 统一走 CPU（仅作降级，速度差几十倍） |
-| ONNX Runtime | `onnxruntime-gpu`（Windows/Linux + NVIDIA） | **macOS 用 CoreML EP、无独显用 `onnxruntime`（CPU）**；GPU 版与 CPU 版**不要同时装** | 直接用 PyTorch 推理 |
+| ONNX Runtime | **`onnxruntime-gpu==1.26.0`**（Windows/Linux + NVIDIA） | ⚠️ **必须钉死版本**：PyPI 上的 GPU 包**从 1.27 起默认改为 CUDA 13 构建**，与 cu128 的 torch（CUDA 12.8）不匹配 → CUDA EP 加载失败并**静默退回 CPU**；官方兼容表里 **1.21.x~1.26.x = CUDA 12.8 + cuDNN 9**，正好对上。⚠️ 代码里**创建 InferenceSession 前必须先 `import torch`**（torch 会注册自带的 CUDA DLL 目录），否则同样退回 CPU | macOS 用 CoreML EP、无独显用 `onnxruntime`（CPU）；GPU 版与 CPU 版**不要同时装** |
 | 识别基线（不训练） | **insightface + ONNX Runtime**（`buffalo_l`/`antelopev2`） | 模型包仅限**非商业研究**；`FaceAnalysis` 的 provider 顺序因平台而异，**必须打印 providers 确认** | `facenet-pytorch` |
 | 识别模型（训练） | 自己实现的 **ResNet(iresnet) + ArcFace**（PyTorch） | 显存不同 → **batch 由 profile 决定**（见 §4.3），不是写死在代码里 | insightface `arcface_torch`（较重） |
 | 生成（A 轨·主力） | **Arc2Face**（SD1.5 + 纯 ArcFace embedding 条件）或 **IP-Adapter-FaceID（SD1.5）** | 512×512、显存友好；**显存 < 8 GB 时降到 384×384 或改用 B 轨** | IDiff-Face（128²，CC BY-NC-SA）、DCFace（112~128²） |
@@ -218,7 +218,7 @@ flowchart TD
 
 ### 4.1 硬件分层：三档配置档案（A / B / C）
 
-既然两台机器不一样，就**不要按机器写代码，而是按"能力档位"配置**。每台机器在 `reports/env_report.md` 里声明自己属于哪一档（#1 的产出），之后所有参数都由档位推导（#20）。
+既然两台机器不一样，就**不要按机器写代码，而是按"能力档位"配置**。每台机器在 Issue #1 评论里公示自己的档位判定（#1 的产出；工具与报告不进仓库），之后所有参数都由档位推导（#20）。
 
 | 档位 | 典型机器 | 能跑什么 | 生成默认 | 训练默认 | 不能做什么 |
 |---|---|---|---|---|---|
@@ -241,7 +241,7 @@ flowchart TD
 | 路径、缓存目录、显存上限等**只写在 `configs/local.<machine>.yaml`** 且**不入库** | 机器私有设定不该污染仓库 |
 | 注意力实现统一用 **PyTorch 自带的 SDPA** | Windows 无 FlashAttention；xformers 对 Blackwell 的支持很晚才到，别按旧教程装 |
 | 数据与权重**不入库**，靠下载脚本 + 校验和复现 | 两台机器各自下载，避免几十 GB 的传输 |
-| 每台机器跑完都**回填 `reports/env_report.md`** | 出问题时能快速判断"是谁的环境" |
+| 每台机器跑完都把**档位与版本信息贴到 Issue #1** | 出问题时能快速判断"是谁的环境" |
 
 ### 4.3 配置分层（把"泛化"落到工程上）
 
@@ -349,7 +349,7 @@ AIGC-in-Face-Recognition-Dataset-Augmentation/
 ├─ docs/              # 文档：FRAMEWORK / WORKFLOW / LEARNING / REFERENCES / BACKGROUND / RESULTS / ETHICS / issues
 ├─ notebooks/         # 探索性分析（不参与复现链路）
 ├─ results/           # 【进 Git】runs/<exp_id>/metrics.json + 图表 + summary.csv
-├─ reports/           # 【进 Git】env_report.md / 各类分析报告与图表
+├─ reports/           # 【进 Git】分析报告与图表（环境自检类结果贴 Issue，不落仓库）
 ├─ scripts/           # 一键入口：setup / download / generate / filter / train / eval / export
 ├─ src/aigcfr/        # 核心包
 │  ├─ data/           # 下载、对齐、manifest 读写与校验
@@ -512,7 +512,7 @@ class FaceGenerator:              # 伪代码，见 issue #9 / #10
 
 **在花大力气做任何一层之前，先用最小成本把这条线走通一次**：
 
-1. 环境跑起来，`python scripts/check_env.py` 输出 GPU 与库版本报告。→ #1
+1. 环境跑起来，一条自检命令输出 GPU 与库版本，结果贴到 Issue #1。→ #1
 2. 下载 LFW，挑 20 个身份、每身份 ~15 张，切成 train/test；写进 manifest。→ #3
 3. 用 50 张真实图训练一个「能跑就行」的 ArcFace，在 LFW 上测出几个数字（很难看也没关系）。→ #6 #7
 4. 用身份条件扩散对 5 个身份各生成 5 张图，人工看一眼像不像。→ #10

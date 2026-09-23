@@ -1,0 +1,25 @@
+# ============================================================
+# conda 环境定义（通用层，进仓库）
+# ------------------------------------------------------------
+# 用法：
+#     conda env create -f environment.yml
+#     conda activate aigcfr
+#     python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+#     python -m pip install -r requirements.txt
+#
+# 设计说明：
+#   * 这里**只钉 Python 与 pip 本身**，其余 Python 依赖全部走 pip（requirements.txt）。
+#     原因是两台机器的 CUDA 版本不同，torch 必须按机器单独选轮子，
+#     放进 conda 依赖里会让环境定义无法通用。
+#   * 机器私有依赖放 environment.local.yml（已被 .gitignore 忽略）。
+#   * 精确版本见 requirements-lock.<machine>.txt（每台机器一份，torch 的本地版本号不同）。
+# ============================================================
+
+name: aigcfr
+
+channels:
+  - defaults
+
+dependencies:
+  - python=3.11
+  - pip

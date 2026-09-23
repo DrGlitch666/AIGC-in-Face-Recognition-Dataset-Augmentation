@@ -67,8 +67,8 @@ milestone: "M0 脚手架与地基"
 
 - [ ] 目录里预留配置三层（详细实现见 {{#20-hardware-profiles}}）：
       `configs/base.yaml`（科学设定）、`configs/profiles/{a,b,cpu}.yaml`（档位资源设定）、`configs/local.template.yaml`（机器私有模板）
-- [ ] `.gitignore` **必须**包含 `configs/local.*.yaml`（保留 `local.template.yaml`）、`environment.local.yml`、`reports/env_report.*.md` 中的机器私有部分（如需要）
-- [ ] 增加 `reports/` 目录（放 `env_report.<machine>.md`、各类分析报告与图表），**入库**
+- [ ] `.gitignore` **必须**包含 `configs/local.*.yaml`（保留 `local.template.yaml`）、`environment.local.yml`
+- [ ] 增加 `reports/` 目录（放分析报告与图表），**入库**；⚠️ 环境自检/连通性这类"配环境"的过程产物**不进仓库**（结果贴 Issue）
 - [ ] 加 `.github/pull_request_template.md`：必填「在哪台机器/哪个档位验证过」+「复现命令」（见 {{#19-collaboration-protocol}}）
 - [ ] 代码里**禁止出现绝对路径**；一切路径走配置，且路径类配置只允许出现在 `local.*.yaml`
 - [ ] `environment.yml` 只写**通用层**（两台机器共有），机器私有依赖放 `environment.local.yml`（不入库）

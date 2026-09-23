@@ -27,10 +27,10 @@ milestone: "M0 脚手架与地基"
 
 ## 任务清单
 
-- [ ] **档位判定**（与 {{#01-env-setup}} 合并产出）：`scripts/check_env.py` 除版本信息外，还要输出：
+- [ ] **档位判定**（与 {{#01-env-setup}} 合并产出，**结果贴 Issue、不落仓库**）：除版本信息外，还要输出：
   - [ ] 是否有可用 CUDA、GPU 名称与显存总量
   - [ ] 判定结果 `profile: a|b|cpu`（判定规则写在配置里，不写死在代码里）
-  - [ ] 写入 `reports/env_report.md`，供别人查看
+  - [ ] 把判定结果贴到 Issue #1 评论，供对方查看
 - [ ] **配置三层骨架**：
   - [ ] `configs/base.yaml`：**科学设定**——数据来源、manifest 路径（相对）、模型结构、loss、epoch、评测集、seed
   - [ ] `configs/profiles/a.yaml` / `b.yaml` / `cpu.yaml`：**资源设定**——batch_size、grad_accum、image_size、amp、num_workers、offload、生成分辨率
@@ -55,7 +55,7 @@ milestone: "M0 脚手架与地基"
 
 ## 验收标准（Definition of Done）
 
-- [ ] 两台机器各跑一次 `python scripts/check_env.py`，都能得到明确的 `profile` 判定，并写入各自的 `reports/env_report.md`
+- [ ] 两台机器各跑一次档位判定，都能得到明确的 `profile`，并把结果贴到 Issue #1
 - [ ] **同一条命令在两台机器上都能跑通**（无需改代码）：
       `python scripts/train.py --config configs/exp/e1-real-only-seed0.yaml --profile auto`
 - [ ] `configs/local.*.yaml` 不在 `git status` 里出现；`local.template.yaml` 在
@@ -68,10 +68,10 @@ milestone: "M0 脚手架与地基"
 
 - `configs/base.yaml`、`configs/profiles/{a,b,cpu}.yaml`、`configs/local.template.yaml`
 - `src/aigcfr/utils/config.py`（三层合并 + 保护规则）、`src/aigcfr/utils/hardware.py`（档位判定与降级）
-- `scripts/check_env.py`（档位判定部分，与 {{#01-env-setup}} 合并）
+- `src/aigcfr/utils/config.py` 里的 `detect_vram_gb()` / `decide_profile()`（档位判定，与 {{#01-env-setup}} 合并）
 - `docs/CONFIG.md`
 - `tests/test_config.py`
-- 两台机器的 `reports/env_report.md`
+- 两台机器贴在 Issue #1 的档位判定记录
 
 ## 依赖
 

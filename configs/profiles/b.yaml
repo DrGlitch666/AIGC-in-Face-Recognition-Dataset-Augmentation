@@ -1,0 +1,32 @@
+# ============================================================
+# profile B —— 小显存独显（6 ~ 12 GB）  ← A 的 RTX 5060 Laptop 8 GB 属于这一档
+# 「资源设定」：batch 变小、开梯度累积、生成分辨率受控。
+# ============================================================
+
+runtime:
+  device: cuda
+  num_workers: 4
+  # 8 GB 是"总量"，桌面显示还要占一部分，所以留出余量避免把系统拖卡
+  max_vram_gb: 7.5
+  # ONNX Runtime 的 provider 顺序（人脸检测/识别推理用）
+  # ✅ 2026-09 已修复并实测通过：
+  #    onnxruntime-gpu 从 **1.27 起 PyPI 上默认改为 CUDA 13 构建**，与 torch cu128（CUDA 12.8）不匹配
+  #    → CUDA EP 加载失败（缺 cublasLt64_13.dll / cudart64_13.dll），静默退回 CPU。
+  #    解决：钉死 **onnxruntime-gpu==1.26.0**（官方兼容表：1.21.x~1.26.x = CUDA 12.8 + cuDNN 9，
+  #    与 torch cu128 完全一致），并复用 torch 自带的 CUDA DLL，无需另装 CUDA。
+  # ⚠️ 代码约束：**创建 InferenceSession 之前必须先 `import torch`**。
+  #    torch 导入时会把自带的 CUDA DLL 目录注册进 Windows DLL 搜索路径，ORT 才能加载 CUDA EP；
+  #    顺序反了会静默退回 CPU（不报错，只是慢）。也可显式调用 onnxruntime.preload_dlls()。
+  onnx_providers: [CUDAExecutionProvider, CPUExecutionProvider]
+  onnx_det_size: 640
+
+train:
+  batch_size: 64
+  grad_accum: 2            # 等效 batch = 64 × 2 = 128
+  amp: true
+
+gen:
+  image_size: 512          # 显存吃紧时降到 384
+  batch: 1
+  fp16: true
+  cpu_offload: false       # 真 OOM 了再开（会变慢）

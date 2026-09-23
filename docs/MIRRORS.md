@@ -68,7 +68,7 @@ setx HF_ENDPOINT "https://hf-mirror.com"
 
 ## 3. 连通性预检（**第一天就做，10 分钟**）
 
-写一个 `scripts/check_network.py`（或临时用 PowerShell 版本），对下面每个端点做一次 **5 秒超时的 HEAD/GET**，输出一张「通 / 不通 / 慢」的表：
+用一个**一次性探测脚本**（放在项目之外，例如 `F:\aigcfr\_cache\tools`，**不进仓库**）对下面每个端点做一次 **5 秒超时**的探测，输出一张「通 / 不通 / 慢」的表：
 
 | 端点 | 用途 |
 |---|---|
@@ -82,7 +82,7 @@ setx HF_ENDPOINT "https://hf-mirror.com"
 | `https://arxiv.org` / `https://ar5iv.labs.arxiv.org` | 论文 |
 | `http://vis-www.cs.umass.edu/lfw/` | LFW 官方（大概率不通，用于确认需要镜像） |
 
-**产出** `reports/network_report.<machine>.md`：一张表 + 一句结论（例如「HF 走 hf-mirror 可用，GitHub 需加速，GDrive 放弃」）。
+**产出**：一张表 + 一句结论 —— **回填到本文档 §4 的实测结果表**，并在 Issue #22 评论里贴一份（例如「HF 走 hf-mirror 可用，GitHub 需加速，GDrive 放弃」）。
 这份报告**两台机器各一份**，直接决定后面每一步用哪条路线。
 
 ---

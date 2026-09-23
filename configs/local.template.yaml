@@ -1,0 +1,37 @@
+# ============================================================
+# local 配置模板 —— 复制成 configs/local.<你的机器>.yaml 再改
+#
+# ⚠️ 这个文件（local.<机器>.yaml）是**机器私有**的，已被 .gitignore 忽略：
+#    每台机器一份、互不影响、不进仓库。
+#
+# ⚠️ 只允许出现下面这四类顶层键：paths / runtime / cache / env
+#    如果你想改 train.* / model.* / eval.* / seed —— 那是"科学设定"，
+#    必须改 configs/base.yaml 或 configs/exp/*.yaml，并且让另一台机器也知道。
+#    加载器会直接报错拦住你（见 src/aigcfr/utils/config.py 的 guard_local）。
+# ============================================================
+
+paths:
+  # 数据集根目录（原始 / 中间 / 处理后）
+  data_root: null          # 例：F:/aigcfr/data
+  # 预训练模型权重（SD1.5、insightface 等）
+  models_root: null        # 例：F:/aigcfr/models
+  # HuggingFace 缓存
+  hf_cache: null           # 例：F:/aigcfr/hf
+  # 训练产生的 checkpoint
+  ckpt_root: null          # 例：F:/aigcfr/ckpt
+  # 生成的合成图
+  synth_root: null         # 例：F:/aigcfr/synth
+
+runtime:
+  # 显存上限（GB）。留出余量，避免桌面/系统被拖卡
+  max_vram_gb: 7.5
+  # 需要时覆盖 profile 的线程数（纯性能参数，允许）
+  # num_workers: 4
+
+cache:
+  # 通用缓存根目录（下载的压缩包、临时解压等）
+  root: null               # 例：F:/aigcfr/_cache
+
+env:
+  # 需要时在这里放非敏感的环境开关（不要放密钥）
+  HF_ENDPOINT: https://hf-mirror.com

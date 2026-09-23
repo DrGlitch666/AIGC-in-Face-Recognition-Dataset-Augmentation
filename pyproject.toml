@@ -1,0 +1,11 @@
+[project]
+name = "aigcfr"
+version = "0.1.0"
+description = "AIGC 用于人脸识别数据集扩充：数据 → 生成 → 筛选 → 训练 → 评测 → 展示"
+requires-python = ">=3.11"
+
+# pytest 配置：让 tests/ 里能直接 import src/ 下的包（不需要 pip install -e .）
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"

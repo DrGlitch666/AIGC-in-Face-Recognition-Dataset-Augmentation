@@ -1,0 +1,19 @@
+# ============================================================
+# E1 基线实验：只用真实数据训练
+# 这个文件是「科学设定」的一部分，两人必须一致。
+# exp_id 命名规范：{阶段}-{生成器}-{比例}-{seed}
+# ============================================================
+
+exp_id: e1-real-only-seed0
+
+seed: 0
+
+data:
+  manifest: data/manifests/toy_train.jsonl
+
+train:
+  real_only: true
+  mix_ratio: 0.0
+
+eval:
+  benchmarks: [lfw]

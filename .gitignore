@@ -1,0 +1,53 @@
+# ============ 数据与产物：绝不入库 ============
+# 只放行清单文件（manifest 是数据的"索引"，必须在仓库里，两人靠它对齐）
+data/*
+!data/manifests/
+data/manifests/.*.tmp
+
+outputs/
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+*.rec
+*.idx
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# 过程产物
+reports/**/*.tmp
+reports/figures/*_draft.*
+
+# ============ 机器私有配置：每台机器一份，不进仓库 ============
+configs/local.*.yaml
+!configs/local.template.yaml
+environment.local.yml
+
+# ============ Python ============
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# ============ 网站 ============
+site/node_modules/
+site/dist/
+site/.vite/
+
+# ============ 编辑器 / 系统 ============
+.vscode/
+!.vscode/settings.json.example
+.idea/
+*.swp
+*~
+Thumbs.db
+Desktop.ini

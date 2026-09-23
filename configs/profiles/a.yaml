@@ -1,0 +1,25 @@
+# ============================================================
+# profile A —— 大显存独显（>= 12 GB）
+# 这是「资源设定」：只放"因为硬件不同而必须不同"的参数。
+# 它不影响科学结论，但会被记录进 metrics.json 的 hardware 块。
+# ============================================================
+
+runtime:
+  device: cuda
+  num_workers: 8
+  max_vram_gb: 11.0
+  # 同 b.yaml：钉 onnxruntime-gpu==1.26.0（CUDA 12.8 构建，与 torch cu128 匹配），GPU 优先。
+  # ⚠️ 创建 session 前必须先 import torch（详见 b.yaml 的完整说明）。
+  onnx_providers: [CUDAExecutionProvider, CPUExecutionProvider]
+  onnx_det_size: 640
+
+train:
+  batch_size: 128
+  grad_accum: 1
+  amp: true
+
+gen:
+  image_size: 512
+  batch: 2
+  fp16: true
+  cpu_offload: false

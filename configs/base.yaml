@@ -1,0 +1,41 @@
+# ============================================================
+# base.yaml —— ① 科学设定（两人必须完全一致）
+# ------------------------------------------------------------
+# 这里放的是"影响实验结论"的东西：数据、模型、损失、训练轮数、评测集、随机种子。
+# 任何一台机器都不允许用 local 配置覆盖这里的字段。
+#
+# 三层合并顺序（后面的覆盖前面的）：
+#   base.yaml  →  profiles/<档位>.yaml  →  configs/exp/<实验>.yaml  →  local.<机器>.yaml
+# ============================================================
+
+seed: 0
+
+data:
+  # manifest 是数据的唯一索引（每行一个 JSON），见 docs/FRAMEWORK.md §3.3 契约 A
+  manifest: data/manifests/toy_train.jsonl
+  # 对齐后的标准尺寸：ArcFace 模板，训练与评测必须一致
+  image_size: 112
+  align: arcface_112
+
+model:
+  arch: iresnet18          # W2 先用小模型跑通，跑通后可换 iresnet50
+  emb_dim: 512
+  loss: arcface
+  margin: 0.5
+  scale: 64.0
+
+train:
+  epochs: 10
+  lr: 0.1
+  optimizer: sgd
+  momentum: 0.9
+  weight_decay: 5.0e-4
+  # 数据组成（E1 基线：只用真实数据）
+  real_only: true
+  mix_ratio: 0.0           # 合成图占比 = 合成图数 / (真实图数 + 合成图数)，仅 real_only=false 时有意义
+
+eval:
+  # W2 先只做 LFW；后续再加 cfp_fp / agedb_30
+  benchmarks: [lfw]
+  protocol: lfw_10fold
+  flip_test: true

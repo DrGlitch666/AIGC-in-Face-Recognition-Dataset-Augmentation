@@ -1,0 +1,44 @@
+# ============================================================
+# 通用依赖层（两台机器共用，进仓库）
+# ------------------------------------------------------------
+# ⚠️ PyTorch **不在这里**：它必须用 cu128 专用索引单独安装
+#    （RTX 50 系 = sm_120，必须 PyTorch >= 2.7 + cu128）：
+#
+#      python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+#
+# 完整安装顺序见 docs/SETUP.md。摘要：
+#      1) conda create -n aigcfr python=3.11 -y
+#      2) conda activate aigcfr
+#      3) pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+#      4) pip install -r requirements.txt
+#
+# 这里写"范围"，精确版本见 requirements-lock.<machine>.txt
+# （由 pip freeze 生成，**每台机器一份**：A 的带 +cu128，B 的是 CPU 版，不能混用）。
+# ============================================================
+
+# --- 人脸识别（推理用，不训练）---
+# ⚠️ onnxruntime-gpu 必须钉在 1.26.0：
+#    PyPI 上的 GPU 包**从 1.27 起默认改为 CUDA 13 构建**，与 cu128 的 torch（CUDA 12.8）不匹配
+#    → CUDA EP 加载失败（缺 cublasLt64_13.dll 等），且**不报错、静默退回 CPU**。
+#    官方兼容表：onnxruntime 1.21.x ~ 1.26.x = CUDA 12.8 + cuDNN 9，正好对上 torch cu128。
+#    （无独显的机器请改装 CPU 版：pip install onnxruntime）
+onnxruntime-gpu==1.26.0
+insightface
+opencv-python>=4.8
+
+# --- 图像与工具 ---
+numpy>=1.26
+Pillow>=10.0
+tqdm>=4.66
+PyYAML>=6.0
+matplotlib>=3.8
+
+# --- 生成（W3/W4 才用，先装好省一趟）---
+diffusers>=0.30
+transformers>=4.40
+accelerate>=0.30
+safetensors>=0.4
+huggingface_hub>=0.23
+
+# --- 测试 ---
+pytest>=8.0

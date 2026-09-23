@@ -24,8 +24,8 @@ milestone: "M0 脚手架与地基"
 
 ## 任务清单
 
-- [ ] 写 `scripts/check_network.py`（或 PowerShell 版），对 [`docs/MIRRORS.md`](../MIRRORS.md) §3 列出的端点做**超时 5 秒**的探测
-- [ ] **两台机器各跑一次**，产出 `reports/network_report.<machine>.md`（一张表 + 一句结论）
+- [ ] 用一个**一次性探测命令**（脚本放项目之外，如 `F:\aigcfr\_cache\tools`，**不进仓库**）对 [`docs/MIRRORS.md`](../MIRRORS.md) §3 列出的端点做**超时 5 秒**的探测
+- [ ] **两台机器各跑一次**，把结果（一张表 + 一句结论）回填到 `docs/MIRRORS.md` §4，并贴到本 Issue 评论
 - [ ] 按 [`docs/MIRRORS.md`](../MIRRORS.md) §2 配置三件事：
   - [ ] pip 全局源（清华 tuna）
   - [ ] conda `.condarc`（清华）
@@ -41,7 +41,7 @@ milestone: "M0 脚手架与地基"
 
 ## 验收标准（Definition of Done）
 
-- [ ] `reports/network_report.<machine>.md` **两份**（各自机器），结论明确可执行
+- [ ] `docs/MIRRORS.md` §4 实测表已回填 + 两台机器各有一条 Issue 评论，结论明确可执行
 - [ ] `HF_ENDPOINT` 生效已验证（有证据：下载日志或缓存目录里出现了文件）
 - [ ] PyTorch 装好且 `torch.cuda.get_arch_list()` 含 `sm_120`（你这台机器）
 - [ ] `buffalo_l` 已下载并能跑一次人脸比对（≥1 对图片）
@@ -51,8 +51,8 @@ milestone: "M0 脚手架与地基"
 
 ## 交付物
 
-- `scripts/check_network.py`
-- `reports/network_report.<machine>.md` ×2
+- `docs/MIRRORS.md` §4 的实测结果表（回填）
+- Issue 评论：两台机器各一份连通性结论
 - 回填后的 `docs/MIRRORS.md` §4
 - 各自的 `configs/local.<machine>.yaml` 中的缓存路径配置
 

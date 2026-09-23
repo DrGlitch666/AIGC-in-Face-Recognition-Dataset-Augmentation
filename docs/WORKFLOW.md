@@ -130,8 +130,8 @@ chore/<短描述>              杂务        chore/add-gitignore-data
 所有操作尽量走统一入口，便于写进文档和 CI：
 
 ```bash
-# 环境自检（同时判定本机属于 A / B / C 哪一档，写入 reports/env_report.md）
-python scripts/check_env.py
+# 环境自检：判定本机属于 A / B / C 哪一档（一次性命令，结果贴 Issue #1，不落仓库）
+python -c "import sys; sys.path.insert(0,'src'); from aigcfr.utils.config import detect_vram_gb as v, decide_profile as d; x=v(); print('vram_gb=', x, '| profile=', d(x))"
 
 # 数据：下载 / 对齐 / 建 manifest
 python scripts/download_data.py  --config configs/data/lfw.yaml
@@ -159,7 +159,7 @@ python scripts/train.py --config configs/exp/e4-ipadapter-r25-seed0.yaml \
                         --local   configs/local.my-laptop.yaml
 ```
 
-- `--profile auto`（默认）会**读取 env_report.md 的档位判定**自动选择 a/b/cpu。
+- `--profile auto`（默认）用 `aigcfr.utils.config.decide_profile` **按显存自动判定档位**，选择 a/b/cpu。
 - `--local` **可以省略**；文件已被 `.gitignore` 忽略，每人一份、互不影响。
 - 脚本必须把**实际生效的 config/profile/local 三者合并结果与哈希**写进 `results/runs/<exp_id>/config.resolved.yaml`——这是跨机器协作能追溯的前提。
 
@@ -335,7 +335,7 @@ python scripts/train.py --config configs/exp/e4-ipadapter-r25-seed0.yaml \
 
 ### 7.4 新机器 / 新人 onboarding 清单（半天内完成）
 
-- [ ] 按 #1 建环境，产出本机的 `reports/env_report.md` 并判定档位（A/B/C）
+- [ ] 按 #1 建环境，把本机的档位判定结果贴到 Issue #1（A/B/C）
 - [ ] 按 #20 建好自己的 `configs/local.<machine>.yaml`（**不要提交**）
 - [ ] `pytest -q` 全绿（契约测试是跨机器一致性的安全网）
 - [ ] 能跑通两条最小命令：`scripts/evaluate.py --run <别人的 run>`、`scripts/summarize.py`
@@ -347,7 +347,7 @@ python scripts/train.py --config configs/exp/e4-ipadapter-r25-seed0.yaml \
 
 ## 8. 下一步（现在就做这几件事）
 
-1. **两人各自**跑 #1，把 `reports/env_report.md` 提交上去，确认各自的档位（A/B/C）。
+1. **两人各自**跑 #1，把档位判定与版本信息贴到 Issue #1，确认各自的档位（A/B/C）。
 2. 按 #19 在 Issue 里**认领职责域**，并把分工写进仓库文档。
 3. 按 #20 建配置分层的骨架（`base.yaml` + `profiles/*` + `.gitignore` 里的 `local.*`）。
 4. 按 #2 把仓库骨架建起来（目录 + `.gitignore` + 配置文件模板）。

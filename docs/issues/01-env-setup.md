@@ -21,12 +21,12 @@ milestone: "M0 脚手架与地基"
 | 没有独显 / macOS | 用 CPU 或 Apple Silicon 的人 | 需要 CPU 轮子、并按平台选择 ONNX Runtime 的 EP |
 | 装成 CPU 版 torch | 照抄别人命令的人 | `torch.cuda.is_available()` 为 `False`，训练慢几十倍 |
 
-所以本任务的产出是**每台机器一份的环境报告 + 档位判定**，让后面的所有任务都能"按档位运行"（见 {{#20-hardware-profiles}}）。
+所以本任务的产出是**每台机器一条环境自检记录 + 档位判定**（贴在本 Issue 评论里，**不落仓库文件**），让后面的所有任务都能"按档位运行"（见 {{#20-hardware-profiles}}）。
 
 ## 目标
 
 - 每台机器都有一个可复现、可销毁重建的 Python 环境。
-- 一条命令 `python scripts/check_env.py` 输出「这台机器能跑什么」的明确结论，并给出**档位判定（A / B / C）**。
+- 一条（一次性）命令输出「这台机器能跑什么」的明确结论，并给出**档位判定（A / B / C）**，结果贴到本 Issue 评论。
 
 ## 任务清单
 
@@ -39,29 +39,28 @@ milestone: "M0 脚手架与地基"
   - [ ] 装完确认 `torch.cuda.is_available()`；有卡的话再确认 `torch.cuda.get_arch_list()` 包含你显卡的架构（如 `sm_120` / `sm_89` / `sm_86`）
 - [ ] 安装其余依赖：`insightface`、`onnxruntime-gpu`（或按平台用 `onnxruntime` / CoreML EP）、`opencv-python`、`numpy`、`pillow`、`tqdm`、`pyyaml`、`pytest`、`matplotlib`
       ⚠️ **不要同时装 `onnxruntime` 和 `onnxruntime-gpu`**（会冲突，且常常静默退回 CPU）
-- [ ] 编写 `scripts/check_env.py`，输出：
+- [ ] 做一次**环境自检**（一次性命令即可，**不写成仓库里的脚本**）：
   - [ ] 版本信息：Python / torch / torchvision / CUDA / cuDNN / onnxruntime / 关键库
   - [ ] 硬件信息：OS 与平台、GPU 名称与**显存总量**、CUDA 可用性、ONNX Runtime 实际 providers
   - [ ] **一次真实的张量运算**（如 1024×1024 矩阵乘）确认真的能算，而不是只报告"可用"
-  - [ ] **档位判定** `profile: a | b | cpu`（判定规则写在配置里，不写死在代码里）
-  - [ ] 生成 `reports/env_report.md`：版本表 + 硬件表 + 档位判定 + 已知问题
+  - [ ] **档位判定**：直接调用 `src/aigcfr/utils/config.py` 的 `detect_vram_gb()` / `decide_profile()`
 - [ ] 写 `docs/SETUP.md`：从零到能跑的完整步骤，**并标注哪些步骤是"每台机器不同"的**
 - [ ] 冻结依赖：导出 `environment.yml`（**通用层，入库**）；如有机器私有依赖，写进 `environment.local.yml`（**不入库**）
-- [ ] 把 `reports/env_report.md` 提交到仓库（**两台机器各一份**，文件名带机器标识，如 `env_report.laptop-b.md`）
+- [ ] 把自检输出 + 档位判定**贴到本 Issue 评论**（两台机器各一条）
+- [ ] ⚠️ **关于过程产物**：配环境用的自检脚本与报告属于**一次性脚手架，不进仓库**（仓库只放项目本身）；需要时放到项目之外，例如 `F:\aigcfr\_cache\tools`
 
 ## 验收标准（Definition of Done）
 
-- [ ] `python scripts/check_env.py` 退出码为 0，输出里能看到 GPU 名称（或明确写出"无可用 GPU，判定为 cpu 档"）
-- [ ] `reports/env_report.<machine>.md` **两台机器各一份**，每份都包含：版本表、硬件表、**档位判定**、最终结论（可用 / 降级可用 / 不可用）
+- [ ] 自检输出里能看到 GPU 名称（或明确写出"无可用 GPU，判定为 cpu 档"），且**已贴到本 Issue 评论**
+- [ ] **两台机器各有一条**自检评论，每条包含：版本表、硬件表、**档位判定**、最终结论（可用 / 降级可用 / 不可用）
 - [ ] `docs/SETUP.md` 里写清了每个包**从哪个源**装的，并明确标出"因机器而异"的步骤
 - [ ] `environment.yml` 入库且能被另一台机器成功创建环境（**通用层不依赖任何一台机器的私有配置**）
-- [ ] 同一份 `check_env.py` 在**两台机器上都能跑**（不需要改代码）
+- [ ] 两台机器都能跑通同一条自检命令（不需要改代码）
 - [ ] 两人互相确认：各自档位是什么、后面谁负责哪部分（衔接 {{#19-collaboration-protocol}}）
 
 ## 交付物
 
-- `scripts/check_env.py`
-- `reports/env_report.<machine>.md`（两台机器各一份）
+- Issue 评论：两台机器各一条环境自检记录 + 档位判定（**不新增仓库文件**）
 - `docs/SETUP.md`
 - `environment.yml`（+ 私有的 `environment.local.yml`，不入库）
 
