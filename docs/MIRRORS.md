@@ -120,6 +120,21 @@ setx HF_ENDPOINT "https://hf-mirror.com"
 > ⚠️ 注意：这台机器的网络**比预期好得多**（境外源基本都能通）。B 的机器**未必一样**，
 > 所以 B 必须自己跑一遍 §3 的探测并在这里补一行 —— **不要假设两台机器的网络环境相同**。
 
+### 4.3 B 机器实测（Windows / 无独显，2026-09-24）
+
+| 端点 | 用途 | 结果 | 耗时 |
+|---|---|---|---|
+| `pypi.tuna.tsinghua.edu.cn/simple/` | pip 源 | ✅ 200（本次较慢） | 35447 ms |
+| `mirrors.aliyun.com/pytorch-wheels/` | PyTorch 轮子镜像 | ✅ 200 | 3467 ms |
+| `download.pytorch.org/whl/cu128` | PyTorch 官方索引 | ✅ 200 | 771 ms |
+| `hf-mirror.com` | HF 模型/数据集 | ✅ 200 | 1063 ms |
+| `www.modelscope.cn` | 国内模型社区 | ✅ 200 | 3394 ms |
+| `zenodo.org` | 合成数据集托管 | ✅ 200 | 2128 ms |
+| `github.com` | 代码与 Releases | ✅ 200 | 4313 ms |
+| `arxiv.org` | 论文 | ✅ 200 | 1172 ms |
+
+**B 机结论**：8/8 端点均可访问，当前无需启用 §5 止损路线。清华 PyPI 本次 HTTP 探测耗时异常偏高，但 pip 已成功配置为清华源，后续以实际 `pip install` 表现为准。HF 使用 `HF_ENDPOINT=https://hf-mirror.com`。
+
 ---
 
 ## 5. 如果连镜像都不通（止损路线）
