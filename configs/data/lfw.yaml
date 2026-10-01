@@ -1,0 +1,38 @@
+# ============================================================
+# LFW 数据集下载配置（任务卡 #3）
+# ------------------------------------------------------------
+# ⚠️ 官方站点 vis-www.cs.umass.edu 在 2026-09 实测 **DNS 解析失败**，
+#    所以改用 HuggingFace 镜像（经 hf-mirror 中转）。
+#
+# 该镜像仓库同时含图片与官方 pairs.txt，且已校验：
+#   pairs.txt 共 6000 对 = 3000 同人 + 3000 异人，10 折 —— 与官方协议一致。
+#
+# 用法：
+#   python scripts/download_data.py --config configs/data/lfw.yaml
+#   python scripts/download_data.py --config configs/data/lfw.yaml --dry-run
+# ============================================================
+
+name: lfw
+
+# 下载到哪里（相对 configs/local.<machine>.yaml 里的 paths.data_root）
+dest_subdir: raw/lfw
+
+# 依次尝试，第一个成功的就用（镜像挂了就自动换下一个）
+sources:
+  - name: hf-mirror
+    base_url: https://hf-mirror.com/datasets/DerrickUnleashed/LFW/resolve/main
+    files:
+      - pairs.txt          # 官方 6000 对协议（评估用，必需）
+      - lfw.tgz            # 13233 张原图（训练+评估用，必需）
+
+# 可选：填上 sha256 就能做完整性校验（第一次下完后脚本会打印实际值，可回填）
+checksums: {}
+
+# 下完自动解压（.tgz / .tar.gz / .zip）
+extract: true
+
+notes: |
+  * lfw.tgz 解压后是 lfw/<身份名>/<身份名>_0001.jpg 的目录结构（5749 个身份）
+  * 我们**不使用**官方预切好的 pair 图片，而是自己用 buffalo_l 做检测+对齐，
+    以保证训练与评测走**完全相同的对齐流程**（见 docs/FRAMEWORK.md §5.2）
+  * 原始图片不进 Git（.gitignore 已排除 data/）

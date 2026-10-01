@@ -134,6 +134,18 @@ def _resolve(path_like: str | Path, config_dir: Path, subdir: str | None = None)
     return from_root  # 交给 _read_yaml 报"不存在"
 
 
+def find_local_config(config_dir: str | Path | None = None) -> Path | None:
+    """自动定位本机的私有配置 `configs/local.<machine>.yaml`（排除 template）。
+
+    两台机器各有一份、文件名不同（local.a.yaml / local.b.yaml），
+    只要存在**唯一**一份就直接用它 —— 这样所有脚本都不必要求传 `--local`。
+    存在 0 份或 ≥2 份（命名混乱）时返回 None，由调用方决定怎么处理。
+    """
+    cfg_dir = Path(config_dir) if config_dir else CONFIG_DIR
+    cands = sorted(p for p in cfg_dir.glob("local.*.yaml") if p.name != "local.template.yaml")
+    return cands[0] if len(cands) == 1 else None
+
+
 def load_config(
     exp_path: str | Path | None = None,
     profile: str = "auto",
@@ -146,7 +158,7 @@ def load_config(
     ----
     exp_path   : 实验配置，例如 "configs/exp/e1-real-only-seed0.yaml"（可省略）
     profile    : "auto" 或 "a" / "b" / "cpu"
-    local_path : 机器私有配置，例如 "configs/local.a.yaml"（可省略）
+    local_path : 机器私有配置，例如 "configs/local.a.yaml"；传 "auto" 自动寻找（推荐）
     config_dir : 配置根目录，默认 <仓库根>/configs（测试时可指定别处）
     """
     cfg_dir = Path(config_dir) if config_dir else CONFIG_DIR
@@ -171,7 +183,9 @@ def load_config(
         except ValueError:
             sources.append(exp_file.name)
 
-    # ④ 机器私有
+    # ④ 机器私有（local_path="auto" 时自动找 configs/local.<machine>.yaml）
+    if local_path == "auto":
+        local_path = find_local_config(cfg_dir)
     if local_path:
         loc_file = _resolve(local_path, cfg_dir)
         if loc_file.exists():
@@ -200,6 +214,7 @@ __all__ = [
     "decide_profile",
     "deep_merge",
     "detect_vram_gb",
+    "find_local_config",
     "guard_local",
     "load_config",
 ]
