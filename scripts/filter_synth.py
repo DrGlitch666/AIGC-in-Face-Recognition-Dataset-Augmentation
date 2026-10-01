@@ -132,8 +132,22 @@ def main() -> int:
     print(f"    预热 {warmup(app):.1f}s")
 
     def embed(relpath: str) -> np.ndarray | None:
+        """解析 manifest 里的 path。
+
+        约定：**绝对路径**，或**相对 paths.data_root** 的路径。
+        但为了不再被"相对仓库根"的写法坑到（生成端漏 .resolve() 就会那样，
+        结果是好图全被判成 no_face），这里加一道回退：
+        data_root 下找不到就试仓库根，两边都不存在才算失败。
+        """
         p = Path(relpath)
-        return identity_embedding(app, p if p.is_absolute() else data_root / p)
+        if p.is_absolute():
+            return identity_embedding(app, p)
+        cand = data_root / p
+        if not cand.exists():
+            alt = REPO_ROOT / p
+            if alt.exists():
+                cand = alt
+        return identity_embedding(app, cand)
 
     # 真实图：按身份求中心（这是"本人长什么样"的参考）
     real_by_id: dict[str, list[np.ndarray]] = {}
