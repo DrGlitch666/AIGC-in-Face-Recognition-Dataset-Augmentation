@@ -1,0 +1,30 @@
+# ============================================================
+# 人脸生成用的 VAE（任务卡 #10）
+# ------------------------------------------------------------
+# ⚠️ **为什么不能用 SD1.5 自带的 VAE**：
+#
+#   Realistic Vision V6 这类人脸/写实向 SD1.5 微调，是用 **MSE VAE
+#   （vae-ft-mse-840000-ema-pruned）** 训练的。配 SD1.5 原版 VAE 解码会**色调错乱** ——
+#   实测症状是"脸上出现莫名其妙的色块、整体异常偏亮（均值 155+）、完全不像人类"。
+#
+# 用法：
+#   python scripts/download_data.py --config configs/data/sd15_vae.yaml
+#
+# 目录：<models_root>/sd15-faceid/vae-mse/
+# ============================================================
+
+name: sd15-vae
+
+dest_root: models
+dest_subdir: sd15-faceid
+
+sources:
+  - name: hf-mirror/sd-vae-ft-mse
+    base_url: https://hf-mirror.com/stabilityai/sd-vae-ft-mse/resolve/main
+    dest_subdir: vae-mse
+    files:
+      - config.json
+      - diffusion_pytorch_model.safetensors
+
+checksums: {}
+extract: false

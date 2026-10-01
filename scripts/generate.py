@@ -84,6 +84,8 @@ def main() -> int:
     ap.add_argument("--scale", type=float, default=0.8, help="IP-Adapter 强度（实测 0.8 最佳，勿低于 0.6）")
     ap.add_argument("--base", default="sd15", choices=["sd15", "realvis"],
                     help="底模：sd15=原始 SD1.5；realvis=Realistic Vision V6（人脸向微调，强烈建议）")
+    ap.add_argument("--vae", default="auto", choices=["auto", "none", "mse"],
+                    help="auto=mse(realvis)/none(sd15)；mse=vae-ft-mse-840000（人脸微调底模配套）")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=None, help="输出目录（默认 <synth_root>/<exp-id>）")
     ap.add_argument("--manifest", default=None, help="manifest 路径（默认 data/manifests/<exp-id>.jsonl）")
@@ -247,9 +249,43 @@ def main() -> int:
     pipe.load_ip_adapter(str(faceid_dir), subfolder=None, weight_name=faceid_bin,
                          image_encoder_folder=None)   # FaceID 不需要 CLIP 编码器
     pipe.set_ip_adapter_scale(args.scale)
+
+    # ---------- VAE：换配套的，并且强制 fp32 ----------
+    # ⚠️ 两个真实踩过的坑，合起来会让画面出现"脸上的色块、整体异常偏亮、不像人类"：
+    #    ① 人脸/写实向的 SD1.5 微调（如 Realistic Vision）是用 **MSE VAE**
+    #       （vae-ft-mse-840000）训练的，配 SD1.5 原版 VAE 解码会**色调错乱**；
+    #    ② **VAE 必须在 fp32 下解码**：SD 管线**不读** vae.config.force_upcast
+    #       （那是 SDXL 管线的逻辑），所以 pipe.vae 会以 fp16 解码 -> 数值溢出。
+    #       实测把 VAE 换成 fp32 后，portrait 提示词的身份相似度从 0.21 提到 **0.43**。
+    vae_choice = args.vae
+    if vae_choice == "auto":
+        vae_choice = "mse" if args.base == "realvis" else "none"
+    if vae_choice == "mse":
+        vae_dir = sd_root / "vae-mse"
+        if not (vae_dir / "diffusion_pytorch_model.safetensors").exists():
+            print(f"!! 找不到 MSE VAE: {vae_dir}")
+            print("   先跑：python scripts/download_data.py --config configs/data/sd15_vae.yaml")
+            return 2
+        from diffusers import AutoencoderKL
+        pipe.vae = AutoencoderKL.from_pretrained(str(vae_dir), torch_dtype=torch.float32)
+        print("    VAE: sd-vae-ft-mse（配套）")
+    pipe.vae.to(dtype=torch.float32)      # ← 必须 fp32，见上面的说明
     pipe = pipe.to("cuda")
     pipe.set_progress_bar_config(disable=True)
-    print(f"    底模={args.base}  scale={args.scale}  dtype={pipe.dtype}  device={pipe.device}")
+    print(f"    底模={args.base}  scale={args.scale}  VAE={vae_choice}/fp32  device={pipe.device}")
+
+    def decode_to_pil(latents):
+        """用 **fp32 VAE** 手动解码 latents。
+
+        管线只算到 latents（output_type="latent"），跳过它自带的 fp16 解码。
+        """
+        latents = latents.to(dtype=pipe.vae.dtype) / pipe.vae.config.scaling_factor
+        image = pipe.vae.decode(latents, return_dict=False)[0]
+        image = (image / 2 + 0.5).clamp(0, 1)
+        arr = image.detach().cpu().permute(0, 2, 3, 1).float().numpy()
+        arr = (arr * 255).round().astype(np.uint8)
+        from PIL import Image as _Image
+        return _Image.fromarray(arr[0])
 
     # ---------------- 生成 ----------------
     print("\n[4/4] 开始生成 ...")
@@ -272,7 +308,7 @@ def main() -> int:
             seed = args.seed + zlib.crc32(f"{ident}_{k}".encode()) % 100000
             generator = torch.Generator(device="cuda").manual_seed(seed)
             prompt = PROMPTS[k % len(PROMPTS)]
-            image = pipe(
+            image = decode_to_pil(pipe(
                 prompt=prompt,
                 negative_prompt=NEGATIVE,
                 ip_adapter_image_embeds=[embeds],
@@ -280,7 +316,8 @@ def main() -> int:
                 guidance_scale=args.guidance,
                 generator=generator,
                 height=512, width=512,
-            ).images[0]
+                output_type="latent",          # 关键：只算到 latents，自己用 fp32 VAE 解码
+            ).images)
 
             name = f"{ident}_syn{k:02d}.png"
             target = out_dir / ident / name
