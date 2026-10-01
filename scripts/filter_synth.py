@@ -114,25 +114,9 @@ def main() -> int:
     print(f"    providers = {provider_report(app)}")
     print(f"    预热 {warmup(app):.1f}s")
 
-    def resolve(relpath: str) -> Path:
-        """manifest 里的 path 是相对 data_root 的；自测时可能是绝对路径。"""
-        p = Path(relpath)
-        return p if p.is_absolute() else data_root / p
-
     def embed(relpath: str) -> np.ndarray | None:
-        img = cv2.imread(str(resolve(relpath)))
-        if img is None:
-            return None
-        # 已经对齐好的 112x112（build_dataset 的产物）直接送识别模型，
-        # 不必再检测一遍 —— 既快，也避免"人脸占满整幅图导致检测失败"。
-        if img.shape[0] == 112 and img.shape[1] == 112:
-            feat = app.models["recognition"].get_feat(img)
-            return np.asarray(feat, dtype=np.float32).reshape(-1)
-        faces = app.get(img)
-        if not faces:
-            return None
-        face = pick_face(faces, img.shape, "center")
-        return np.asarray(face.normed_embedding, dtype=np.float32)
+        p = Path(relpath)
+        return identity_embedding(app, p if p.is_absolute() else data_root / p)
 
     # 真实图：按身份求中心（这是"本人长什么样"的参考）
     real_by_id: dict[str, list[np.ndarray]] = {}

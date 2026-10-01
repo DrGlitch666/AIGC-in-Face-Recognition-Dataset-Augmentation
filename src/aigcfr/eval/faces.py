@@ -23,6 +23,47 @@ from aigcfr.data.align import ARCFACE_SIZE, align_by_kps
 from aigcfr.eval.embed import pick_face
 
 
+def identity_embedding(app, image_path: str | Path) -> np.ndarray | None:
+    """取一张图的**身份嵌入**（512 维，L2 归一化），失败返回 None。
+
+    ## ⚠️ 为什么必须区分"已对齐"和"原始图"（真实踩过，排查了很久）
+
+    训练集里的图是 `scripts/build_dataset.py` 对齐好的 **112x112 紧致裁剪**，
+    人脸占满整个画面。对这类图**再跑一遍检测是错的**：
+
+    * `det_10g` 在紧致裁剪图上**经常一张脸都检测不到**（实测：同一个身份，
+      有的图能检出、有的不能，于是该身份被静默跳过）
+    * 即使检出，5 点位置也可能不准 -> 对齐发生偏移 -> **嵌入失真**
+
+    症状：喂给 IP-Adapter 的"本人特征"根本不对，生成的人不像本人、性别都错。
+
+    所以这里按尺寸分流：
+    * ``112x112`` —— 认定是已对齐图，**直接送识别模型**（跳过检测）
+    * 其他尺寸 —— 正常"检测 -> 选脸 -> 对齐"流程
+
+    注意 `get_feat()` 返回的是**未归一化**特征，要自己归一化，
+    才能与 insightface 的 ``normed_embedding`` 同一尺度（IP-Adapter-FaceID 是在那个尺度上训练的）。
+    """
+    import cv2  # noqa: PLC0415
+
+    img = cv2.imread(str(image_path))
+    if img is None:
+        return None
+
+    if img.shape[0] == 112 and img.shape[1] == 112:
+        feat = app.models["recognition"].get_feat(img)
+        vec = np.asarray(feat, dtype=np.float32).reshape(-1)
+        return vec / max(float(np.linalg.norm(vec)), 1e-12)
+
+    faces = app.get(img)
+    if not faces:
+        return None
+    face = pick_face(faces, img.shape, "center")
+    if face is None:
+        return None
+    return np.asarray(face.normed_embedding, dtype=np.float32)
+
+
 def build_aligned_cache(
     app,
     img_dir: str | Path,

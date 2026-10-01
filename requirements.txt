@@ -39,6 +39,10 @@ transformers>=4.40
 accelerate>=0.30
 safetensors>=0.4
 huggingface_hub>=0.23
+# ⚠️ peft 不能漏！IP-Adapter-FaceID 的**配套 LoRA** 要靠它加载。
+#    缺了它 diffusers 只会打印一行 "PEFT backend is required to load these weights."
+#    然后**静默跳过 LoRA** —— 生成的人不像本人（真实踩过，排查了很久）。
+peft>=0.13
 
 # --- 测试 ---
 pytest>=8.0

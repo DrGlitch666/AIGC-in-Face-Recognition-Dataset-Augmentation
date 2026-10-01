@@ -51,6 +51,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
+from aigcfr.eval.faces import identity_embedding  # noqa: E402
 from aigcfr.utils.config import find_local_config, load_config  # noqa: E402
 
 for _stream in (sys.stdout, sys.stderr):
@@ -174,27 +175,40 @@ def main() -> int:
     ref_ids: dict[str, str] = {}          # 身份 -> 实际用作参考的真实图 image_id
     skipped: list[str] = []
     for ident in identities:
-        # 从该身份的多张真实图里挑一张检测质量最好的当参考
+        # 从该身份的多张真实图里挑一张检测质量最好的当参考。
+        # ⚠️ 训练图是**已对齐的 112x112**，必须直通识别模型（不能再检测）——
+        #    详见 aigcfr.eval.faces.identity_embedding 的说明。
         best: tuple[np.ndarray, str] | None = None
         for rec in sorted(by_identity[ident], key=lambda r: -r["meta"].get("det_score", 0)):
-            img = cv2.imread(str(data_root / rec["path"]))
-            if img is None:
-                continue
-            faces = app.get(img)
-            if not faces:
-                continue
-            face = max(faces, key=lambda f: (f.bbox[2] - f.bbox[0]) * (f.bbox[3] - f.bbox[1]))
-            best = (face.normed_embedding.astype(np.float32), rec["image_id"])
-            break
+            vec = identity_embedding(app, data_root / rec["path"])
+            if vec is not None:
+                best = (vec, rec["image_id"])
+                break
         if best is not None:
             id_embeds[ident] = best[0]
             ref_ids[ident] = best[1]
         else:
             skipped.append(ident)
     print(f"    拿到嵌入 {len(id_embeds)} 个身份，跳过 {len(skipped)} 个")
+    if skipped:
+        print(f"    跳过的身份: {skipped[:8]}{' ...' if len(skipped) > 8 else ''}")
     if not id_embeds:
         print("!! 一个嵌入都没拿到")
         return 1
+
+    # 自检：同一身份的多张真实图之间应该互相相似（> 0.4）。
+    # 如果这里很低，说明嵌入提取本身有问题，后面生成再调参也没用。
+    probe_id = next(iter(id_embeds))
+    probe_sims = []
+    for rec in by_identity[probe_id][1:4]:
+        vec = identity_embedding(app, data_root / rec["path"])
+        if vec is not None:
+            probe_sims.append(float(id_embeds[probe_id] @ vec))
+    if probe_sims:
+        print(f"    [自检] {probe_id} 的参考图与该身份另外 {len(probe_sims)} 张真实图的"
+              f"相似度: {[round(s, 3) for s in probe_sims]}")
+        if max(probe_sims) < 0.3:
+            print("    [!] 同身份真实图之间都不相似（<0.3）—— 嵌入提取有问题，先别急着生成")
 
     # ---------------- 加载 SD1.5 + IP-Adapter ----------------
     print("\n[3/4] 加载 SD1.5 + IP-Adapter-FaceID ...")
