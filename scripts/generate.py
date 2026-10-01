@@ -106,7 +106,11 @@ def main() -> int:
         print(f"!! 找不到 IP-Adapter-FaceID: {faceid_dir / faceid_bin}")
         return 2
 
-    out_dir = (Path(args.out).resolve() if args.out else synth_root / args.exp_id)
+    # ⚠️ 默认放在 data_root/processed/synth/ 下 —— 和真实对齐图（processed/aligned/）
+    #    同一棵树，这样 manifest 里的 path 才能统一相对 data_root 解析（契约 A）。
+    #    写到 synth_root 会导致 path 无法用同一条规则解析（真实踩过）。
+    out_dir = (Path(args.out).resolve() if args.out
+               else data_root / "processed" / "synth" / args.exp_id)
     manifest_path = (Path(args.manifest).resolve() if args.manifest
                      else REPO_ROOT / "data" / "manifests" / f"{args.exp_id}.jsonl")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -217,10 +221,13 @@ def main() -> int:
     total = len(id_embeds) * args.per_identity
     done = 0
     for ident, emb in id_embeds.items():
-        (out_dir / ident).mkdir(parents=True, exist_ok=True)
-        # (1,1,512) -> (2,1,512)：前半负例、后半正例（CFG）
         base = torch.from_numpy(emb).to(dtype=pipe.dtype, device="cuda").reshape(1, 1, -1)
-        embeds = torch.cat([base, base], dim=0)
+        # ⚠️ CFG 的两半：**前一半是负例、后一半是正例**（prepare_ip_adapter_image_embeds 做 chunk(2)）。
+        #    负例必须是**全零** —— diffusers 的 encode_image 就是
+        #        uncond_image_embeds = torch.zeros_like(image_embeds)
+        #    如果两半都给同一个人脸嵌入，CFG 的 (cond - uncond) 会把面部条件**抵消掉**，
+        #    症状是"生成的人不像本人、甚至性别都错"（真实踩过，别改回去）。
+        embeds = torch.cat([torch.zeros_like(base), base], dim=0)
 
         for k in range(args.per_identity):
             # ⚠️ 必须用**确定性**哈希：Python 内置 hash() 对字符串每个进程都会变
@@ -239,8 +246,14 @@ def main() -> int:
             ).images[0]
 
             name = f"{ident}_syn{k:02d}.png"
-            rel = f"{ident}/{name}"
-            image.save(out_dir / rel)
+            target = out_dir / ident / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            image.save(target)
+            # path 统一相对 data_root；--out 指到 data_root 之外（自测）时退回绝对路径
+            try:
+                rel = target.relative_to(data_root).as_posix()
+            except ValueError:
+                rel = target.as_posix()
             records.append({
                 "image_id": f"syn_{ident}_{k:02d}",
                 "path": rel,

@@ -4,6 +4,11 @@ data/*
 !data/manifests/
 data/manifests/.*.tmp
 
+# 自测/冒烟产物：results/runs/<exp-id>/ 里，正式实验用 e0-*/e1-*/e4-* 命名（要入库），
+# 自测一律用下划线开头（如 _smoke、_smoke_gen），不入库。
+# ⚠️ 加这条是因为真实犯过一次：`git add -A` 把跑错的冒烟产物一起提交了。
+results/runs/_*/
+
 outputs/
 *.pth
 *.ckpt
