@@ -1,0 +1,35 @@
+# ============================================================
+# antelopev2 —— IP-Adapter-FaceID 所需的 insightface 模型包（任务卡 #10）
+# ------------------------------------------------------------
+# ⚠️ **为什么要单独用本脚本下，而不是让 insightface 自动下**：
+#
+#   insightface 内置下载器（insightface/utils/download.py）**既不支持断点续传、
+#   也没有重试**。实测从 GitHub Releases 拉 antelopev2.zip（约 360 MB）时，
+#   下到 115 MB 连接被断，整个流程直接抛 ChunkedEncodingError 崩掉。
+#
+#   本脚本支持断点续传 + 自动重试，所以用它。
+#
+# 目录布局必须和 insightface 期望的一致（读 insightface/utils/storage.py 得到）：
+#   <root>/models/antelopev2.zip        压缩包
+#   <root>/models/antelopev2/*.onnx     解压后（**散着**的 onnx 文件，没有套一层目录）
+#   其中 <root> = paths.models_root/insightface
+#
+# 用法：
+#   python scripts/download_data.py --config configs/data/antelopev2.yaml
+# ============================================================
+
+name: antelopev2
+
+dest_root: models
+dest_subdir: insightface/models      # -> <models_root>/insightface/models/
+
+sources:
+  - name: github-release/model-zoo
+    base_url: https://github.com/deepinsight/insightface/releases/download/model-zoo
+    files:
+      - antelopev2.zip
+
+# 该 zip 里是散装的 .onnx（没有顶层目录），所以解压器会建一个同名目录 antelopev2/，
+# 正好就是 insightface 期望的位置。
+extract: true
+checksums: {}

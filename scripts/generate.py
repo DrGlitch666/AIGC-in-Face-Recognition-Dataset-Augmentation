@@ -144,6 +144,17 @@ def main() -> int:
     print("\n[2/4] 加载 antelopev2 提取 ID 嵌入 ...")
     import cv2  # noqa: PLC0415
 
+    # ⚠️ 先自己检查模型是否就位 —— **不要让 insightface 自动下载**：
+    #    它的下载器不支持断点续传也没有重试，实测拉 antelopev2.zip（360MB）
+    #    时中断一次就整体抛 ChunkedEncodingError 崩掉。请用本项目的下载器。
+    antelope_dir = models_root / "insightface" / "models" / "antelopev2"
+    if not antelope_dir.is_dir():
+        print(f"!! 找不到 antelopev2: {antelope_dir}")
+        print("   请不要让 insightface 自动下载（它的下载器不支持断点续传/重试）。")
+        print("   用本项目的下载器（支持续传 + 重试）：")
+        print("     python scripts/download_data.py --config configs/data/antelopev2.yaml")
+        return 2
+
     from insightface.app import FaceAnalysis
 
     app = FaceAnalysis(name="antelopev2", root=str(models_root / "insightface"),

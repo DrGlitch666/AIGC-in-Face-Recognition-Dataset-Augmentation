@@ -114,22 +114,63 @@ def sha256_of(path: Path) -> str:
     return h.hexdigest()
 
 
-def extract(archive: Path, dest: Path) -> None:
+def _archive_top_levels(archive: Path) -> set[str]:
+    """列出压缩包里的**顶层名字**，用来判断它是"自带一层目录"还是"散着一堆文件"。"""
     name = archive.name.lower()
-    print(f"    解压 {archive.name} ...")
+    tops: set[str] = set()
+    try:
+        if name.endswith((".tgz", ".tar.gz")):
+            with tarfile.open(archive, "r:gz") as tf:
+                for member in tf.getmembers():
+                    parts = Path(member.name).parts
+                    if parts:
+                        tops.add(parts[0])
+        elif name.endswith(".zip"):
+            with zipfile.ZipFile(archive) as zf:
+                for entry in zf.namelist():
+                    parts = Path(entry).parts
+                    if parts:
+                        tops.add(parts[0])
+    except Exception:  # noqa: BLE001
+        return set()
+    return tops
+
+
+def extract(archive: Path, dest: Path, into: str | None = None) -> Path:
+    """解压到 ``dest``，返回实际解压到的目录。
+
+    ⚠️ 目标目录规则（真实踩过坑，别随手改）：
+
+    * 压缩包**自带一层顶层目录**（如 ``lfw.tgz`` 里就是 ``lfw/``）→ 直接解到 ``dest``
+    * 压缩包是**散着的文件**（如 ``antelopev2.zip`` 里直接是 ``.onnx``）→ 解到 ``dest/<压缩包名>/``
+      因为消费方 insightface 期望 ``<root>/models/antelopev2/*.onnx``，
+      散着解到 ``dest`` 会把 onnx 文件撒得到处都是
+    * 也可以用 ``into`` 显式指定子目录名
+    """
+    name = archive.name.lower()
+    if not name.endswith((".tgz", ".tar.gz", ".zip")):
+        print(f"    （不认识的压缩格式，跳过：{archive.name}）")
+        return dest
+
+    if into is None:
+        tops = _archive_top_levels(archive)
+        # 只有一个顶层项且它不是文件（即"带目录的包"）→ 解到 dest；否则建一个同名目录
+        into = "" if len(tops) == 1 else archive.name.rsplit(".", 1)[0].replace(".tar", "")
+    target = dest / into if into else dest
+    target.mkdir(parents=True, exist_ok=True)
+    print(f"    解压 {archive.name} -> {target}")
+
     if name.endswith((".tgz", ".tar.gz")):
         with tarfile.open(archive, "r:gz") as tf:
             try:
-                tf.extractall(dest, filter="data")  # Python 3.12+
+                tf.extractall(target, filter="data")   # Python 3.12+
             except TypeError:
-                tf.extractall(dest)                 # Python 3.11
-    elif name.endswith(".zip"):
-        with zipfile.ZipFile(archive) as zf:
-            zf.extractall(dest)
+                tf.extractall(target)                  # Python 3.11
     else:
-        print(f"    （不认识的压缩格式，跳过：{archive.name}）")
-        return
+        with zipfile.ZipFile(archive) as zf:
+            zf.extractall(target)
     print("    解压完成")
+    return target
 
 
 def main() -> int:
@@ -140,6 +181,8 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="只打印将要做什么")
     parser.add_argument("--no-extract", action="store_true", help="下载后不解压")
     parser.add_argument("--only", nargs="*", default=None, help="只下载指定的文件名（可多个）")
+    parser.add_argument("--retries", type=int, default=4,
+                        help="单个文件的中断重试次数（默认 4，续传接着下）")
     args = parser.parse_args()
 
     data_cfg = yaml.safe_load((REPO_ROOT / args.config).read_text(encoding="utf-8"))
@@ -213,12 +256,25 @@ def main() -> int:
         total = remote_size(url)
         if total:
             print(f"    远端大小 {human(total)}")
-        try:
-            download(url, out, total)
-        except Exception as exc:  # noqa: BLE001
-            print(f"    !! 下载失败: {type(exc).__name__}: {exc}")
-            print(f"    提示：手动把文件放到 {out} 后重跑本脚本（支持断点续传）")
-            return 1
+
+        # ⚠️ 必须重试：镜像/Release 的连接会中途断掉（实测 antelopev2 下到 115MB 断了），
+        #    而 download() 支持断点续传，所以重试就能接着下，不用从头再来。
+        attempt = 0
+        while True:
+            attempt += 1
+            try:
+                download(url, out, total)
+                break
+            except Exception as exc:  # noqa: BLE001
+                if attempt >= args.retries:
+                    print(f"    !! 下载失败（已尝试 {attempt} 次）: {type(exc).__name__}: {exc}")
+                    print(f"    提示：直接重跑本脚本即可（支持断点续传），文件在 {out}")
+                    return 1
+                wait = min(5 * attempt, 30)
+                done_bytes = out.stat().st_size if out.exists() else 0
+                print(f"    [!] 第 {attempt} 次中断（{type(exc).__name__}），"
+                      f"已有 {human(done_bytes)}；{wait}s 后续传重试 ...")
+                time.sleep(wait)
 
         if total and out.stat().st_size != total:
             print(f"    !! 大小不符：本地 {out.stat().st_size} 字节 vs 远端 {total} 字节")
