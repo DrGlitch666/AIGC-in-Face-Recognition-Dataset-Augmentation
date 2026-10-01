@@ -161,6 +161,9 @@ def main() -> int:
     t_start = time.time()
 
     for epoch in range(1, epochs + 1):
+        # 先记下本轮**实际使用**的 lr：scheduler.step() 在轮末执行，改的是"下一轮"的 lr。
+        # （之前把打印放在 scheduler.step() 之后，日志里的 lr 标签是错位的。）
+        current_lr = optimizer.param_groups[0]["lr"]
         model.train()
         head.train()
         run_loss, run_correct, run_total = 0.0, 0, 0
@@ -192,11 +195,10 @@ def main() -> int:
         acc = run_correct / max(run_total, 1)
         avg_loss = run_loss / max(run_total, 1)
         dt = time.time() - t_epoch
-        lr = optimizer.param_groups[0]["lr"]
         print(f"  epoch {epoch:>2}/{epochs}  loss={avg_loss:.4f}  train_acc={acc:.4f}  "
-              f"lr={lr:.5f}  {dt:.1f}s")
+              f"lr={current_lr:.5f}  {dt:.1f}s")
         log_rows.append({"epoch": epoch, "loss": round(avg_loss, 6),
-                         "train_acc": round(acc, 6), "lr": round(lr, 8),
+                         "train_acc": round(acc, 6), "lr": round(current_lr, 8),
                          "seconds": round(dt, 2)})
 
         state = {"model": model.state_dict(), "head": head.state_dict(),
