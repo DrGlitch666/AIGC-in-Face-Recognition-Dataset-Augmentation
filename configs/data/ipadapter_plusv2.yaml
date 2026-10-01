@@ -1,0 +1,48 @@
+# ============================================================
+# IP-Adapter-FaceID **plusv2** 所需文件（任务卡 #10 的质量进阶）
+# ------------------------------------------------------------
+# ⚠️ **为什么值得下这 2.7 GB**：
+#
+#   官方 README 明确说 plusv2 比 base FaceID "**much better**"。
+#   我们现在用的是 base FaceID，实测 id_sim 均值 0.335（真实同人是 0.745）。
+#   plusv2 同时用 **CLIP 图像嵌入 + 人脸 ID 嵌入**，人脸细节和身份保真明显更强。
+#
+# ⚠️ **但 diffusers 没有实现 plusv2**：
+#
+#   `IPAdapterFaceIDPlusImageProjection.forward` 依赖 `self.clip_embeds`，
+#   而整个 diffusers 包里**没有任何地方给它赋值** —— 走标准路径必崩。
+#   本项目的做法是**手工把 CLIP 隐状态写进投影层**（在推理前设一次）：
+#       proj.clip_embeds = clip_hidden_states
+#   所以要把 CLIP 编码器放在 ip-adapter 目录下（load_ip_adapter 的
+#   image_encoder_folder 参数是相对主路径的**子目录**名）。
+#
+# 用法：
+#   python scripts/download_data.py --config configs/data/ipadapter_plusv2.yaml
+# ============================================================
+
+name: ipadapter-faceid-plusv2
+
+dest_root: models
+dest_subdir: sd15-faceid
+
+sources:
+  # ⚠️ plusv2 的权重和 CLIP 编码器在**两个不同的仓库**里（实测踩过 404）：
+  #    FaceID 系列在 h94/IP-Adapter-FaceID；CLIP 编码器在 h94/IP-Adapter/models/image_encoder
+  - name: hf-mirror/IP-Adapter-FaceID
+    base_url: https://hf-mirror.com/h94/IP-Adapter-FaceID/resolve/main
+    dest_subdir: ip-adapter-faceid
+    files:
+      - ip-adapter-faceid-plusv2_sd15.bin
+      - ip-adapter-faceid-plusv2_sd15_lora.safetensors
+
+  - name: hf-mirror/IP-Adapter
+    base_url: https://hf-mirror.com/h94/IP-Adapter/resolve/main/models
+    dest_subdir: ip-adapter-faceid
+    files:
+      # CLIP 视觉编码器（2.53 GB）—— 放在 ip-adapter 的 image_encoder 子目录下，
+      # 这样 load_ip_adapter(..., image_encoder_folder="image_encoder") 能找到
+      - image_encoder/config.json
+      - image_encoder/model.safetensors
+
+checksums: {}
+extract: false

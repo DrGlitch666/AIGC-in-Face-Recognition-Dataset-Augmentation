@@ -59,6 +59,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 import numpy as np  # noqa: E402
 import torch  # noqa: E402
+from PIL import Image  # noqa: E402
 
 from aigcfr.eval.faces import identity_embedding  # noqa: E402
 from aigcfr.utils.config import find_local_config, load_config  # noqa: E402
@@ -98,6 +99,8 @@ def main() -> int:
     ap.add_argument("--base", default="sd15", choices=["sd15", "realvis"],
                     help="底模：sd15=原始 SD1.5；realvis=Realistic Vision V6"
                          "（2026-10-01 在修好的管线下重测：id_sim 仅 0.0428，比基线低 7 倍，确认不兼容）")
+    ap.add_argument("--ip-adapter", default="faceid", choices=["faceid", "faceid-plusv2"],
+                    help="faceid=base（仅 ID 嵌入）；faceid-plusv2=CLIP+ID 双路（官方称 much better，需额外下载）")
     ap.add_argument("--scheduler", default="dpmpp", choices=["pndm", "dpmpp"],
                     help="采样器：dpmpp=DPM++ 2M Karras（默认，实测更好）；pndm=SD1.5 旧默认")
     ap.add_argument("--ref-mode", default="mean", choices=["single", "mean"],
@@ -201,6 +204,7 @@ def main() -> int:
 
     id_embeds: dict[str, np.ndarray] = {}
     ref_ids: dict[str, str] = {}          # 身份 -> 参考说明（图片 id 或 "mean of N"）
+    ref_paths: dict[str, Path] = {}       # 身份 -> 代表性真实图（plusv2 的 CLIP 那一路要用）
     skipped: list[str] = []
     for ident in identities:
         # ⚠️ 训练图是**已对齐的 112x112**，必须直通识别模型（不能再检测）——
@@ -228,6 +232,7 @@ def main() -> int:
         else:
             id_embeds[ident] = vecs[0]
             ref_ids[ident] = cands[0]["image_id"]
+        ref_paths[ident] = data_root / cands[0]["path"]
     print(f"    拿到嵌入 {len(id_embeds)} 个身份（ref-mode={args.ref_mode}），跳过 {len(skipped)} 个")
     if skipped:
         print(f"    跳过的身份: {skipped[:8]}{' ...' if len(skipped) > 8 else ''}")
@@ -277,9 +282,49 @@ def main() -> int:
             safety_checker=None,               # 人脸研究不需要，且它会拦图
             requires_safety_checker=False,
         )
-    pipe.load_ip_adapter(str(faceid_dir), subfolder=None, weight_name=faceid_bin,
-                         image_encoder_folder=None)   # FaceID 不需要 CLIP 编码器
+    # ---------------- IP-Adapter：base FaceID 或 plusv2 ----------------
+    plusv2 = args.ip_adapter == "faceid-plusv2"
+    if plusv2:
+        faceid_bin = "ip-adapter-faceid-plusv2_sd15.bin"
+        clip_dir = faceid_dir / "image_encoder"
+        if not (clip_dir / "model.safetensors").exists():
+            print(f"!! plusv2 需要 CLIP 图像编码器: {clip_dir}")
+            print("   先跑：python scripts/download_data.py --config configs/data/ipadapter_plusv2.yaml")
+            return 2
+    pipe.load_ip_adapter(
+        str(faceid_dir), subfolder=None, weight_name=faceid_bin,
+        # base FaceID 不需要 CLIP 编码器；plusv2 需要（放在 image_encoder 子目录下）
+        image_encoder_folder="image_encoder" if plusv2 else None,
+    )
     pipe.set_ip_adapter_scale(args.scale)
+    print(f"    IP-Adapter: {'FaceID plusv2（CLIP + ID 双路）' if plusv2 else 'base FaceID（仅 ID 一路）'}")
+
+    if plusv2:
+        # ⚠️⚠️ diffusers **没有实现** FaceIDPlus 的 CLIP 这一路，必须手工接。
+        #
+        #    `IPAdapterFaceIDPlusImageProjection.forward(id_embeds)` 内部用的是
+        #    `self.clip_embeds`，而整个 diffusers 包里**没有任何地方给它赋值**
+        #    （只有 `__init__` 里的 `self.clip_embeds = None`）。
+        #    更绕的是：管线 `encode_image(..., output_hidden_state=True)` 明明算出了
+        #    CLIP 隐状态，却把它当作 `id_embeds` **传进了 forward**，而 forward
+        #    完全不用这个参数 —— 于是整条路断掉，走标准调用必崩。
+        #
+        #    所以这里自己算、自己塞：
+        #      * 形状必须是 **4 维** `(2, 1, 257, 1280)`：
+        #          - forward 里 `clip_embeds.reshape(-1, shape[2], shape[3])` 要求 >=4 维
+        #          - 最后一维 1280 = CLIP ViT-H 的隐藏维（proj_in = Linear(1280, 768)）
+        #          - 257 = 256 patch + 1 CLS
+        #          - 第 0 维 2 = CFG 的 [负例, 正例]，负例给全零（与 ID 那一路一致）
+        from transformers import CLIPImageProcessor
+
+        clip_proc = CLIPImageProcessor.from_pretrained(str(clip_dir))
+
+        def clip_hidden(pil_img):
+            px = clip_proc(images=pil_img, return_tensors="pt").pixel_values
+            px = px.to(device=pipe.device, dtype=pipe.dtype)
+            with torch.no_grad():
+                h = pipe.image_encoder(px).last_hidden_state          # (1, 257, 1280)
+            return h.to(dtype=pipe.dtype)
 
     # 采样器：PNDM 是 SD1.5 的老默认；DPM++ 2M Karras 是社区标准，同样步数下细节更好
     if args.scheduler == "dpmpp":
@@ -313,6 +358,15 @@ def main() -> int:
         #    如果两半都给同一个人脸嵌入，CFG 的 (cond - uncond) 会把面部条件**抵消掉**，
         #    症状是"生成的人不像本人、甚至性别都错"（真实踩过，别改回去）。
         embeds = torch.cat([torch.zeros_like(base), base], dim=0)
+
+        if plusv2:
+            # CLIP 这一路：每个身份都要重算（不同人 → 不同隐状态），
+            # 然后在整段去噪里保持不变（投影层每步都会读它）。
+            ref_pil = Image.open(ref_paths[ident]).convert("RGB")
+            hidden = clip_hidden(ref_pil)                       # (1, 257, 1280)
+            proj = pipe.unet.encoder_hid_proj.image_projection_layers[0]
+            proj.clip_embeds = torch.cat([torch.zeros_like(hidden), hidden], dim=0).unsqueeze(1)
+            assert proj.clip_embeds.shape == (2, 1, 257, hidden.shape[-1]), proj.clip_embeds.shape
 
         for k in range(args.per_identity):
             # ⚠️ 必须用**确定性**哈希：Python 内置 hash() 对字符串每个进程都会变
