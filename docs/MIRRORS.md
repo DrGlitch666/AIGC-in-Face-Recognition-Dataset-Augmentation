@@ -135,6 +135,40 @@ setx HF_ENDPOINT "https://hf-mirror.com"
 
 **B 机结论**：8/8 端点均可访问，当前无需启用 §5 止损路线。清华 PyPI 本次 HTTP 探测耗时异常偏高，但 pip 已成功配置为清华源，后续以实际 `pip install` 表现为准。HF 使用 `HF_ENDPOINT=https://hf-mirror.com`。
 
+### 4.4 GitHub Releases 下载测速（2026-10-01，A 机器）
+
+> **背景**：`antelopev2.zip`（344 MB）从 GitHub Releases 直连**慢到不可用**，
+> 于是对每条候选路线做 3 MB 探针测速。结论对所有 GitHub Releases 资源都适用。
+
+| 路线 | 实测速度 | 344 MB 预计耗时 | 结论 |
+|---|---|---|---|
+| **`gh-proxy.com/<原始URL>`** | **2.004 MB/s** | **≈ 2.9 分钟** | ✅ **首选** |
+| `hf-mirror.com/`（第三方镜像仓库） | 1.050 MB/s | ≈ 5.5 分钟 | ✅ 回退 |
+| `ghfast.top/<原始URL>` | 0.469 MB/s | ≈ 12 分钟 | ⚠️ 可用但慢 |
+| `ghproxy.net/<原始URL>` | 0.226 MB/s | ≈ 25 分钟 | ⚠️ 慢 |
+| **GitHub 直连** | **0.058 MB/s** | **≈ 99 分钟** | ❌ **不要用** |
+| `github.moeyy.xyz` | — | — | ❌ DNS 解析失败 |
+| `hub.gitmirror.com` | — | — | ❌ DNS 解析失败 |
+| `gh.llkk.cc` | — | — | ❌ 超时 |
+
+**规律**：直连与代理差 **34 倍**。凡是 GitHub Releases 上的资源（insightface 模型包等），
+**一律走 `gh-proxy.com` 前缀**，不要直连。
+
+> ⚠️ 代理域名会失效（本次就有 2 个 DNS 解析不了、1 个超时）。
+> 所以配置里要**多列几个镜像** —— `scripts/download_data.py` 现在会在
+> 某个镜像连续失败后**自动换下一个**。
+
+### 4.5 归档压缩包的存放约定（写下来避免再踩）
+
+| 情况 | 例子 | 解压到 |
+|---|---|---|
+| 压缩包**自带一层顶层目录** | `lfw.tgz` 里就是 `lfw/` | 目标目录本身 |
+| 压缩包是**散装文件** | `antelopev2.zip` 里直接是 `*.onnx` | 目标目录下**建同名子目录** `antelopev2/` |
+
+第二条很关键：insightface 期望 `<root>/models/antelopev2/*.onnx`。
+散着解压会把 onnx 撒到 `<root>/models/` 下，模型就找不到了。
+`download_data.py` 会**自动判断**这两种情况。
+
 ---
 
 ## 5. 如果连镜像都不通（止损路线）

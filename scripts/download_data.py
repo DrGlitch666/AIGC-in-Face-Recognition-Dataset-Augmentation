@@ -235,8 +235,20 @@ def main() -> int:
         if missing:
             print(f"!! 配置里没有这些文件: {sorted(missing)}")
             return 2
-    total_bytes = sum(remote_size(url) or 0 for _, url, _, _ in jobs)
-    print(f"\n数据集: {data_cfg['name']}  |  共 {len(jobs)} 个文件"
+    # 同一个文件可能配了多个镜像（自动回退用），按文件名分组
+    by_name: dict[str, list[tuple[str, str, str, str]]] = {}
+    for job in jobs:
+        by_name.setdefault(job[0], []).append(job)
+
+    # 估算总量：同一个文件可能配了多个镜像，**只算一次**（否则会重复计数）
+    total_bytes = 0
+    counted: set[str] = set()
+    for fn, url, _mirror, _rel in jobs:
+        if fn in counted:
+            continue
+        counted.add(fn)
+        total_bytes += remote_size(url) or 0
+    print(f"\n数据集: {data_cfg['name']}  |  共 {len(by_name)} 个文件"
           f"{f'，约 {human(total_bytes)}' if total_bytes else ''}\n")
 
     if args.dry_run:
@@ -248,45 +260,57 @@ def main() -> int:
 
     dest.mkdir(parents=True, exist_ok=True)
 
-    # ---------- 逐个下载 ----------
+    # ---------- 逐个文件下载（同一文件可配多个镜像，失败自动换下一个）----------
     results: dict[str, str] = {}
-    for fn, url, mirror, rel in jobs:
-        out = dest / rel
-        print(f"[{rel}]  源: {mirror}")
-        total = remote_size(url)
-        if total:
-            print(f"    远端大小 {human(total)}")
+    for fn, candidates in by_name.items():
+        success = False
+        for _, url, mirror, rel in candidates:
+            out = dest / rel
+            print(f"[{rel}]  源: {mirror}")
+            total = remote_size(url)
+            if total:
+                print(f"    远端大小 {human(total)}")
 
-        # ⚠️ 必须重试：镜像/Release 的连接会中途断掉（实测 antelopev2 下到 115MB 断了），
-        #    而 download() 支持断点续传，所以重试就能接着下，不用从头再来。
-        attempt = 0
-        while True:
-            attempt += 1
-            try:
-                download(url, out, total)
-                break
-            except Exception as exc:  # noqa: BLE001
-                if attempt >= args.retries:
-                    print(f"    !! 下载失败（已尝试 {attempt} 次）: {type(exc).__name__}: {exc}")
-                    print(f"    提示：直接重跑本脚本即可（支持断点续传），文件在 {out}")
-                    return 1
-                wait = min(5 * attempt, 30)
-                done_bytes = out.stat().st_size if out.exists() else 0
-                print(f"    [!] 第 {attempt} 次中断（{type(exc).__name__}），"
-                      f"已有 {human(done_bytes)}；{wait}s 后续传重试 ...")
-                time.sleep(wait)
+            # ⚠️ 必须重试：镜像连接会中途断掉（实测 antelopev2 下到 115MB 断了），
+            #    而 download() 支持断点续传，所以重试就能接着下，不用从头再来。
+            attempt = 0
+            failed = False
+            while True:
+                attempt += 1
+                try:
+                    download(url, out, total)
+                    break
+                except Exception as exc:  # noqa: BLE001
+                    if attempt >= args.retries:
+                        print(f"    !! 本镜像失败（尝试 {attempt} 次）: {type(exc).__name__}: {exc}")
+                        failed = True
+                        break
+                    wait = min(5 * attempt, 30)
+                    done_bytes = out.stat().st_size if out.exists() else 0
+                    print(f"    [!] 第 {attempt} 次中断（{type(exc).__name__}），"
+                          f"已有 {human(done_bytes)}；{wait}s 后续传重试 ...")
+                    time.sleep(wait)
+            if failed:
+                continue          # 换下一个镜像
 
-        if total and out.stat().st_size != total:
-            print(f"    !! 大小不符：本地 {out.stat().st_size} 字节 vs 远端 {total} 字节")
+            if total and out.stat().st_size != total:
+                print(f"    !! 大小不符：本地 {out.stat().st_size} 字节 vs 远端 {total} 字节")
+                out.unlink(missing_ok=True)      # 残包会污染下一个镜像的续传
+                continue
+
+            digest = sha256_of(out)
+            expect = (data_cfg.get("checksums") or {}).get(fn)
+            if expect and expect != digest:
+                print(f"    !! sha256 不匹配！\n       期望 {expect}\n       实际 {digest}")
+                return 1
+            results[fn] = digest
+            print(f"    sha256 {digest[:16]}...{'（已校验）' if expect else '（配置未提供，建议回填）'}")
+            success = True
+            break
+
+        if not success:
+            print(f"!! {fn} 的所有镜像都失败了。提示：配置里再加一个镜像，或直接重跑本脚本续传。")
             return 1
-
-        digest = sha256_of(out)
-        expect = (data_cfg.get("checksums") or {}).get(fn)
-        if expect and expect != digest:
-            print(f"    !! sha256 不匹配！\n       期望 {expect}\n       实际 {digest}")
-            return 1
-        results[fn] = digest
-        print(f"    sha256 {digest[:16]}...{'（已校验）' if expect else '（配置未提供，建议回填）'}")
 
     # ---------- 校验和（两台机器靠它对齐数据）----------
     cs_path = dest / "checksums.sha256"

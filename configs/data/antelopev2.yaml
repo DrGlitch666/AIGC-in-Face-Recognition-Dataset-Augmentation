@@ -4,14 +4,18 @@
 # ⚠️ **为什么要单独用本脚本下，而不是让 insightface 自动下**：
 #
 #   insightface 内置下载器（insightface/utils/download.py）**既不支持断点续传、
-#   也没有重试**。实测从 GitHub Releases 拉 antelopev2.zip（约 360 MB）时，
+#   也没有重试**。实测从 GitHub Releases 拉 antelopev2.zip（约 344 MB）时，
 #   下到 115 MB 连接被断，整个流程直接抛 ChunkedEncodingError 崩掉。
 #
-#   本脚本支持断点续传 + 自动重试，所以用它。
+# ⚠️ **为什么把代理放第一位（2026-10-01 实测三代）**：
+#
+#   GitHub Releases 直连只有 **0.058 MB/s → 344 MB 要 99 分钟**，
+#   而走 gh-proxy.com 是 **2.004 MB/s → 约 2.9 分钟（快 34 倍）**。
+#   本配置列了多个镜像，前一个失败/超时会**自动换下一个**。
 #
 # 目录布局必须和 insightface 期望的一致（读 insightface/utils/storage.py 得到）：
 #   <root>/models/antelopev2.zip        压缩包
-#   <root>/models/antelopev2/*.onnx     解压后（**散着**的 onnx 文件，没有套一层目录）
+#   <root>/models/antelopev2/*.onnx     解压后（zip 里是**散着**的 onnx，没有套一层目录）
 #   其中 <root> = paths.models_root/insightface
 #
 # 用法：
@@ -24,12 +28,25 @@ dest_root: models
 dest_subdir: insightface/models      # -> <models_root>/insightface/models/
 
 sources:
-  - name: github-release/model-zoo
+  # ① GitHub 代理（实测最快，2.0 MB/s）
+  - name: gh-proxy.com
+    base_url: https://gh-proxy.com/https://github.com/deepinsight/insightface/releases/download/model-zoo
+    files:
+      - antelopev2.zip
+
+  # ② hf-mirror 上的第三方镜像（实测 1.05 MB/s，作为回退）
+  - name: hf-mirror/Charles-Elena
+    base_url: https://hf-mirror.com/Charles-Elena/antelopev2/resolve/main
+    files:
+      - antelopev2.zip
+
+  # ③ 官方直连（最慢，99 分钟，仅作最后兜底）
+  - name: github-official
     base_url: https://github.com/deepinsight/insightface/releases/download/model-zoo
     files:
       - antelopev2.zip
 
-# 该 zip 里是散装的 .onnx（没有顶层目录），所以解压器会建一个同名目录 antelopev2/，
+# zip 里是散装的 .onnx（没有顶层目录），所以解压器会建一个同名目录 antelopev2/，
 # 正好就是 insightface 期望的位置。
 extract: true
 checksums: {}
