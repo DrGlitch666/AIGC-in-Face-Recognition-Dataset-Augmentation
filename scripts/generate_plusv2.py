@@ -112,8 +112,9 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--s-scale", type=float, default=1.0, help="shortcut 残差权重，官方 1.0")
     ap.add_argument("--no-shortcut", action="store_true",
                     help="关掉 shortcut 残差（**会丢掉身份信号**，只用于对照实验）")
-    ap.add_argument("--ref-mode", default="single", choices=["single", "mean"],
-                    help="ID 嵌入取单张还是多张平均（官方为单张）")
+    ap.add_argument("--ref-mode", default="mean", choices=["single", "mean"],
+                    help="ID 嵌入取单张还是多张平均。官方用单张，但实测**多张平均明显更好**"
+                         "（0.5138 -> 0.6084，且最差样本从 0.4320 提到 0.5273），故默认 mean")
     ap.add_argument("--ref-count", type=int, default=5)
     ap.add_argument("--clip-layer", type=int, default=-2,
                     help="CLIP 取第几层隐状态，官方为 -2（倒数第二层）")

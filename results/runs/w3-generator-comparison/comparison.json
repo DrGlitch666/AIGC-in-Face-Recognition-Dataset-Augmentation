@@ -126,5 +126,75 @@
       }
     }
   ],
-  "conclusion": "plusv2 均值 +0.5138、最小值 +0.4320，12/12 张越过 0.4；base FaceID 均值 +0.3891、最小值 +0.2035，仅 5/11 越过。plusv2 在均值与一致性两方面都更好，对训练数据而言“最差样本的质量”尤其关键。Realistic Vision 底模在两种适配器下都更差，确认不兼容。"
+  "conclusion": "plusv2 均值 +0.5138、最小值 +0.4320，12/12 张越过 0.4；base FaceID 均值 +0.3891、最小值 +0.2035，仅 5/11 越过。plusv2 在均值与一致性两方面都更好，对训练数据而言“最差样本的质量”尤其关键。Realistic Vision 底模在两种适配器下都更差，确认不兼容。",
+  "tuning_round": {
+    "protocol": "在 plusv2 官方配方基础上，同一批 4 身份 × 3 seed 逐项微调（配对比较）",
+    "baseline_plusv2_official": {
+      "id_sim_mean": 0.5138,
+      "id_sim_min": 0.432,
+      "stdev": 0.0496
+    },
+    "arms": [
+      {
+        "key": "plusv2-meanref",
+        "description": "plusv2 + 多参考平均嵌入（**最终采用**）",
+        "n_scored": 12,
+        "id_sim_mean": 0.6084,
+        "id_sim_median": 0.6057,
+        "id_sim_min": 0.5273,
+        "id_sim_max": 0.7045,
+        "id_sim_stdev": 0.053,
+        "n_above_0.4": 12,
+        "n_scored_list": 12
+      },
+      {
+        "key": "plusv2-scale1.2",
+        "description": "plusv2 + IP scale 1.2",
+        "n_scored": 12,
+        "id_sim_mean": 0.5223,
+        "id_sim_median": 0.5239,
+        "id_sim_min": 0.4248,
+        "id_sim_max": 0.5988,
+        "id_sim_stdev": 0.0514,
+        "n_above_0.4": 12,
+        "n_scored_list": 12
+      },
+      {
+        "key": "plusv2-guidance5",
+        "description": "plusv2 + guidance 5.0",
+        "n_scored": 12,
+        "id_sim_mean": 0.5095,
+        "id_sim_median": 0.5178,
+        "id_sim_min": 0.3947,
+        "id_sim_max": 0.6036,
+        "id_sim_stdev": 0.0719,
+        "n_above_0.4": 10,
+        "n_scored_list": 12
+      }
+    ],
+    "winner": "plusv2-meanref",
+    "conclusion": "多参考平均嵌入把均值从 0.5138 提到 0.6084、最差样本从 0.4320 提到 0.5273，且 12/12 张全部远超 0.4 门槛，故定为最终配方（已设为 generate_plusv2.py 默认）。提高 IP scale 到 1.2 或降低 guidance 到 5.0 都没有帮助。"
+  },
+  "final_recipe": {
+    "adapter": "IP-Adapter-FaceID-plusv2 (ip-adapter-faceid-plusv2_sd15.bin)",
+    "shortcut": true,
+    "s_scale": 1.0,
+    "clip_layer": -2,
+    "negative_clip": "encoder output for a zero image (official), not a zero tensor",
+    "clip_input": "face_align.norm_crop(image, kps, image_size=224)",
+    "id_model": "buffalo_l (normed_embedding)",
+    "ref_mode": "mean (multi-reference)",
+    "base": "sd15 (original)",
+    "vae": "sd-vae-ft-mse",
+    "scheduler": "DDIM (official params)",
+    "steps": 30,
+    "guidance": 7.5,
+    "ip_scale": 1.0,
+    "id_sim_mean": 0.6084,
+    "id_sim_min": 0.5273,
+    "reference": {
+      "same_person_real_photos": 0.745,
+      "base_faceid": 0.3891
+    }
+  }
 }
