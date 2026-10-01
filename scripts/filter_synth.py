@@ -38,6 +38,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from aigcfr.eval.faces import identity_embedding  # noqa: E402
 from aigcfr.eval.verify import l2_normalize  # noqa: E402
 from aigcfr.utils.config import find_local_config, load_config  # noqa: E402
 

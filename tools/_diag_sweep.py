@@ -35,9 +35,28 @@ print(f"参考身份 {ident}  参考图 {rec['path']}")
 
 from diffusers import StableDiffusionPipeline
 
-pipe = StableDiffusionPipeline.from_pretrained(
-    str(models_root / "sd15-faceid" / "sd15"), torch_dtype=torch.float16, variant="fp16",
-    safety_checker=None, requires_safety_checker=False)
+import argparse
+
+_ap = argparse.ArgumentParser(allow_abbrev=False)
+_ap.add_argument("--base", default="sd15", choices=["sd15", "realvis"])
+_ap.add_argument("--scales", default="0.6,0.8,1.0")
+_args = _ap.parse_args()
+
+_sd_root = models_root / "sd15-faceid"
+if _args.base == "realvis":
+    _ckpt = _sd_root / "realvis" / "Realistic_Vision_V6.0_NV_B1_fp16.safetensors"
+    if not _ckpt.exists():
+        print(f"!! 找不到 {_ckpt}，先跑 download_data.py --config configs/data/sd15_realvis.yaml")
+        raise SystemExit(2)
+    print(f"底模: Realistic Vision V6（人脸向微调）")
+    pipe = StableDiffusionPipeline.from_single_file(
+        str(_ckpt), config=str(_sd_root / "sd15"), torch_dtype=torch.float16,
+        safety_checker=None, requires_safety_checker=False)
+else:
+    print("底模: 原始 SD1.5")
+    pipe = StableDiffusionPipeline.from_pretrained(
+        str(_sd_root / "sd15"), torch_dtype=torch.float16, variant="fp16",
+        safety_checker=None, requires_safety_checker=False)
 pipe.set_progress_bar_config(disable=True)
 pipe = pipe.to("cuda")
 pipe.load_ip_adapter(str(models_root / "sd15-faceid" / "ip-adapter-faceid"), subfolder=None,
@@ -48,8 +67,7 @@ embeds = torch.cat([torch.zeros_like(base), base], dim=0)
 
 PROMPTS = {
     "face": "a photo of a person's face, frontal view, natural lighting, sharp focus",
-    "portrait": "a portrait photo of a person, looking at the camera",
-    "simple": "a photo of a face",
+    "portrait": "a close-up portrait photo of the person, looking at the camera",
 }
 NEG = "blurry, low quality, distorted, deformed, cartoon, painting, watermark, text"
 
@@ -58,7 +76,7 @@ print("=" * 84)
 print(f"{'scale':>6} {'prompt':>10} {'检出':>5} {'id_sim':>9}  图像统计")
 print("=" * 84)
 results = []
-for scale in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0):
+for scale in [float(x) for x in _args.scales.split(",")]:
     pipe.set_ip_adapter_scale(scale)
     for pname, prompt in PROMPTS.items():
         gen = torch.Generator(device="cuda").manual_seed(7)

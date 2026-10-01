@@ -82,6 +82,8 @@ def main() -> int:
     #    0.6 起才明显有效，0.8 最好（id_sim 0.04 -> 0.39，差 10 倍）。
     #    而且强度不够时生成的图**连人脸都检测不到**（条件是泛化人像而非本人）。
     ap.add_argument("--scale", type=float, default=0.8, help="IP-Adapter 强度（实测 0.8 最佳，勿低于 0.6）")
+    ap.add_argument("--base", default="sd15", choices=["sd15", "realvis"],
+                    help="底模：sd15=原始 SD1.5；realvis=Realistic Vision V6（人脸向微调，强烈建议）")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=None, help="输出目录（默认 <synth_root>/<exp-id>）")
     ap.add_argument("--manifest", default=None, help="manifest 路径（默认 data/manifests/<exp-id>.jsonl）")
@@ -215,22 +217,39 @@ def main() -> int:
             print("    [!] 同身份真实图之间都不相似（<0.3）—— 嵌入提取有问题，先别急着生成")
 
     # ---------------- 加载 SD1.5 + IP-Adapter ----------------
-    print("\n[3/4] 加载 SD1.5 + IP-Adapter-FaceID ...")
+    print("\n[3/4] 加载底模 + IP-Adapter-FaceID ...")
     from diffusers import StableDiffusionPipeline
 
-    pipe = StableDiffusionPipeline.from_pretrained(
-        str(sd15_dir),
-        torch_dtype=torch.float16,
-        variant="fp16",
-        safety_checker=None,               # 人脸研究不需要，且它会拦图
-        requires_safety_checker=False,
-    )
+    if args.base == "realvis":
+        # ⚠️ 人脸向微调的底模是**单文件** .safetensors（不是 diffusers 分文件夹格式）。
+        #    SD 1.5 基础模型画人脸很差，换它通常能把身份保持从"不像"拉到"像"。
+        #    config 用本地那份 SD1.5 的 diffusers 配置（官方 config 仓库已下架）。
+        ckpt = sd_root / "realvis" / "Realistic_Vision_V6.0_NV_B1_fp16.safetensors"
+        if not ckpt.exists():
+            print(f"!! 找不到底模: {ckpt}")
+            print("   先跑：python scripts/download_data.py --config configs/data/sd15_realvis.yaml")
+            return 2
+        print(f"    底模: {ckpt.name}（人脸向微调）")
+        pipe = StableDiffusionPipeline.from_single_file(
+            str(ckpt), config=str(sd15_dir),
+            torch_dtype=torch.float16,
+            safety_checker=None, requires_safety_checker=False,
+        )
+    else:
+        print(f"    底模: 原始 SD1.5（{sd15_dir}）")
+        pipe = StableDiffusionPipeline.from_pretrained(
+            str(sd15_dir),
+            torch_dtype=torch.float16,
+            variant="fp16",
+            safety_checker=None,               # 人脸研究不需要，且它会拦图
+            requires_safety_checker=False,
+        )
     pipe.load_ip_adapter(str(faceid_dir), subfolder=None, weight_name=faceid_bin,
                          image_encoder_folder=None)   # FaceID 不需要 CLIP 编码器
     pipe.set_ip_adapter_scale(args.scale)
     pipe = pipe.to("cuda")
     pipe.set_progress_bar_config(disable=True)
-    print(f"    scale={args.scale}  dtype={pipe.dtype}  device={pipe.device}")
+    print(f"    底模={args.base}  scale={args.scale}  dtype={pipe.dtype}  device={pipe.device}")
 
     # ---------------- 生成 ----------------
     print("\n[4/4] 开始生成 ...")

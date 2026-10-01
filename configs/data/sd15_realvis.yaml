@@ -1,0 +1,35 @@
+# ============================================================
+# Realistic Vision V6.0（人脸向微调的 SD1.5 底模，任务卡 #10）
+# ------------------------------------------------------------
+# ⚠️ **为什么需要它**：
+#
+#   SD 1.5 基础模型**本身画人脸就很差**（容易性别/种族跑偏、五官崩坏）。
+#   IP-Adapter-FaceID 是在跟这样一个底模较劲 —— 实测身份相似度只能到 0.40
+#   （同一个人两张真实照片是 0.745，不同人 < 0.25），人眼判断"甚至不像同一个种族"。
+#
+#   业界做身份保持生成的标准做法是**配一个人脸向微调的 SD1.5 底模**。
+#   Realistic Vision V6.0 是这类模型里最常用的之一，**架构仍是 SD1.5**，
+#   所以 IP-Adapter-FaceID-SD15 可以直接用。
+#
+# 用法：
+#   python scripts/download_data.py --config configs/data/sd15_realvis.yaml
+#   然后 python scripts/generate.py --base realvis ...
+#
+# 目录：<models_root>/sd15-faceid/realvis/Realistic_Vision_V6.0_NV_B1_fp16.safetensors
+# ============================================================
+
+name: sd15-realvis
+
+dest_root: models
+dest_subdir: sd15-faceid          # 和 SD1.5/IP-Adapter 放一起，generate.py 一并找得到
+
+sources:
+  - name: hf-mirror/RealisticVision
+    base_url: https://hf-mirror.com/SG161222/Realistic_Vision_V6.0_B1_noVAE/resolve/main
+    dest_subdir: realvis
+    files:
+      # fp16 版 2.13 GB（fp32 是 4.27 GB，没必要）
+      - Realistic_Vision_V6.0_NV_B1_fp16.safetensors
+
+checksums: {}
+extract: false
