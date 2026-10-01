@@ -72,6 +72,7 @@ def remote_size(url: str) -> int | None:
 
 def download(url: str, dst: Path, total: int | None) -> None:
     """流式下载 + 进度显示 + 断点续传。"""
+    dst.parent.mkdir(parents=True, exist_ok=True)   # 文件名可能带子目录（如 unet/xxx.bin）
     done = dst.stat().st_size if dst.exists() else 0
     if total and done == total:
         print(f"    已完整（{human(done)}），跳过")
@@ -159,17 +160,31 @@ def main() -> int:
             return 2
         print(f"使用机器私有配置: {local_file}")
         cfg = load_config(None, profile="auto", local_path=str(local_file))
-        root = (cfg.get("paths") or {}).get("data_root")
+        paths = cfg.get("paths") or {}
+        # dest_root 决定下到哪个根目录：data（默认）或 models。
+        # 数据集下到 data_root，模型权重下到 models_root（SD1.5 之类的权重不该混进 data）。
+        root_key = {"data": "data_root", "models": "models_root"}.get(
+            data_cfg.get("dest_root", "data"), "data_root")
+        root = paths.get(root_key)
         if not root:
-            print(f"!! {local_file} 里没有 paths.data_root，无法确定下载到哪里。")
+            print(f"!! {local_file} 里没有 paths.{root_key}，无法确定下载到哪里。")
             return 2
         dest = Path(root) / data_cfg["dest_subdir"]
-        print(f"目标目录: {dest}")
-    dest.mkdir(parents=True, exist_ok=True)
+        print(f"目标目录: {dest}   （dest_root={data_cfg.get('dest_root', 'data')}）")
+
+    # ⚠️ 建目录必须放在 --dry-run 之后：dry-run 应当**零副作用**
+    #    （之前的顺序会先建目录再 dry-run，目录不可写时 dry-run 也会失败）
 
     # ---------- 展开文件列表 ----------
-    jobs = [(fn, f"{src['base_url'].rstrip('/')}/{fn}", src["name"])
-            for src in data_cfg["sources"] for fn in src["files"]]
+    # 每个源可以有自己的 dest_subdir（例如 SD1.5 与 IP-Adapter 分开放），
+    # 没写就放在数据集根目录下。rel 是相对 dest 的落盘路径。
+    jobs: list[tuple[str, str, str, str]] = []
+    for src in data_cfg["sources"]:
+        sub = (src.get("dest_subdir") or "").strip("/")
+        for fn in src["files"]:
+            rel = f"{sub}/{fn}" if sub else fn
+            jobs.append((fn, f"{src['base_url'].rstrip('/')}/{fn}", src["name"], rel))
+
     if args.only:
         wanted = set(args.only)
         jobs = [j for j in jobs if j[0] in wanted]
@@ -177,19 +192,24 @@ def main() -> int:
         if missing:
             print(f"!! 配置里没有这些文件: {sorted(missing)}")
             return 2
-    print(f"\n数据集: {data_cfg['name']}  |  共 {len(jobs)} 个文件\n")
+    total_bytes = sum(remote_size(url) or 0 for _, url, _, _ in jobs)
+    print(f"\n数据集: {data_cfg['name']}  |  共 {len(jobs)} 个文件"
+          f"{f'，约 {human(total_bytes)}' if total_bytes else ''}\n")
 
     if args.dry_run:
-        for fn, url, mirror in jobs:
-            print(f"  [dry-run] {fn:18} <- {mirror}")
-        print("\n--dry-run 结束，未下载任何内容。")
+        for fn, url, mirror, rel in jobs:
+            size = remote_size(url)
+            print(f"  [dry-run] {rel:58} {human(size) if size else '?':>10}  <- {mirror}")
+        print(f"\n--dry-run 结束，未下载任何内容。预计总量 {human(total_bytes)}")
         return 0
+
+    dest.mkdir(parents=True, exist_ok=True)
 
     # ---------- 逐个下载 ----------
     results: dict[str, str] = {}
-    for fn, url, mirror in jobs:
-        out = dest / fn
-        print(f"[{fn}]  源: {mirror}")
+    for fn, url, mirror, rel in jobs:
+        out = dest / rel
+        print(f"[{rel}]  源: {mirror}")
         total = remote_size(url)
         if total:
             print(f"    远端大小 {human(total)}")

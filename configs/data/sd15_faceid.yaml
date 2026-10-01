@@ -1,0 +1,62 @@
+# ============================================================
+# SD 1.5 + IP-Adapter-FaceID —— 身份保持生成所需的权重（任务卡 #10）
+# ------------------------------------------------------------
+# ⚠️ 只下**必需的子集**，不是完整仓库：
+#   * 官方仓库总共 47 GB，其中绝大部分我们永远用不到
+#   * **不要 safety_checker**（1.2 GB）—— 它会拦截人脸图，而且对研究无意义
+#   * **不要** v1-5-pruned*.ckpt / *.safetensors 单文件权重（各 4~7 GB）—— 那是给
+#     Automatic1111 之类用的，diffusers 只吃分文件夹格式
+#   * 用 **fp16 变体**：下载量减半，8 GB 显存下也刚好合适
+#
+# 实测（2026-10-01）：
+#   * diffusers 0.40 完整支持 FaceID（IPAdapterFaceIDImageProjection /
+#     IPAdapterFaceIDPlusImageProjection 都在），且 load_ip_adapter 会**自动加载配套 LoRA**
+#   * hf-mirror 上这些文件都可访问
+#
+# 用法：
+#   python scripts/download_data.py --config configs/data/sd15_faceid.yaml
+# ============================================================
+
+name: sd15-faceid
+
+# 权重下到 models_root（不是 data_root）
+dest_root: models
+dest_subdir: sd15-faceid
+
+sources:
+  # ---------- ① SD 1.5 基础模型（diffusers 格式，fp16 子集，约 2.1 GB）----------
+  - name: hf-mirror/sd15
+    base_url: https://hf-mirror.com/stable-diffusion-v1-5/stable-diffusion-v1-5/resolve/main
+    dest_subdir: sd15
+    files:
+      - model_index.json
+      - scheduler/scheduler_config.json
+      - tokenizer/merges.txt
+      - tokenizer/special_tokens_map.json
+      - tokenizer/tokenizer_config.json
+      - tokenizer/vocab.json
+      - text_encoder/config.json
+      - text_encoder/pytorch_model.fp16.bin
+      - unet/config.json
+      - unet/diffusion_pytorch_model.fp16.bin
+      - vae/config.json
+      - vae/diffusion_pytorch_model.fp16.bin
+
+  # ---------- ② IP-Adapter-FaceID（SD15 版，约 148 MB）----------
+  #
+  # ⚠️ 用 **base FaceID**，不用 plusv2 —— 这是读 diffusers 源码后的结论：
+  #    IPAdapterFaceIDPlusImageProjection.forward 依赖 `self.clip_embeds`，
+  #    而整个 diffusers 包里**没有任何地方给它赋值**（`__init__` 里只置 None），
+  #    走标准路径必崩（NoneType.dtype）。plusv2 还需要额外的 CLIP 编码器（2.5 GB）。
+  #    base FaceID 只需一个 512 维 insightface 嵌入，代码路径完整。
+  #
+  # 配套 LoRA 必须一起下（load_ip_adapter 会自动加载）
+  - name: hf-mirror/ipadapter-faceid
+    base_url: https://hf-mirror.com/h94/IP-Adapter-FaceID/resolve/main
+    dest_subdir: ip-adapter-faceid
+    files:
+      - ip-adapter-faceid_sd15.bin
+      - ip-adapter-faceid_sd15_lora.safetensors
+
+checksums: {}          # 首次下完可把 sha256 回填到这里
+extract: false         # 全是权重文件，没有压缩包
