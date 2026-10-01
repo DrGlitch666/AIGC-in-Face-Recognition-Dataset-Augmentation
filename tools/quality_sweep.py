@@ -39,12 +39,21 @@ from aigcfr.utils.config import find_local_config, load_config
 # ---------------- 扫描的配置 ----------------
 # 每组只改 generate.py 的开关，不改代码路径
 CONFIGS = [
-    ("baseline", ["--scheduler", "pndm", "--ref-mode", "single", "--steps", "30", "--guidance", "5.0"]),
-    ("A_dpmpp", ["--scheduler", "dpmpp", "--ref-mode", "single", "--steps", "30", "--guidance", "5.0"]),
-    ("B_meanref", ["--scheduler", "pndm", "--ref-mode", "mean", "--steps", "30", "--guidance", "5.0"]),
-    ("C_steps40_cfg40", ["--scheduler", "pndm", "--ref-mode", "single", "--steps", "40", "--guidance", "4.0"]),
-    ("D_realvis", ["--base", "realvis", "--scheduler", "pndm", "--ref-mode", "single", "--steps", "30", "--guidance", "5.0"]),
-    ("E_all", ["--base", "sd15", "--scheduler", "dpmpp", "--ref-mode", "mean", "--steps", "40", "--guidance", "4.0"]),
+    # 第二轮：只比"当前默认"和 plusv2
+    ("cur_default", ["--scheduler", "dpmpp", "--ref-mode", "mean", "--steps", "40", "--guidance", "4.0"]),
+    ("F_plusv2", ["--ip-adapter", "faceid-plusv2", "--scheduler", "dpmpp", "--ref-mode", "mean",
+                  "--steps", "40", "--guidance", "4.0"]),
+    # 第一轮已跑完（id_sim 均值）：
+    #   E_all  dpmpp+mean+steps40+cfg4.0   +0.3352   <- 已设为默认
+    #   B      mean-ref                    +0.3272
+    #   C      steps40+cfg4.0              +0.3225
+    #   A      DPM++ 2M Karras             +0.2986
+    #   -      baseline                    +0.2932
+    #   D      Realistic Vision V6 底模     +0.0428   <- 确认出局
+    # 需要复跑时把下面两行取消注释：
+    # ("baseline", ["--scheduler", "pndm", "--ref-mode", "single", "--steps", "30", "--guidance", "5.0"]),
+    # ("D_realvis", ["--base", "realvis", "--scheduler", "pndm", "--ref-mode", "single",
+    #                "--steps", "30", "--guidance", "5.0"]),
 ]
 
 
