@@ -4,6 +4,12 @@
 # ⚠️ 只下**必需的子集**，不是完整仓库：
 #   * 官方仓库总共 47 GB，其中绝大部分我们永远用不到
 #   * **不要 safety_checker**（1.2 GB）—— 它会拦截人脸图，而且对研究无意义
+#     （代码里用 safety_checker=None + requires_safety_checker=False 跳过）
+#   * **但要 feature_extractor/preprocessor_config.json**（只有几百字节）——
+#     它是 StableDiffusionPipeline.__init__ 的**必需参数**，而 diffusers 对它的
+#     处理不像 safety_checker 那样有明确跳过方式。漏了会报
+#     "Can't load image processor ... containing a preprocessor_config.json file"。
+#     （真实踩过：第一次跑就是缺这个文件挂掉的。）
 #   * **不要** v1-5-pruned*.ckpt / *.safetensors 单文件权重（各 4~7 GB）—— 那是给
 #     Automatic1111 之类用的，diffusers 只吃分文件夹格式
 #   * 用 **fp16 变体**：下载量减半，8 GB 显存下也刚好合适
@@ -30,6 +36,10 @@ sources:
     dest_subdir: sd15
     files:
       - model_index.json
+      # ⚠️ feature_extractor 是 StableDiffusionPipeline.__init__ 的**必需参数**，
+      #    虽然可以传 None，但 diffusers 对它的处理不如 safety_checker 那样有明确支持。
+      #    这个 preprocessor_config.json 只有几百字节，下下来最稳妥（真实踩过）。
+      - feature_extractor/preprocessor_config.json
       - scheduler/scheduler_config.json
       - tokenizer/merges.txt
       - tokenizer/special_tokens_map.json
