@@ -292,7 +292,14 @@ def main() -> int:
             print("   先跑：python scripts/download_data.py --config configs/data/ipadapter_plusv2.yaml")
             return 2
     pipe.load_ip_adapter(
-        str(faceid_dir), subfolder=None, weight_name=faceid_bin,
+        str(faceid_dir),
+        # ⚠️ subfolder **不能**是 None：diffusers 里
+        #      image_encoder_subfolder = Path(subfolder, image_encoder_folder).as_posix()
+        #    只要给了 image_encoder_folder，就会把 subfolder 也传进 Path()，
+        #    None 会直接 TypeError: expected str, bytes or os.PathLike object, not NoneType。
+        #    （真实踩过：plusv2 一开就崩）
+        subfolder="" if plusv2 else None,
+        weight_name=faceid_bin,
         # base FaceID 不需要 CLIP 编码器；plusv2 需要（放在 image_encoder 子目录下）
         image_encoder_folder="image_encoder" if plusv2 else None,
     )
@@ -317,7 +324,25 @@ def main() -> int:
         #          - 第 0 维 2 = CFG 的 [负例, 正例]，负例给全零（与 ID 那一路一致）
         from transformers import CLIPImageProcessor
 
-        clip_proc = CLIPImageProcessor.from_pretrained(str(clip_dir))
+        # ⚠️ h94/IP-Adapter 的 models/image_encoder/ 里**没有** preprocessor_config.json
+        #    （只有 config.json 和 model.safetensors），所以 from_pretrained 会报
+        #    "Can't load image processor ... preprocessor_config.json"。
+        #    不用再下载 —— CLIP 的图像预处理是**公开固定常量**，直接构造即可。
+        #    下面这组值与 laion/CLIP-ViT-H-14 的 preprocessor_config.json 一致
+        #    （proj_in = Linear(1280, 768) 说明这个编码器是 ViT-H/14，隐藏维 1280）。
+        try:
+            clip_proc = CLIPImageProcessor.from_pretrained(str(clip_dir))
+        except OSError:
+            clip_proc = CLIPImageProcessor(
+                size={"shortest_edge": 224},
+                crop_size={"height": 224, "width": 224},
+                resample=3,                       # PILImageResampling.BICUBIC
+                image_mean=[0.48145466, 0.4578275, 0.40821073],
+                image_std=[0.26862954, 0.26130258, 0.27577711],
+                do_center_crop=True, do_normalize=True, do_resize=True,
+                do_rescale=True, do_convert_rgb=True,
+            )
+            print("    CLIP 预处理: 用内置常量（仓库里没有 preprocessor_config.json）")
 
         def clip_hidden(pil_img):
             px = clip_proc(images=pil_img, return_tensors="pt").pixel_values
