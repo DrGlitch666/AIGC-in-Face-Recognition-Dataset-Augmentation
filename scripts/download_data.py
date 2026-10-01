@@ -132,7 +132,7 @@ def extract(archive: Path, dest: Path) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="下载数据集原始文件")
+    parser = argparse.ArgumentParser(allow_abbrev=False, description="下载数据集原始文件")
     parser.add_argument("--config", required=True, help="数据集配置，如 configs/data/lfw.yaml")
     parser.add_argument("--local", default="auto", help='机器私有配置；默认 "auto" 自动寻找')
     parser.add_argument("--dest", default=None, help="覆盖目标目录（自测用）")

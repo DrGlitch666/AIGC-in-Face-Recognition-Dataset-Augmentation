@@ -48,7 +48,7 @@ for _stream in (sys.stdout, sys.stderr):
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="构建对齐训练集 + manifest")
+    ap = argparse.ArgumentParser(allow_abbrev=False, description="构建对齐训练集 + manifest")
     ap.add_argument("--config", default="configs/data/lfw.yaml")
     ap.add_argument("--min-images", type=int, default=15, help="选身份的最小图片数")
     ap.add_argument("--identity-limit", type=int, default=None, help="只做前 N 个身份（自测用）")

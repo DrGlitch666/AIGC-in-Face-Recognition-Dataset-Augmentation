@@ -1,9 +1,9 @@
 {
   "exp_id": "e1-real-only-seed0",
-  "created_at": "2026-10-01T14:25:38+08:00",
+  "created_at": "2026-10-01T14:44:10+08:00",
   "config_path": "configs/exp/e1-real-only-seed0.yaml",
-  "config_hash": "f8a189377d49",
-  "git_commit": "385f305",
+  "config_hash": "5db9a56038cc",
+  "git_commit": "e425030",
   "train_set": {
     "real_identities": 96,
     "real_images": 3590,
@@ -14,14 +14,14 @@
   },
   "model": {
     "arch": "iresnet18",
-    "loss": "arcface",
-    "margin": 0.5,
-    "scale": 64.0,
-    "emb_dim": 512,
-    "epochs": 10,
-    "seed": 0,
+    "loss": "arcface (self-trained)",
+    "epochs": 30,
+    "seed": null,
     "params_total": 62556544,
-    "pooled_fc": false
+    "ckpt": "F:\\aigcfr\\ckpt\\e1-real-only-seed0\\best.pth",
+    "embedding_source": "torch",
+    "face_select": "center",
+    "det_size": 640
   },
   "optim": {
     "optimizer": "sgd",
@@ -34,13 +34,246 @@
     "amp": true
   },
   "training": {
-    "final_loss": 4.332983,
-    "final_train_acc": 0.588022,
-    "best_train_acc": 0.5880222841225626,
-    "elapsed_seconds": 287.2,
+    "final_loss": 0.039415,
+    "final_train_acc": 0.989694,
+    "best_train_acc": 0.9896935933147633,
+    "elapsed_seconds": 762.5,
     "log": "results\\runs\\e1-real-only-seed0\\train_log.csv"
   },
-  "benchmarks": {},
+  "benchmarks": {
+    "lfw": {
+      "n_pairs_used": 5983,
+      "n_pairs_missing": 17,
+      "n_same": 2989,
+      "n_diff": 2994,
+      "metric": "accuracy",
+      "value": 0.880495,
+      "threshold": 0.241237,
+      "tar_at_far": {
+        "1e-02": {
+          "tar": 0.635664,
+          "threshold": 0.393081,
+          "actual_far": 0.009686
+        },
+        "1e-03": {
+          "tar": 0.415524,
+          "threshold": 0.52469,
+          "actual_far": 0.000668
+        }
+      },
+      "same_score": {
+        "mean": 0.459165,
+        "std": 0.204235,
+        "min": -0.212953,
+        "p05": 0.098947,
+        "p50": 0.4734,
+        "p95": 0.754711,
+        "max": 0.958732
+      },
+      "diff_score": {
+        "mean": 0.010921,
+        "std": 0.165552,
+        "min": -0.469078,
+        "p05": -0.255397,
+        "p50": 0.008127,
+        "p95": 0.291627,
+        "max": 0.559572
+      },
+      "per_fold": [
+        {
+          "fold": 1,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.908333
+        },
+        {
+          "fold": 2,
+          "n_pairs": 599,
+          "n_same": 299,
+          "n_diff": 300,
+          "accuracy": 0.906511
+        },
+        {
+          "fold": 3,
+          "n_pairs": 598,
+          "n_same": 300,
+          "n_diff": 298,
+          "accuracy": 0.859532
+        },
+        {
+          "fold": 4,
+          "n_pairs": 592,
+          "n_same": 296,
+          "n_diff": 296,
+          "accuracy": 0.868243
+        },
+        {
+          "fold": 5,
+          "n_pairs": 599,
+          "n_same": 299,
+          "n_diff": 300,
+          "accuracy": 0.854758
+        },
+        {
+          "fold": 6,
+          "n_pairs": 598,
+          "n_same": 298,
+          "n_diff": 300,
+          "accuracy": 0.886288
+        },
+        {
+          "fold": 7,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.91
+        },
+        {
+          "fold": 8,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.87
+        },
+        {
+          "fold": 9,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.86
+        },
+        {
+          "fold": 10,
+          "n_pairs": 597,
+          "n_same": 297,
+          "n_diff": 300,
+          "accuracy": 0.881072
+        }
+      ],
+      "accuracy_per_fold_mean": 0.880474,
+      "accuracy_per_fold_std": 0.020343,
+      "protocol": "official-6000pairs-10fold",
+      "description": "官方全量 6000 对，用于与文献对照"
+    },
+    "lfw_filtered": {
+      "n_pairs_used": 5539,
+      "n_pairs_missing": 14,
+      "n_same": 2624,
+      "n_diff": 2915,
+      "metric": "accuracy",
+      "value": 0.871457,
+      "threshold": 0.241237,
+      "tar_at_far": {
+        "1e-02": {
+          "tar": 0.584985,
+          "threshold": 0.393081,
+          "actual_far": 0.009949
+        },
+        "1e-03": {
+          "tar": 0.33689,
+          "threshold": 0.52469,
+          "actual_far": 0.000686
+        }
+      },
+      "same_score": {
+        "mean": 0.428185,
+        "std": 0.197293,
+        "min": -0.212953,
+        "p05": 0.086759,
+        "p50": 0.442662,
+        "p95": 0.726551,
+        "max": 0.958732
+      },
+      "diff_score": {
+        "mean": 0.011545,
+        "std": 0.166377,
+        "min": -0.469078,
+        "p05": -0.255791,
+        "p50": 0.009302,
+        "p95": 0.293077,
+        "max": 0.559572
+      },
+      "per_fold": [
+        {
+          "fold": 1,
+          "n_pairs": 543,
+          "n_same": 251,
+          "n_diff": 292,
+          "accuracy": 0.898711
+        },
+        {
+          "fold": 2,
+          "n_pairs": 531,
+          "n_same": 246,
+          "n_diff": 285,
+          "accuracy": 0.894539
+        },
+        {
+          "fold": 3,
+          "n_pairs": 566,
+          "n_same": 275,
+          "n_diff": 291,
+          "accuracy": 0.85159
+        },
+        {
+          "fold": 4,
+          "n_pairs": 550,
+          "n_same": 261,
+          "n_diff": 289,
+          "accuracy": 0.86
+        },
+        {
+          "fold": 5,
+          "n_pairs": 573,
+          "n_same": 276,
+          "n_diff": 297,
+          "accuracy": 0.848168
+        },
+        {
+          "fold": 6,
+          "n_pairs": 561,
+          "n_same": 265,
+          "n_diff": 296,
+          "accuracy": 0.878788
+        },
+        {
+          "fold": 7,
+          "n_pairs": 538,
+          "n_same": 251,
+          "n_diff": 287,
+          "accuracy": 0.899628
+        },
+        {
+          "fold": 8,
+          "n_pairs": 553,
+          "n_same": 260,
+          "n_diff": 293,
+          "accuracy": 0.858951
+        },
+        {
+          "fold": 9,
+          "n_pairs": 572,
+          "n_same": 278,
+          "n_diff": 294,
+          "accuracy": 0.854895
+        },
+        {
+          "fold": 10,
+          "n_pairs": 552,
+          "n_same": 261,
+          "n_diff": 291,
+          "accuracy": 0.873188
+        }
+      ],
+      "accuracy_per_fold_mean": 0.871846,
+      "accuracy_per_fold_std": 0.019035,
+      "protocol": "official-excluding-train-identities(min_images=15)",
+      "description": "剔除含训练身份的对，自训练模型的主结论用这个",
+      "train_identities": 96,
+      "train_images": 3595
+    }
+  },
   "hardware": {
     "hardware_profile": "b",
     "gpu_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
@@ -51,7 +284,62 @@
   "artifacts": {
     "ckpt_last": "F:\\aigcfr\\ckpt\\e1-real-only-seed0\\last.pth",
     "ckpt_best": "F:\\aigcfr\\ckpt\\e1-real-only-seed0\\best.pth",
-    "metrics": "results\\runs\\e1-real-only-seed0\\metrics.json"
+    "metrics": "results\\runs\\e1-real-only-seed0\\metrics.json",
+    "pairs_csv": "results\\runs\\e1-real-only-seed0\\pairs.csv"
   },
-  "notes": ""
+  "notes": "自研模型评测（F:\\aigcfr\\ckpt\\e1-real-only-seed0\\best.pth）。embedding 由 PyTorch 模型产生，检测与对齐复用 buffalo_l + norm_crop2（与训练完全一致）。filtered 协议已剔除 96 个训练身份。",
+  "evaluated_at": "2026-10-01T14:52:44+08:00",
+  "protocol_detail": {
+    "official": {
+      "dataset": "lfw",
+      "protocol": "official-6000pairs-10fold",
+      "num_pairs": 6000,
+      "num_same": 3000,
+      "num_diff": 3000,
+      "folds": 10,
+      "num_identities": 4281
+    },
+    "filtered": {
+      "dataset": "lfw",
+      "protocol": "official-6000pairs-10fold",
+      "num_pairs": 6000,
+      "num_same": 3000,
+      "num_diff": 3000,
+      "folds": 10,
+      "num_identities": 4281,
+      "filtered": true,
+      "num_pairs_kept": 5553,
+      "num_same_kept": 2633,
+      "num_diff_kept": 2920,
+      "num_pairs_removed": 447,
+      "num_identities_kept": 4161
+    }
+  },
+  "embedding": {
+    "num_used": 7690,
+    "num_failed": 11,
+    "failure_reasons": {
+      "no_face": 11
+    },
+    "norm_stats": {
+      "count": 7690,
+      "min": 9.652753829956055,
+      "max": 31.970487594604492,
+      "mean": 18.830241760010836,
+      "is_normalized": false
+    },
+    "extract_seconds": 0.2,
+    "images_per_second": 38450.0,
+    "warmup_seconds": 12.92,
+    "detection": {
+      "newly_processed": 11,
+      "from_cache": 7690,
+      "failed": 11,
+      "seconds": 0.2,
+      "face_count_hist": {},
+      "multi_face_ratio": null,
+      "det_score_mean": null
+    },
+    "aligned_cache": "F:\\aigcfr\\data\\cache\\aligned_lfw\\center"
+  }
 }

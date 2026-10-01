@@ -75,7 +75,7 @@ def git_commit() -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="E0：预训练模型零样本评测")
+    ap = argparse.ArgumentParser(allow_abbrev=False, description="E0：预训练模型零样本评测")
     ap.add_argument("--exp-id", required=True, help="实验 ID，决定输出目录名")
     ap.add_argument("--data-name", default="lfw")
     ap.add_argument("--min-images", type=int, default=15,

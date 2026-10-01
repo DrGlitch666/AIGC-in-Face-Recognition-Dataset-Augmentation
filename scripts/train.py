@@ -71,7 +71,7 @@ def set_seed(seed: int) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="训练 iresnet18 + ArcFace")
+    ap = argparse.ArgumentParser(allow_abbrev=False, description="训练 iresnet18 + ArcFace")
     ap.add_argument("--exp-id", required=True)
     ap.add_argument("--exp", default=None, help="实验配置，如 configs/exp/e1-real-only-seed0.yaml")
     ap.add_argument("--epochs", type=int, default=None, help="覆盖配置里的轮数（冒烟用）")
