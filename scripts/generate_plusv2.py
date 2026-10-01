@@ -101,6 +101,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--out", default=None, help="默认 <synth_root>/<exp-id>")
     ap.add_argument("--manifest", default=None, help="默认 data/manifests/<exp-id>.jsonl")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--overwrite", action="store_true",
+                    help="默认**断点续跑**（已存在的图直接跳过，因为种子确定性）；加此开关强制重生成")
     ap.add_argument("--base", default="sd15", choices=["sd15", "realvis"])
     ap.add_argument("--vae", default="mse", choices=["none", "mse"],
                     help="官方用 stabilityai/sd-vae-ft-mse（默认 mse）")
@@ -218,6 +220,31 @@ def clip_hidden_states_zeros(pipe, processor, pil_image, layer: int) -> torch.Te
     px = processor(images=pil_image, return_tensors="pt").pixel_values
     px = torch.zeros_like(px).to(device=pipe.device, dtype=pipe.dtype)
     return pipe.image_encoder(px, output_hidden_states=True).hidden_states[layer]
+
+
+def _make_record(ident, k, ri, n_refs, ref, target: Path, args, proj, data_root: Path,
+                 resumed: bool = False) -> dict:
+    """构造 manifest 记录。生成与"断点续跑跳过"两条路径共用，保证字段一致。"""
+    try:
+        rel = target.relative_to(data_root).as_posix()
+    except ValueError:
+        rel = target.as_posix()          # 输出在 data_root 之外 -> 绝对路径
+    seed = args.seed + zlib.crc32(f"{ident}_{k}".encode()) % 100000
+    return {
+        "image_id": f"syn_{ident}_{k:02d}", "path": rel, "identity_id": ident,
+        "source": "synth", "generator": "ipadapter-faceid-plusv2-sd15",
+        # 这张图是拿哪张真实图当**结构参考**生成的 —— 可追溯、可做归因分析
+        "parent_image_id": ref["rec"]["image_id"], "split": "train", "status": "pending",
+        "meta": {"exp_id": args.exp_id, "seed": seed, "prompt": PROMPTS[k % len(PROMPTS)],
+                 "ip_scale": args.scale, "guidance": args.guidance,
+                 "steps": args.steps, "shortcut": proj.shortcut,
+                 "s_scale": args.s_scale, "clip_layer": args.clip_layer,
+                 "base": args.base, "vae": args.vae, "scheduler": args.scheduler,
+                 "ref_mode": args.ref_mode, "id_model": "buffalo_l",
+                 "ref_rank": ri, "n_refs": n_refs,
+                 "ref_q": round(ref["q"], 4), "ref_det": round(ref["det"], 4),
+                 "resumed": resumed},
+    }
 
 
 def main() -> int:
@@ -365,6 +392,7 @@ def main() -> int:
     t0 = time.time()
     total = len(refs_by_id) * args.per_identity
     done = 0
+    n_skip = 0
     for ident, refs in refs_by_id.items():
         # ID 那一路：CFG 的 [负例(全零), 正例]
         idt = torch.from_numpy(id_mean_by_id[ident]).to(dtype=pipe.dtype,
@@ -374,9 +402,20 @@ def main() -> int:
         clip_cache: dict[int, torch.Tensor] = {}
 
         for k in range(args.per_identity):
-            # 轮换参考图：8 张 + 2 参考图 -> 各 4 张；参考图只有 1 张时全部用它
+            # 轮换参考图：10 张 + 2 参考图 -> 各 5 张；参考图只有 1 张时全部用它
             ri = min(k * n_refs // args.per_identity, n_refs - 1)
             ref = refs[ri]
+            name = f"{ident}_plusv2_{k:02d}.png"
+            target = out_dir / ident / name
+
+            # ⚠️ 断点续跑：文件已存在就跳过生成（种子是确定性的 -> 内容必然相同）。
+            #    960 张要跑约 62 分钟，中途断了不该从头再来。
+            if target.exists() and not args.overwrite:
+                n_skip += 1
+                done += 1
+                records_out.append(_make_record(ident, k, ri, n_refs, ref, target, args, proj, data_root, resumed=True))
+                continue
+
             if ri not in clip_cache:
                 rgb = Image.fromarray(cv2.cvtColor(ref["face224"], cv2.COLOR_BGR2RGB))
                 # 官方取 hidden_states[-2]；**每张参考图单独算，不平均**（见文件头说明）
@@ -392,33 +431,16 @@ def main() -> int:
                          ip_adapter_image_embeds=[id_embeds_pair],
                          num_inference_steps=args.steps, guidance_scale=args.guidance,
                          generator=gen, height=512, width=512).images[0]
-            name = f"{ident}_plusv2_{k:02d}.png"
-            target = out_dir / ident / name
             target.parent.mkdir(parents=True, exist_ok=True)
             image.save(target)
-            try:
-                rel = target.relative_to(data_root).as_posix()
-            except ValueError:
-                rel = target.as_posix()
-            records_out.append({
-                "image_id": f"syn_{ident}_{k:02d}", "path": rel, "identity_id": ident,
-                "source": "synth", "generator": "ipadapter-faceid-plusv2-sd15",
-                # 这张图是拿哪张真实图当**结构参考**生成的 —— 可追溯、可做归因分析
-                "parent_image_id": ref["rec"]["image_id"], "split": "train", "status": "pending",
-                "meta": {"exp_id": args.exp_id, "seed": seed, "prompt": prompt,
-                         "ip_scale": args.scale, "guidance": args.guidance,
-                         "steps": args.steps, "shortcut": proj.shortcut,
-                         "s_scale": args.s_scale, "clip_layer": args.clip_layer,
-                         "base": args.base, "vae": args.vae, "scheduler": args.scheduler,
-                         "ref_mode": args.ref_mode, "id_model": "buffalo_l",
-                         "ref_rank": ri, "n_refs": n_refs,
-                         "ref_q": round(ref["q"], 4), "ref_det": round(ref["det"], 4)},
-            })
+            records_out.append(_make_record(ident, k, ri, n_refs, ref, target, args, proj, data_root))
             done += 1
             el = time.time() - t0
             print(f"\r  {done}/{total}  {done/el:.2f} 张/秒  剩余约 {el/done*(total-done)/60:.1f} 分钟",
                   end="", flush=True)
     print()
+    if n_skip:
+        print(f"  （其中 {n_skip} 张是已存在、直接跳过生成 —— 断点续跑）")
 
     # ---------------- 5) 写报告 ----------------
     print("\n[5/5] 写清单 ...")
