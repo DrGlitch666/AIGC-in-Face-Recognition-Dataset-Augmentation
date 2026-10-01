@@ -100,7 +100,9 @@ def main() -> int:
                     help="底模：sd15=原始 SD1.5；realvis=Realistic Vision V6"
                          "（2026-10-01 在修好的管线下重测：id_sim 仅 0.0428，比基线低 7 倍，确认不兼容）")
     ap.add_argument("--ip-adapter", default="faceid", choices=["faceid", "faceid-plusv2"],
-                    help="faceid=base（仅 ID 嵌入）；faceid-plusv2=CLIP+ID 双路（官方称 much better，需额外下载）")
+                    help="faceid=base（仅 ID 嵌入，实测 id_sim 0.335，**默认用这个**）；"
+                         "faceid-plusv2=CLIP+ID 双路（代码已打通、形状已验证，但实测只有 0.082，"
+                         "比 base 差 4 倍；上游 diffusers 无参考实现，故不推荐）")
     ap.add_argument("--scheduler", default="dpmpp", choices=["pndm", "dpmpp"],
                     help="采样器：dpmpp=DPM++ 2M Karras（默认，实测更好）；pndm=SD1.5 旧默认")
     ap.add_argument("--ref-mode", default="mean", choices=["single", "mean"],
@@ -204,7 +206,8 @@ def main() -> int:
 
     id_embeds: dict[str, np.ndarray] = {}
     ref_ids: dict[str, str] = {}          # 身份 -> 参考说明（图片 id 或 "mean of N"）
-    ref_paths: dict[str, Path] = {}       # 身份 -> 代表性真实图（plusv2 的 CLIP 那一路要用）
+    ref_paths: dict[str, Path] = {}       # 身份 -> 代表图（对齐裁剪）
+    clip_paths: dict[str, Path] = {}      # 身份 -> 喂 CLIP 那一路的图（原始整图）
     skipped: list[str] = []
     for ident in identities:
         # ⚠️ 训练图是**已对齐的 112x112**，必须直通识别模型（不能再检测）——
@@ -233,6 +236,12 @@ def main() -> int:
             id_embeds[ident] = vecs[0]
             ref_ids[ident] = cands[0]["image_id"]
         ref_paths[ident] = data_root / cands[0]["path"]
+        # ⚠️ plusv2 的 CLIP 那一路要的是**整体外观**（发型、轮廓、光照、衣着），
+        #    **不是**五官细节 —— 官方 demo 喂的是原始整图。
+        #    喂 112x112 的紧致裁剪会让 CLIP 嵌入完全落在训练分布之外，
+        #    实测身份相似度只有 0.0775（而 base FaceID 是 0.3352）。
+        origin = cands[0].get("meta", {}).get("origin")
+        clip_paths[ident] = (data_root / origin) if origin else ref_paths[ident]
     print(f"    拿到嵌入 {len(id_embeds)} 个身份（ref-mode={args.ref_mode}），跳过 {len(skipped)} 个")
     if skipped:
         print(f"    跳过的身份: {skipped[:8]}{' ...' if len(skipped) > 8 else ''}")
@@ -391,7 +400,7 @@ def main() -> int:
         if plusv2:
             # CLIP 这一路：每个身份都要重算（不同人 → 不同隐状态），
             # 然后在整段去噪里保持不变（投影层每步都会读它）。
-            ref_pil = Image.open(ref_paths[ident]).convert("RGB")
+            ref_pil = Image.open(clip_paths[ident]).convert("RGB")
             hidden = clip_hidden(ref_pil)                       # (1, 257, 1280)
             proj = pipe.unet.encoder_hid_proj.image_projection_layers[0]
             proj.clip_embeds = torch.cat([torch.zeros_like(hidden), hidden], dim=0).unsqueeze(1)
