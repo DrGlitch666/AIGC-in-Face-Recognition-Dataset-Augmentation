@@ -139,10 +139,19 @@ def main() -> int:
             aligned = align_by_kps(img, face.kps, ARCFACE_SIZE)
 
             stem = Path(fname).stem
-            rel = f"{ident}/{stem}.png"
-            if not cv2.imwrite(str(out_dir / rel), aligned):
+            target = out_dir / ident / f"{stem}.png"
+            if not cv2.imwrite(str(target), aligned):
                 failures.append({"identity": ident, "file": fname, "reason": "write_failed"})
                 continue
+            # ⚠️ manifest 里的 path 必须**相对 data_root**（契约 A），
+            #    消费方（train.py）就是这么解析的；写成"相对对齐目录"会读不到文件（真实踩过）。
+            try:
+                rel = target.relative_to(data_root).as_posix()
+            except ValueError:
+                # --out 指到了 data_root 之外（自测场景）：退回绝对路径并提示
+                rel = target.as_posix()
+                if not records:
+                    print(f"  [!] --out 不在 data_root 下，manifest 里将写绝对路径（仅供自测）")
 
             stats = align_stats(aligned)
             records.append({
