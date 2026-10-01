@@ -59,6 +59,9 @@ def main() -> int:
     # ⚠️ 默认 320 而不是 640：见下面 load_app 处的说明（实测 640 会一张脸都检不出）
     ap.add_argument("--det-size", type=int, default=320,
                     help="检测输入尺寸（默认 320；生成图/对齐图用 640 会检不出人脸）")
+    ap.add_argument("--keep-per-identity", type=int, default=0, metavar="N",
+                    help="每个身份最终保留 N 张（0=不剪枝）。做法是**质量地板 + 冗余剪枝**，"
+                         "见下方说明 —— 不要改成按 id_sim 排名取前 N")
     args = ap.parse_args()
 
     local_file = find_local_config()
@@ -166,6 +169,7 @@ def main() -> int:
     print("\n[3/4] 计算身份相似度 ...")
     rows: list[dict] = []
     updated: list[dict] = []
+    vec_by_id: dict[str, np.ndarray] = {}          # 剪枝要用归一化后的特征
     for rec in synth:
         vec = embed(rec["path"])
         centroid = centroids.get(rec["identity_id"])
@@ -175,6 +179,7 @@ def main() -> int:
             sim, note = None, "no_real_centroid"
         else:
             sim, note = float(l2_normalize(vec) @ centroid), "ok"
+            vec_by_id[rec["image_id"]] = l2_normalize(vec)
         rec.setdefault("meta", {})["id_sim"] = None if sim is None else round(sim, 6)
         if args.threshold is not None:
             rec["status"] = "rejected" if (sim is None or sim < args.threshold) else "accepted"
@@ -182,12 +187,56 @@ def main() -> int:
                 None if sim >= args.threshold else f"id_sim {sim:.3f} < {args.threshold}")
         rows.append({"image_id": rec["image_id"], "identity_id": rec["identity_id"],
                      "status": rec.get("status"), "id_sim": sim, "note": note,
-                     "path": rec["path"]})
+                     "path": rec["path"], "_rec": rec})
         updated.append(rec)
 
     ok = [r for r in rows if r["id_sim"] is not None]
     sims = [r["id_sim"] for r in ok]
     print(f"    可评分 {len(ok)}/{len(rows)} 张")
+
+    # ---------------- 冗余剪枝：每个身份保留 keep_per_identity 张 ----------------
+    # ⚠️ 为什么**不能**按 id_sim 排名取前 N 张：
+    #
+    #   质量与多样性是相互拉扯的。实测（2026-10-01，3 身份 × 8 张）：
+    #       R1（最典型的那张参考图）生成组  id_sim 均值 +0.6053
+    #       R2（为多样性特意挑的不同视角）  id_sim 均值 +0.5840
+    #   按分数排名删图，删掉的会绝大多数是 R2 生成的图 —— 而 R2 正是多样化来源，
+    #   于是结构相似度回升到接近单参考的水平，**把多样性提升原样还回去**。
+    #
+    #   所以这里第二步删的是**冗余**：迭代地删掉"与同身份其余图最相似"的那一张。
+    #   一张 0.58 但视角独特的图，比一张 0.63 但和别人几乎一样的图更有价值。
+    if args.keep_per_identity:
+        group_by_id: dict[str, list[dict]] = {}
+        for r in rows:
+            if r["id_sim"] is not None and r["status"] != "rejected":
+                group_by_id.setdefault(r["identity_id"], []).append(r)
+        n_pruned = 0
+        for ident, group in group_by_id.items():
+            if len(group) <= args.keep_per_identity:
+                continue
+            mats = np.stack([vec_by_id[g["image_id"]] for g in group])
+            simmat = mats @ mats.T
+            keep = list(range(len(group)))
+            while len(keep) > args.keep_per_identity:
+                worst, worst_score = None, -9.9
+                for i in keep:
+                    others = [j for j in keep if j != i]
+                    score = float(simmat[i, others].mean()) if others else 0.0
+                    if score > worst_score:            # 与其余图最像 = 最冗余
+                        worst, worst_score = i, score
+                keep.remove(worst)
+                victim = group[worst]
+                victim["_rec"]["status"] = "rejected"
+                victim["_rec"]["meta"]["reject_reason"] = (
+                    f"redundant (与同身份其余图平均相似 {worst_score:.3f})")
+                victim["status"] = "rejected"
+                victim["note"] = "redundant"
+                n_pruned += 1
+        print(f"    冗余剪枝：删除 {n_pruned} 张（每个身份保留 ≤ {args.keep_per_identity} 张）")
+        ok = [r for r in rows if r["id_sim"] is not None and r["status"] != "rejected"]
+        sims = [r["id_sim"] for r in ok]
+        print(f"    剪枝后保留 {len(ok)}/{len(rows)} 张，均值 "
+              f"{statistics.fmean(sims) if sims else float('nan'):+.4f}")
 
     # ---------------- 报告 ----------------
     print("\n[4/4] 写报告 ...")
@@ -205,6 +254,9 @@ def main() -> int:
         "id_sim_max": round(max(sims), 4) if sims else None,
         "id_sim_stdev": round(statistics.pstdev(sims), 4) if len(sims) > 1 else None,
         "threshold": args.threshold,
+        "keep_per_identity": args.keep_per_identity,
+        "keep_criterion": ("质量地板(threshold) + 冗余剪枝（迭代删掉与同身份其余图最相似的那张）；"
+                           "**不是**按 id_sim 排名取前 N —— 那会优先删掉多样化来源，抵消多样性收益"),
         "n_accepted": sum(1 for r in rows if r["status"] == "accepted"),
         "n_rejected": sum(1 for r in rows if r["status"] == "rejected"),
         "identities": {

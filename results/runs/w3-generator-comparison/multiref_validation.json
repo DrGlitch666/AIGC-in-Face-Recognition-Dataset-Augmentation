@@ -1,0 +1,65 @@
+{
+  "experiment": "多参考图 + best-of-10 取 8 的小样本验证",
+  "protocol": "3 身份 × 10 张，同一批图做配对比较；评分器 filter_synth (buffalo_l, det 320)",
+  "generation": "generate_plusv2.py --per-identity 10 --max-refs 2",
+  "arms": [
+    {
+      "key": "8张基线",
+      "generate_per_identity": 8,
+      "threshold": 0.45,
+      "keep": null,
+      "n_kept": 24,
+      "id_sim_mean": 0.5947,
+      "id_sim_min": 0.4425,
+      "id_sim_stdev": 0.0604,
+      "clip_diversity": 0.6998
+    },
+    {
+      "key": "10张·全保留",
+      "generate_per_identity": 10,
+      "threshold": 0.45,
+      "keep": null,
+      "n_kept": 28,
+      "id_sim_mean": 0.5986,
+      "id_sim_min": 0.4425,
+      "id_sim_stdev": 0.0559
+    },
+    {
+      "key": "10张·冗余剪枝到8",
+      "generate_per_identity": 10,
+      "threshold": 0.45,
+      "keep": 8,
+      "n_kept": 24,
+      "id_sim_mean": 0.6015,
+      "id_sim_min": 0.5036,
+      "id_sim_stdev": 0.0348,
+      "clip_diversity": 0.6846
+    }
+  ],
+  "selection_strategy_test": {
+    "question": "剪枝该按冗余还是按 id_sim 排名？",
+    "same_30_images_per_identity_8": [
+      {
+        "strategy": "全保留(10张/身份)",
+        "clip_pairwise": 0.7003,
+        "id_pairwise": 0.6952
+      },
+      {
+        "strategy": "冗余剪枝(采用)",
+        "clip_pairwise": 0.6846,
+        "id_pairwise": 0.6862
+      },
+      {
+        "strategy": "按 id_sim 排名取前8",
+        "clip_pairwise": 0.7049,
+        "id_pairwise": 0.6937
+      }
+    ],
+    "conclusion": "按 id_sim 排名选出的 8 张比不剪枝的 10 张还要同质（0.7003 -> 0.7049），即纯按质量排序会**主动删掉多样性**（被删的多是为多样性特意挑的不同视角参考图 R2 生成的图，R2 组 id_sim 系统性低 0.021）。冗余剪枝则降到 0.6846，比全保留更有多样性。"
+  },
+  "final_recipe": {
+    "generate": "--per-identity 10 --max-refs 2",
+    "filter": "--threshold 0.45 --keep-per-identity 8",
+    "criterion": "质量地板(0.45) + 冗余剪枝；**不是**按 id_sim 排名"
+  }
+}

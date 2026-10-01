@@ -115,7 +115,22 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--ref-mode", default="mean", choices=["single", "mean"],
                     help="ID 嵌入取单张还是多张平均。官方用单张，但实测**多张平均明显更好**"
                          "（0.5138 -> 0.6084，且最差样本从 0.4320 提到 0.5273），故默认 mean")
-    ap.add_argument("--ref-count", type=int, default=5)
+    ap.add_argument("--ref-count", type=int, default=5, help="--ref-mode mean 时平均几张")
+    # ---------------- 多参考图（结构多样性）----------------
+    # 背景：ID 嵌入是全局向量可以平均；**CLIP 隐状态是空间 token 序列，不能平均**
+    #       （两张不同姿态的照片，同位置的 token 不对应同一部位，平均会糊掉结构）。
+    #       所以做法是：**每张参考图各生成一部分图**，让同一身份出现多个"结构来源"。
+    ap.add_argument("--max-refs", type=int, default=2,
+                    help="每个身份最多用几张参考图（各自的 CLIP 结构）来分别生成")
+    ap.add_argument("--prep-count", type=int, default=8,
+                    help="每个身份参与参考图挑选的候选真实图数量")
+    ap.add_argument("--det-floor", type=float, default=0.75, help="检测分硬闸门（低于它一概不选）")
+    ap.add_argument("--det-ratio", type=float, default=0.90,
+                    help="检测分还要 ≥ 本人最高分 × 此比例")
+    ap.add_argument("--min-q", type=float, default=0.50,
+                    help="候选必须 ≥ 与本人身份中心的余弦，防止选到侧脸/糊图")
+    ap.add_argument("--quality-margin", type=float, default=0.10,
+                    help="第 2 张参考图的质量分不得低于第 1 张这么多；差距过大就只用 1 张")
     ap.add_argument("--clip-layer", type=int, default=-2,
                     help="CLIP 取第几层隐状态，官方为 -2（倒数第二层）")
     return ap.parse_args()
@@ -254,12 +269,18 @@ def main() -> int:
     if args.identities:
         identities = identities[: args.identities]
 
-    id_embeds: dict[str, np.ndarray] = {}
-    faces224: dict[str, np.ndarray] = {}
+    # ---------------- 参考图选取（每个身份最多 max_refs 张）----------------
+    # 设计要点：
+    #   * **ID 嵌入是全局向量**，可以多张平均 -> 用最多 ref_count 张，身份最稳（实测 0.6084）
+    #   * **CLIP 隐状态是空间 token 序列，不能平均**（两张不同姿态的照片，同位置的 token
+    #     不对应同一部位，平均会糊成"幽灵脸"）-> 只能**分别生成**
+    #   * 于是：身份用一个稳健的均值，结构按参考图**轮换**，同一身份就有了多个"结构来源"
+    refs_by_id: dict[str, list[dict]] = {}
+    id_mean_by_id: dict[str, np.ndarray] = {}
     for ident in identities:
         cands = sorted(by_id[ident], key=lambda r: -r["meta"].get("det_score", 0))
-        vecs, face_img = [], None
-        for rec in cands[: args.ref_count] if args.ref_mode == "mean" else cands[:1]:
+        prep: list[dict] = []
+        for rec in cands[: args.prep_count]:
             origin = rec["meta"].get("origin")
             src = (data_root / origin) if origin else (data_root / rec["path"])
             img = cv2.imread(str(src))
@@ -269,20 +290,53 @@ def main() -> int:
             if not faces:
                 continue
             f = max(faces, key=lambda x: (x.bbox[2] - x.bbox[0]) * (x.bbox[3] - x.bbox[1]))
-            vecs.append(np.asarray(f.normed_embedding, dtype=np.float32))
-            if face_img is None:
+            prep.append({
+                "rec": rec,
+                "det": float(rec["meta"].get("det_score", f.det_score)),
+                "emb": np.asarray(f.normed_embedding, dtype=np.float32),
                 # 官方：face_align.norm_crop(image, landmark=kps, image_size=224)
-                face_img = face_align.norm_crop(img, landmark=f.kps, image_size=224)
-        if not vecs or face_img is None:
+                "face224": face_align.norm_crop(img, landmark=f.kps, image_size=224),
+            })
+        if not prep:
             continue
-        if args.ref_mode == "mean":
-            m = np.mean(np.stack(vecs), axis=0)
-            id_embeds[ident] = m / max(float(np.linalg.norm(m)), 1e-12)
-        else:
-            id_embeds[ident] = vecs[0]
-        faces224[ident] = face_img
-    print(f"    {len(id_embeds)} 个身份（ref-mode={args.ref_mode}，{args.ref_count if args.ref_mode=='mean' else 1} 张参考）")
-    if not id_embeds:
+
+        # 身份中心：用来衡量"这张参考图有多典型"（q 低的多半是侧脸/糊图/遮挡）
+        stack = np.stack([p["emb"] for p in prep])
+        centroid = stack.mean(axis=0)
+        centroid /= max(float(np.linalg.norm(centroid)), 1e-12)
+        for p in prep:
+            p["q"] = float(p["emb"] @ centroid)
+
+        # 质量闸门：检测分不能明显低于本人最好水平，且必须清楚是本人
+        best_det = max(p["det"] for p in prep)
+        gate = max(args.det_floor, args.det_ratio * best_det)
+        pool = [p for p in prep if p["det"] >= gate and p["q"] >= args.min_q]
+        if not pool:                                   # 全都不合格就退回最典型的一张
+            pool = [max(prep, key=lambda p: p["q"])]
+
+        order = sorted(range(len(pool)), key=lambda i: -pool[i]["q"])
+        chosen = [order[0]]                            # R1 = 最典型的一张
+        # 后续参考图：在质量允许范围内，挑与已选参考**差异最大**的（主动要不同视角）
+        while len(chosen) < args.max_refs:
+            rest = [i for i in order if i not in chosen
+                    and pool[i]["q"] >= pool[chosen[0]]["q"] - args.quality_margin]
+            if not rest:
+                break
+            chosen.append(min(rest, key=lambda i: max(
+                float(pool[i]["emb"] @ pool[c]["emb"]) for c in chosen)))
+
+        refs_by_id[ident] = [pool[i] for i in chosen]
+        # ID 嵌入：最多 ref_count 张的平均（保持实测最优身份表征）
+        m = np.mean(np.stack([p["emb"] for p in prep[: args.ref_count]]), axis=0)
+        id_mean_by_id[ident] = m / max(float(np.linalg.norm(m)), 1e-12)
+
+    n_multi = sum(1 for v in refs_by_id.values() if len(v) > 1)
+    print(f"    {len(refs_by_id)} 个身份；其中 {n_multi} 个采纳了 ≥2 张参考图"
+          f"（上限 {args.max_refs}，质量容忍 {args.quality_margin}，检测硬闸门 {args.det_floor}）")
+    for ident, refs in list(refs_by_id.items())[:5]:
+        desc = ", ".join(f"rank{r+1} q={p['q']:.3f} det={p['det']:.3f}" for r, p in enumerate(refs))
+        print(f"      {ident:26} {len(refs)} 张  {desc}")
+    if not refs_by_id:
         return 1
 
     # ---------------- 2) 管线 ----------------
@@ -297,7 +351,7 @@ def main() -> int:
 
     # ---------------- 3) 负例 CLIP ----------------
     print("\n[3/5] 算负例 CLIP 嵌入（对全零图像编码）...")
-    sample_face = next(iter(faces224.values()))
+    sample_face = next(iter(refs_by_id.values()))[0]["face224"]
     neg_clip = clip_hidden_states_zeros(pipe, processor, sample_face, args.clip_layer)
     print(f"    负例 CLIP {tuple(neg_clip.shape)}  均值 {neg_clip.mean().item():+.4f} "
           f"（官方做法，**不是**全零张量）")
@@ -306,22 +360,28 @@ def main() -> int:
     print("\n[4/5] 生成 ...")
     records_out: list[dict] = []
     t0 = time.time()
-    total = len(id_embeds) * args.per_identity
+    total = len(refs_by_id) * args.per_identity
     done = 0
-    for ident, emb in id_embeds.items():
-        face_rgb = Image.fromarray(cv2.cvtColor(faces224[ident], cv2.COLOR_BGR2RGB))
-
+    for ident, refs in refs_by_id.items():
         # ID 那一路：CFG 的 [负例(全零), 正例]
-        idt = torch.from_numpy(emb).to(dtype=pipe.dtype, device=pipe.device).reshape(1, 1, -1)
+        idt = torch.from_numpy(id_mean_by_id[ident]).to(dtype=pipe.dtype,
+                                                        device=pipe.device).reshape(1, 1, -1)
         id_embeds_pair = torch.cat([torch.zeros_like(idt), idt], dim=0)
-
-        # CLIP 那一路：官方取 hidden_states[-2]，负例来自全零图像
-        clip_pos = clip_hidden_states(pipe, processor, face_rgb, args.clip_layer)
-        # diffusers 要求 4 维并在 batch 维对齐 CFG：[负, 正]
-        proj.clip_embeds = torch.cat([neg_clip, clip_pos], dim=0).unsqueeze(1)
-        assert proj.clip_embeds.shape[0] == 2, proj.clip_embeds.shape
+        n_refs = len(refs)
+        clip_cache: dict[int, torch.Tensor] = {}
 
         for k in range(args.per_identity):
+            # 轮换参考图：8 张 + 2 参考图 -> 各 4 张；参考图只有 1 张时全部用它
+            ri = min(k * n_refs // args.per_identity, n_refs - 1)
+            ref = refs[ri]
+            if ri not in clip_cache:
+                rgb = Image.fromarray(cv2.cvtColor(ref["face224"], cv2.COLOR_BGR2RGB))
+                # 官方取 hidden_states[-2]；**每张参考图单独算，不平均**（见文件头说明）
+                clip_cache[ri] = clip_hidden_states(pipe, processor, rgb, args.clip_layer)
+            # diffusers 要求 4 维并在 batch 维对齐 CFG：[负, 正]
+            proj.clip_embeds = torch.cat([neg_clip, clip_cache[ri]], dim=0).unsqueeze(1)
+            assert proj.clip_embeds.shape[0] == 2, proj.clip_embeds.shape
+
             seed = args.seed + zlib.crc32(f"{ident}_{k}".encode()) % 100000
             gen = torch.Generator(device="cuda").manual_seed(seed)
             prompt = PROMPTS[k % len(PROMPTS)]
@@ -340,13 +400,16 @@ def main() -> int:
             records_out.append({
                 "image_id": f"syn_{ident}_{k:02d}", "path": rel, "identity_id": ident,
                 "source": "synth", "generator": "ipadapter-faceid-plusv2-sd15",
-                "parent_image_id": None, "split": "train", "status": "pending",
+                # 这张图是拿哪张真实图当**结构参考**生成的 —— 可追溯、可做归因分析
+                "parent_image_id": ref["rec"]["image_id"], "split": "train", "status": "pending",
                 "meta": {"exp_id": args.exp_id, "seed": seed, "prompt": prompt,
                          "ip_scale": args.scale, "guidance": args.guidance,
                          "steps": args.steps, "shortcut": proj.shortcut,
                          "s_scale": args.s_scale, "clip_layer": args.clip_layer,
                          "base": args.base, "vae": args.vae, "scheduler": args.scheduler,
-                         "ref_mode": args.ref_mode, "id_model": "buffalo_l"},
+                         "ref_mode": args.ref_mode, "id_model": "buffalo_l",
+                         "ref_rank": ri, "n_refs": n_refs,
+                         "ref_q": round(ref["q"], 4), "ref_det": round(ref["det"], 4)},
             })
             done += 1
             el = time.time() - t0
@@ -359,11 +422,17 @@ def main() -> int:
     with open(manifest, "w", encoding="utf-8") as fh:
         for r in records_out:
             fh.write(json.dumps(r, ensure_ascii=False) + "\n")
-    report = {"exp_id": args.exp_id, "n_images": len(records_out), "n_identities": len(id_embeds),
+    report = {"exp_id": args.exp_id, "n_images": len(records_out), "n_identities": len(refs_by_id),
               "generator": "ipadapter-faceid-plusv2-sd15", "base": args.base, "vae": args.vae,
               "scheduler": args.scheduler, "steps": args.steps, "guidance": args.guidance,
               "ip_scale": args.scale, "shortcut": proj.shortcut, "s_scale": args.s_scale,
               "clip_layer": args.clip_layer, "id_model": "buffalo_l", "ref_mode": args.ref_mode,
+              "max_refs": args.max_refs, "quality_margin": args.quality_margin,
+              "det_floor": args.det_floor, "det_ratio": args.det_ratio, "min_q": args.min_q,
+              "n_identities_with_multi_refs": sum(1 for v in refs_by_id.values() if len(v) > 1),
+              "refs": {ident: [{"image_id": p["rec"]["image_id"], "q": round(p["q"], 4),
+                                "det": round(p["det"], 4)} for p in refs]
+                       for ident, refs in refs_by_id.items()},
               "out_dir": str(out_dir), "manifest": str(manifest),
               "seconds": round(time.time() - t0, 1)}
     (out_dir / "gen_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2),
