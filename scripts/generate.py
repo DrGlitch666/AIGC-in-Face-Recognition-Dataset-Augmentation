@@ -341,6 +341,10 @@ def main() -> int:
     #    id_sim 0.4002 / 0.3998 / 0.4002）—— 手动解码并不更好，反而多两个出错点。
     #    所以回到标准路径：直接让管线解码。少动一个部件，少一份风险。
     pipe = pipe.to("cuda")
+    if plusv2:
+        # CLIP 编码器默认会以 fp32 加载（2.5 GB 权重 = 5 GB 显存），8 GB 卡上会 OOM。
+        # 手工降到 fp16（1.25 GB），与主模型一致。
+        pipe.image_encoder.to(device=pipe.device, dtype=torch.float16)
     pipe.set_progress_bar_config(disable=True)
     print(f"    底模={args.base}  scale={args.scale}  device={pipe.device}")
 
