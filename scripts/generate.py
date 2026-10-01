@@ -84,15 +84,25 @@ def main() -> int:
     ap.add_argument("--exp-id", default="syn-faceid")
     ap.add_argument("--per-identity", type=int, default=6, help="每个身份生成几张")
     ap.add_argument("--identities", type=int, default=None, help="只用前 N 个身份（冒烟用）")
-    ap.add_argument("--steps", type=int, default=30)
-    ap.add_argument("--guidance", type=float, default=5.0)
+    # 下面四个默认值是 2026-10-01 配置扫描（tools/quality_sweep.py）选出来的 **E_all**：
+    #   dpmpp + mean-ref + steps40 + guidance4.0 -> id_sim 均值 +0.3352（原配置 +0.2932，+14%）
+    # 其中**贡献最大的是 --ref-mode mean**（单独就有 +0.3272）：
+    # 同一身份不同真实照片的嵌入相似度只有 ~0.75，单张参考本身带噪声，平均能把它压下去。
+    ap.add_argument("--steps", type=int, default=40)
+    ap.add_argument("--guidance", type=float, default=4.0)
     # ⚠️ 0.6 -> 0.8 是**实测扫描**的结果（2026-10-01）：
     #    scale 0.0~0.4 时身份相似度基本是 0（IP-Adapter 等于没起作用），
     #    0.6 起才明显有效，0.8 最好（id_sim 0.04 -> 0.39，差 10 倍）。
     #    而且强度不够时生成的图**连人脸都检测不到**（条件是泛化人像而非本人）。
     ap.add_argument("--scale", type=float, default=0.8, help="IP-Adapter 强度（实测 0.8 最佳，勿低于 0.6）")
     ap.add_argument("--base", default="sd15", choices=["sd15", "realvis"],
-                    help="底模：sd15=原始 SD1.5（实测可用）；realvis=Realistic Vision V6（实测不可用，勿用）")
+                    help="底模：sd15=原始 SD1.5；realvis=Realistic Vision V6"
+                         "（2026-10-01 在修好的管线下重测：id_sim 仅 0.0428，比基线低 7 倍，确认不兼容）")
+    ap.add_argument("--scheduler", default="dpmpp", choices=["pndm", "dpmpp"],
+                    help="采样器：dpmpp=DPM++ 2M Karras（默认，实测更好）；pndm=SD1.5 旧默认")
+    ap.add_argument("--ref-mode", default="mean", choices=["single", "mean"],
+                    help="身份嵌入：mean=前 N 张真实图平均（默认，实测贡献最大）；single=只用一张")
+    ap.add_argument("--ref-count", type=int, default=5, help="--ref-mode mean 时平均几张")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=None, help="输出目录（默认 <synth_root>/<exp-id>）")
     ap.add_argument("--manifest", default=None, help="manifest 路径（默认 data/manifests/<exp-id>.jsonl）")
@@ -190,24 +200,35 @@ def main() -> int:
     warmup(app)
 
     id_embeds: dict[str, np.ndarray] = {}
-    ref_ids: dict[str, str] = {}          # 身份 -> 实际用作参考的真实图 image_id
+    ref_ids: dict[str, str] = {}          # 身份 -> 参考说明（图片 id 或 "mean of N"）
     skipped: list[str] = []
     for ident in identities:
-        # 从该身份的多张真实图里挑一张检测质量最好的当参考。
         # ⚠️ 训练图是**已对齐的 112x112**，必须直通识别模型（不能再检测）——
         #    详见 aigcfr.eval.faces.identity_embedding 的说明。
-        best: tuple[np.ndarray, str] | None = None
-        for rec in sorted(by_identity[ident], key=lambda r: -r["meta"].get("det_score", 0)):
+        #
+        # 两种取法：
+        #   single —— 取 det_score 最高的一张
+        #   mean   —— 取前 N 张求平均再归一化。同一身份不同真实照片的嵌入相似度只有 ~0.75，
+        #             说明单张参考本身带噪声；平均能把这个噪声压下去（零额外计算开销）。
+        cands = sorted(by_identity[ident], key=lambda r: -r["meta"].get("det_score", 0))
+        vecs: list[np.ndarray] = []
+        for rec in (cands[: args.ref_count] if args.ref_mode == "mean" else cands):
             vec = identity_embedding(app, data_root / rec["path"])
             if vec is not None:
-                best = (vec, rec["image_id"])
+                vecs.append(vec)
+            if args.ref_mode == "single" and vecs:
                 break
-        if best is not None:
-            id_embeds[ident] = best[0]
-            ref_ids[ident] = best[1]
-        else:
+        if not vecs:
             skipped.append(ident)
-    print(f"    拿到嵌入 {len(id_embeds)} 个身份，跳过 {len(skipped)} 个")
+            continue
+        if args.ref_mode == "mean":
+            mean = np.mean(np.stack(vecs), axis=0)
+            id_embeds[ident] = mean / max(float(np.linalg.norm(mean)), 1e-12)
+            ref_ids[ident] = f"mean of {len(vecs)}"
+        else:
+            id_embeds[ident] = vecs[0]
+            ref_ids[ident] = cands[0]["image_id"]
+    print(f"    拿到嵌入 {len(id_embeds)} 个身份（ref-mode={args.ref_mode}），跳过 {len(skipped)} 个")
     if skipped:
         print(f"    跳过的身份: {skipped[:8]}{' ...' if len(skipped) > 8 else ''}")
     if not id_embeds:
@@ -259,6 +280,15 @@ def main() -> int:
     pipe.load_ip_adapter(str(faceid_dir), subfolder=None, weight_name=faceid_bin,
                          image_encoder_folder=None)   # FaceID 不需要 CLIP 编码器
     pipe.set_ip_adapter_scale(args.scale)
+
+    # 采样器：PNDM 是 SD1.5 的老默认；DPM++ 2M Karras 是社区标准，同样步数下细节更好
+    if args.scheduler == "dpmpp":
+        from diffusers import DPMSolverMultistepScheduler
+        pipe.scheduler = DPMSolverMultistepScheduler.from_config(
+            pipe.scheduler.config, use_karras_sigmas=True)
+        print("    采样器: DPM++ 2M Karras")
+    else:
+        print("    采样器: PNDM（默认）")
 
     # ---------- 解码：用管线自带的标准路径 ----------
     # ⚠️ 这里曾经被我改成"手动拿 latents 再用 fp32 VAE 解码"，理由是怀疑 fp16 VAE 溢出。
