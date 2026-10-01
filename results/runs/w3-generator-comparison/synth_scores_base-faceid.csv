@@ -1,0 +1,13 @@
+image_id,identity_id,status,id_sim,note,path
+syn_Abdullah_Gul_00,Abdullah_Gul,pending,0.203521,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Abdullah_Gul/Abdullah_Gul_syn00.png
+syn_Abdullah_Gul_01,Abdullah_Gul,pending,0.432925,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Abdullah_Gul/Abdullah_Gul_syn01.png
+syn_Abdullah_Gul_02,Abdullah_Gul,pending,0.401008,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Abdullah_Gul/Abdullah_Gul_syn02.png
+syn_Alejandro_Toledo_00,Alejandro_Toledo,pending,0.295237,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Alejandro_Toledo/Alejandro_Toledo_syn00.png
+syn_Alejandro_Toledo_01,Alejandro_Toledo,pending,0.368520,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Alejandro_Toledo/Alejandro_Toledo_syn01.png
+syn_Alejandro_Toledo_02,Alejandro_Toledo,pending,0.309822,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Alejandro_Toledo/Alejandro_Toledo_syn02.png
+syn_Alvaro_Uribe_00,Alvaro_Uribe,pending,0.368291,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Alvaro_Uribe/Alvaro_Uribe_syn00.png
+syn_Alvaro_Uribe_01,Alvaro_Uribe,pending,0.274497,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Alvaro_Uribe/Alvaro_Uribe_syn01.png
+syn_Alvaro_Uribe_02,Alvaro_Uribe,pending,0.500467,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Alvaro_Uribe/Alvaro_Uribe_syn02.png
+syn_Amelie_Mauresmo_00,Amelie_Mauresmo,pending,,no_face,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Amelie_Mauresmo/Amelie_Mauresmo_syn00.png
+syn_Amelie_Mauresmo_01,Amelie_Mauresmo,pending,0.565303,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Amelie_Mauresmo/Amelie_Mauresmo_syn01.png
+syn_Amelie_Mauresmo_02,Amelie_Mauresmo,pending,0.560270,ok,C:/Users/WXQ/Desktop/project/AIGC-in-Face-Recognition-Dataset-Augmentation/results/runs/_ab_base/Amelie_Mauresmo/Amelie_Mauresmo_syn02.png

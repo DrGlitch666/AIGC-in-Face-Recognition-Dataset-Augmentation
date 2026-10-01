@@ -1,0 +1,130 @@
+{
+  "experiment": "W3 生成器质量对照",
+  "scorer": "filter_synth.py (buffalo_l, det 320)",
+  "protocol": "4 个身份 × 3 个 seed，三组使用相同身份与相同种子（配对比较）",
+  "reference_points": {
+    "same_person_real_photos": 0.745,
+    "different_people_below": 0.25,
+    "same_person_threshold": 0.4
+  },
+  "arms": [
+    {
+      "key": "base-faceid",
+      "description": "IP-Adapter-FaceID (base, ID 一路)",
+      "n_generated": 12,
+      "n_scored": 11,
+      "id_sim_mean": 0.3891,
+      "id_sim_median": 0.3685,
+      "id_sim_min": 0.2035,
+      "id_sim_max": 0.5653,
+      "id_sim_stdev": 0.1121,
+      "n_above_0.4": 5,
+      "n_scored_list": 11,
+      "per_identity": {
+        "Abdullah_Gul": {
+          "n": 3,
+          "mean": 0.3458,
+          "min": 0.2035,
+          "max": 0.4329
+        },
+        "Alejandro_Toledo": {
+          "n": 3,
+          "mean": 0.3245,
+          "min": 0.2952,
+          "max": 0.3685
+        },
+        "Alvaro_Uribe": {
+          "n": 3,
+          "mean": 0.3811,
+          "min": 0.2745,
+          "max": 0.5005
+        },
+        "Amelie_Mauresmo": {
+          "n": 2,
+          "mean": 0.5628,
+          "min": 0.5603,
+          "max": 0.5653
+        }
+      }
+    },
+    {
+      "key": "plusv2",
+      "description": "IP-Adapter-FaceID-plusv2 (ID + CLIP 两路, shortcut=True)",
+      "n_generated": 12,
+      "n_scored": 12,
+      "id_sim_mean": 0.5138,
+      "id_sim_median": 0.5245,
+      "id_sim_min": 0.432,
+      "id_sim_max": 0.5817,
+      "id_sim_stdev": 0.0496,
+      "n_above_0.4": 12,
+      "n_scored_list": 12,
+      "per_identity": {
+        "Abdullah_Gul": {
+          "n": 3,
+          "mean": 0.5479,
+          "min": 0.5405,
+          "max": 0.5583
+        },
+        "Alejandro_Toledo": {
+          "n": 3,
+          "mean": 0.4753,
+          "min": 0.432,
+          "max": 0.5084
+        },
+        "Alvaro_Uribe": {
+          "n": 3,
+          "mean": 0.4618,
+          "min": 0.4512,
+          "max": 0.4709
+        },
+        "Amelie_Mauresmo": {
+          "n": 3,
+          "mean": 0.5703,
+          "min": 0.5518,
+          "max": 0.5817
+        }
+      }
+    },
+    {
+      "key": "plusv2-realvis",
+      "description": "plusv2 + Realistic Vision V6 底模",
+      "n_generated": 12,
+      "n_scored": 12,
+      "id_sim_mean": 0.3999,
+      "id_sim_median": 0.3987,
+      "id_sim_min": 0.2836,
+      "id_sim_max": 0.526,
+      "id_sim_stdev": 0.0841,
+      "n_above_0.4": 5,
+      "n_scored_list": 12,
+      "per_identity": {
+        "Abdullah_Gul": {
+          "n": 3,
+          "mean": 0.3765,
+          "min": 0.2836,
+          "max": 0.4416
+        },
+        "Alejandro_Toledo": {
+          "n": 3,
+          "mean": 0.3323,
+          "min": 0.2908,
+          "max": 0.3997
+        },
+        "Alvaro_Uribe": {
+          "n": 3,
+          "mean": 0.3695,
+          "min": 0.3358,
+          "max": 0.3977
+        },
+        "Amelie_Mauresmo": {
+          "n": 3,
+          "mean": 0.5213,
+          "min": 0.513,
+          "max": 0.526
+        }
+      }
+    }
+  ],
+  "conclusion": "plusv2 均值 +0.5138、最小值 +0.4320，12/12 张越过 0.4；base FaceID 均值 +0.3891、最小值 +0.2035，仅 5/11 越过。plusv2 在均值与一致性两方面都更好，对训练数据而言“最差样本的质量”尤其关键。Realistic Vision 底模在两种适配器下都更差，确认不兼容。"
+}
