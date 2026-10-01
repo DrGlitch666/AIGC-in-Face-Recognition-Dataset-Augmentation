@@ -19,10 +19,19 @@
    而整个 diffusers 包里没有任何地方给它赋值 → 走标准路径必崩。
    base FaceID 只需要一个 512 维嵌入，路径完整。
 
-2. **ID 嵌入用 antelopev2，不用 buffalo_l**
-   IP-Adapter-FaceID 是在 **antelopev2 的嵌入空间**上训练的。
-   用 buffalo_l 提特征属于域不匹配，身份保持会明显变差。
-   （评测仍用 buffalo_l —— 与 E0 一致；两者角色不同，互不冲突。）
+2. **ID 嵌入必须用 buffalo_l，不能用 antelopev2**
+   网上文档（IP-Adapter-FaceID README）说要用 antelopev2，**照做会得到完全不像本人的图**。
+   交叉验证（同一 seed、同一参考图、两个嵌入模型 × 两个度量空间）：
+
+       条件嵌入        度量空间        id_sim
+       buffalo_l      buffalo_l      +0.4002
+       buffalo_l      antelopev2     +0.4464   <- 跨空间更高，排除"度量偏差"
+       antelopev2     buffalo_l      -0.1352
+       antelopev2     antelopev2     -0.0754
+
+   buffalo_l 的嵌入能让身份真正传过去；antelopev2 的嵌入让身份条件**完全失效**。
+   两者对真实图的嵌入都正常（同身份自检 0.755 / 0.768），
+   所以是**这个适配器只认 buffalo_l 的嵌入分布**，与嵌入质量无关。
 
 3. **嵌入必须拼成 `(2, 1, 512)` 传入**
    `prepare_ip_adapter_image_embeds` 对传入的 embeds 做 `.chunk(2)`，
@@ -151,31 +160,34 @@ def main() -> int:
     print(f"\n[1/4] 待生成身份 {len(identities)} 个"
           f"（每个选 1 张参考图）→ 共 {len(identities) * args.per_identity} 张")
 
-    # ---------------- 提 ID 嵌入（antelopev2！）----------------
-    print("\n[2/4] 加载 antelopev2 提取 ID 嵌入 ...")
+    # ---------------- 提 ID 嵌入 ----------------
+    print("\n[2/4] 提取身份嵌入 ...")
     import cv2  # noqa: PLC0415
 
-    # ⚠️ 先自己检查模型是否就位 —— **不要让 insightface 自动下载**：
-    #    它的下载器不支持断点续传也没有重试，实测拉 antelopev2.zip（360MB）
-    #    时中断一次就整体抛 ChunkedEncodingError 崩掉。请用本项目的下载器。
-    antelope_dir = models_root / "insightface" / "models" / "antelopev2"
-    if not antelope_dir.is_dir():
-        print(f"!! 找不到 antelopev2: {antelope_dir}")
-        print("   请不要让 insightface 自动下载（它的下载器不支持断点续传/重试）。")
-        print("   用本项目的下载器（支持续传 + 重试）：")
-        print("     python scripts/download_data.py --config configs/data/antelopev2.yaml")
-        return 2
+    # ⚠️⚠️ 条件嵌入必须用 **buffalo_l**，**不是** antelopev2！
+    #
+    #    网上文档（IP-Adapter-FaceID 的 README）说要用 antelopev2，照做之后
+    #    生成的人完全不像本人。交叉验证（2026-10-01，同一 seed、同一参考图）：
+    #
+    #        条件嵌入        度量空间        id_sim
+    #        buffalo_l      buffalo_l      +0.4002
+    #        buffalo_l      antelopev2     +0.4464   <- 跨空间更高，不是度量偏差
+    #        antelopev2     buffalo_l      -0.1352
+    #        antelopev2     antelopev2     -0.0754
+    #
+    #    buffalo_l 的嵌入能让身份真正传过去（跨空间度量也高）；
+    #    antelopev2 的嵌入则让身份条件**完全失效**。
+    #    两个模型对真实图的嵌入都正常（同身份自检 0.755 / 0.768），
+    #    所以问题不在嵌入质量，而在**这个适配器只认 buffalo_l 的嵌入分布**。
+    from aigcfr.eval.embed import load_app, warmup
 
-    from insightface.app import FaceAnalysis
-
-    app = FaceAnalysis(name="antelopev2", root=str(models_root / "insightface"),
-                       providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
-                       allowed_modules=["detection", "recognition"])
-    app.prepare(ctx_id=0, det_size=(640, 640))
-    rec_prov = list(app.models["recognition"].session.get_providers())
-    print(f"    antelopev2 recognition provider = {rec_prov}")
-    if rec_prov and rec_prov[0] != "CUDAExecutionProvider":
-        print("    [!] 没走 GPU —— 检查 import torch 是否在 onnxruntime 之前")
+    app = load_app(models_root / "insightface",
+                   providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
+                   det_size=640, ctx_id=0)
+    if not torch.cuda.is_available():
+        app.prepare(ctx_id=-1, det_size=(640, 640))
+    print(f"    buffalo_l provider = {list(app.models['recognition'].session.get_providers())}")
+    warmup(app)
 
     id_embeds: dict[str, np.ndarray] = {}
     ref_ids: dict[str, str] = {}          # 身份 -> 实际用作参考的真实图 image_id
@@ -310,7 +322,7 @@ def main() -> int:
                 "meta": {
                     "seed": seed, "prompt": prompt, "negative_prompt": NEGATIVE,
                     "steps": args.steps, "guidance_scale": args.guidance,
-                    "ip_adapter_scale": args.scale, "id_model": "antelopev2",
+                    "ip_adapter_scale": args.scale, "id_model": "buffalo_l",
                     "resolution": 512,
                 },
             })
@@ -329,7 +341,7 @@ def main() -> int:
     report = {
         "exp_id": args.exp_id,
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
-        "generator": "ipadapter-faceid-sd15 (base FaceID, antelopev2 embeddings)",
+        "generator": "ipadapter-faceid-sd15 (base FaceID, buffalo_l embeddings)",
         "n_identities": len(id_embeds),
         "per_identity": args.per_identity,
         "n_generated": len(records),
@@ -340,7 +352,7 @@ def main() -> int:
         "manifest": str(manifest_path),
         "elapsed_seconds": round(elapsed, 1),
         "seconds_per_image": round(elapsed / max(len(records), 1), 2),
-        "id_embedding_provider": rec_prov,
+        "id_embedding_model": "buffalo_l",
     }
     (out_dir / "gen_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2),
                                              encoding="utf-8")
