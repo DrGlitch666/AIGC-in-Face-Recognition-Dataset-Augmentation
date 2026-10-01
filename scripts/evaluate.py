@@ -83,6 +83,8 @@ def main() -> int:
     ap.add_argument("--out", default=None, help="输出目录（默认 results/runs/<exp-id>）")
     ap.add_argument("--cpu", action="store_true", help="强制 CPU（自测用）")
     ap.add_argument("--det-size", type=int, default=None, help="检测尺寸（默认取配置）")
+    ap.add_argument("--face-select", default=None, choices=["center", "score", "area"],
+                    help="一张图检出多张脸时选哪张（默认取配置的 eval.face_select）")
     args = ap.parse_args()
 
     # ---------------- 配置 ----------------
@@ -99,13 +101,18 @@ def main() -> int:
     providers = (["CPUExecutionProvider"] if args.cpu
                  else list(runtime.get("onnx_providers", ["CUDAExecutionProvider", "CPUExecutionProvider"])))
     det_size = args.det_size or int(runtime.get("onnx_det_size", 640))
+    face_select = args.face_select or (cfg.get("eval") or {}).get("face_select", "center")
 
     lfw_root = data_root / "raw" / args.data_name
     out_dir = (Path(args.out) if args.out else REPO_ROOT / "results" / "runs" / args.exp_id)
     out_dir = out_dir.resolve()          # 统一成绝对路径，避免 relative_to 报错
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # ⚠️ 缓存文件名必须带上选脸策略：换策略后旧缓存不能再复用，
+    #    否则会拿"用错误策略算出的 embedding"去算指标（真实踩过）。
     cache_path = None if args.no_cache else Path(
-        args.cache or (data_root / "cache" / "embeddings" / f"{args.data_name}.npz")
+        args.cache or (data_root / "cache" / "embeddings"
+                       / f"{args.data_name}_{face_select}.npz")
     )
 
     print("=" * 68)
@@ -113,7 +120,7 @@ def main() -> int:
     print(f"机器配置  : {local_file.name}  (profile={cfg['_meta']['profile']})")
     print(f"数据根目录: {lfw_root}")
     print(f"输出目录  : {out_dir}")
-    print(f"providers : {providers}   det_size={det_size}")
+    print(f"providers : {providers}   det_size={det_size}   face_select={face_select}")
     print(f"缓存      : {cache_path if cache_path else '(已关闭)'}")
     print("=" * 68)
 
@@ -159,7 +166,7 @@ def main() -> int:
         warm_seconds = warmup(app)
         print(f"  CUDA 预热完成（{warm_seconds:.1f}s，一次性开销，不计入吞吐）")
 
-    emb = extract(app, img_dir, needed, cache_path=cache_path)
+    emb = extract(app, img_dir, needed, cache_path=cache_path, face_select=face_select)
     print(f"  成功 {emb.num_ok} / 失败 {emb.num_failed}")
     if emb.failures:
         print(f"  失败原因: {emb.failure_counts()}")
@@ -199,6 +206,7 @@ def main() -> int:
             "seed": None,
             "onnx_providers": actual,
             "det_size": det_size,
+            "face_select": face_select,
         },
         "benchmarks": {
             "lfw": {**m_official, "protocol": "official-6000pairs-10fold",
@@ -221,6 +229,7 @@ def main() -> int:
             "extract_seconds": round(emb.seconds, 2),
             "images_per_second": round(emb.num_ok / emb.seconds, 2) if emb.seconds > 0 else None,
             "warmup_seconds": round(warm_seconds, 2),
+            "detection": emb.detection_stats(),
         },
         "hardware": {
             "hardware_profile": cfg["_meta"]["profile"],

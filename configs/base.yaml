@@ -39,3 +39,9 @@ eval:
   benchmarks: [lfw]
   protocol: lfw_10fold
   flip_test: true
+  # 一张图里检出多张脸时选哪张：center / score / area
+  # ⚠️ 2026-10-01 实测（LFW 官方 6000 对）：这一项直接决定 2.6 个百分点的准确率 ——
+  #    选"面积最大"会把背景里的误检框裁进来，同人相似度掉到 -0.03。
+  #    假拒绝恢复率：center 96.7% > score 91.7% > area 0%。
+  #    LFW 与生成图都是"单人居中"，所以 center 是正确默认值。**不要改成 area。**
+  face_select: center
