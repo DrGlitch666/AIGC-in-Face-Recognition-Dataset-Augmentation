@@ -231,8 +231,11 @@ def main() -> int:
     #    `target.relative_to(data_root)` 必然抛 ValueError，于是退化成
     #    "相对仓库根"的相对路径，而消费端（filter_synth.py）按"相对 data_root"解析，
     #    结果全部 no_face。**这个 bug 真实踩过，害得 6 张好图被判成检不出人脸。**
-    out_dir = Path(args.out) if args.out else \
-        Path(paths.get("synth_root", data_root / "processed/synth")) / args.exp_id
+    # ⚠️ 默认输出到 **data_root/processed/synth/<exp-id>**，与真实对齐图同一棵树。
+    #    这样 manifest 里的 path 是**相对 data_root** 的相对路径，消费端（filter_synth、
+    #    ManifestDataset）用同一条规则就能解析。若改到 data_root 之外（例如 synth_root），
+    #    path 只能写绝对路径，虽然目前能工作，但一旦两端规则不一致就会静默读不到图。
+    out_dir = Path(args.out) if args.out else data_root / "processed" / "synth" / args.exp_id
     out_dir = out_dir.resolve()
     manifest = Path(args.manifest) if args.manifest else REPO_ROOT / "data" / "manifests" / f"{args.exp_id}.jsonl"
     manifest = manifest.resolve()
