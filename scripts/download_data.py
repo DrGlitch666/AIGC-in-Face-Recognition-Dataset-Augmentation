@@ -60,50 +60,91 @@ def human(n: float) -> str:
 
 
 def remote_size(url: str) -> int | None:
-    """HEAD 拿远端大小；不支持 HEAD 的镜像返回 None（不阻塞下载）。"""
+    """拿远端文件大小。
+
+    ⚠️ 不能只靠 HEAD：实测有镜像对某些路径 **HEAD 直接失败**（返回 None），
+    而"已完整就跳过"的判断依赖这个大小 —— 大小拿不到就会对着完整文件发无效 Range，
+    接着吃 416。所以这里加一条兜底：GET 首字节，从 ``Content-Range`` 解析总大小。
+    （只读响应头，不读 body，所以不会真的把文件拖下来。）
+    """
     try:
         req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": UA})
         with urllib.request.urlopen(req, timeout=20) as resp:
             cl = resp.headers.get("Content-Length")
-            return int(cl) if cl else None
+            if cl:
+                return int(cl)
     except Exception:  # noqa: BLE001
-        return None
+        pass
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": UA, "Range": "bytes=0-0"})
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            content_range = resp.headers.get("Content-Range")     # 形如 "bytes 0-0/123456"
+            if content_range and "/" in content_range:
+                total = content_range.rsplit("/", 1)[1].strip()
+                if total.isdigit():
+                    return int(total)
+            cl = resp.headers.get("Content-Length")
+            if cl and resp.status == 200:
+                return int(cl)
+    except Exception:  # noqa: BLE001
+        pass
+    return None
 
 
 def download(url: str, dst: Path, total: int | None) -> None:
-    """流式下载 + 进度显示 + 断点续传。"""
+    """流式下载 + 进度显示 + 断点续传。
+
+    ⚠️ 关于 HTTP 416（真实踩过）：
+    "文件已经完整但拿不到远端大小"时会走进续传分支，发出 ``Range: bytes=<完整大小>-``，
+    服务器回 **416 Requested Range Not Satisfiable**，整批下载就中断了。
+    原因是我们靠 HEAD 请求拿大小，而 HEAD **可能失败**（返回 None），
+    这时"已完成就跳过"的判断失效。
+
+    所以这里对 416 做兜底：**丢掉 Range 完整重下**。
+    这样既覆盖"文件其实已完整"，也覆盖"本地残片比远端还大"这类情况。
+    """
     dst.parent.mkdir(parents=True, exist_ok=True)   # 文件名可能带子目录（如 unet/xxx.bin）
     done = dst.stat().st_size if dst.exists() else 0
     if total and done == total:
         print(f"    已完整（{human(done)}），跳过")
         return
 
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    mode = "wb"
-    if done and (total is None or done < total):
-        req.add_header("Range", f"bytes={done}-")
-        mode = "ab"
-        print(f"    断点续传：已有 {human(done)}")
+    for use_range in (True, False):
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
+        mode, received = "wb", 0
+        if use_range and done:
+            req.add_header("Range", f"bytes={done}-")
+            mode, received = "ab", done
+            print(f"    断点续传：已有 {human(done)}")
 
-    t0 = time.time()
-    received = done if mode == "ab" else 0
-    last_report = received
-    with urllib.request.urlopen(req, timeout=60) as resp, open(dst, mode) as fh:
-        while True:
-            chunk = resp.read(CHUNK)
-            if not chunk:
-                break
-            fh.write(chunk)
-            received += len(chunk)
-            # 每前进 10% 报一次进度
-            if total and (received - last_report) >= total * 0.10:
-                speed = received / max(time.time() - t0, 1e-6)
-                print(f"    {received / total * 100:5.1f}%  {human(received)}/{human(total)}  {human(speed)}/s")
-                last_report = received
+        t0 = time.time()
+        last_report = received
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp, open(dst, mode) as fh:
+                while True:
+                    chunk = resp.read(CHUNK)
+                    if not chunk:
+                        break
+                    fh.write(chunk)
+                    received += len(chunk)
+                    # 每前进 10% 报一次进度
+                    if total and (received - last_report) >= total * 0.10:
+                        speed = received / max(time.time() - t0, 1e-6)
+                        print(f"    {received / total * 100:5.1f}%  "
+                              f"{human(received)}/{human(total)}  {human(speed)}/s")
+                        last_report = received
+        except urllib.error.HTTPError as exc:
+            if exc.code == 416 and use_range:
+                print("    [!] HTTP 416（范围无效，通常意味着本地文件已完整或比远端大）"
+                      "，改为丢弃 Range 完整重下")
+                continue
+            raise
 
-    size = dst.stat().st_size
-    speed = size / max(time.time() - t0, 1e-6)
-    print(f"    完成 {human(size)}，用时 {time.time() - t0:.0f}s（{human(speed)}/s）")
+        size = dst.stat().st_size
+        speed = size / max(time.time() - t0, 1e-6)
+        print(f"    完成 {human(size)}，用时 {time.time() - t0:.0f}s（{human(speed)}/s）")
+        return
 
 
 def sha256_of(path: Path) -> str:
