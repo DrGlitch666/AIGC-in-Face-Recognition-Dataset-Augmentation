@@ -33,6 +33,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
@@ -224,8 +226,18 @@ def main() -> int:
     if emb.failures:
         print(f"  失败原因: {emb.failure_counts()}")
     ns = norm_stats(emb.vectors)
-    print(f"  L2 范数: min={ns.get('min'):.4f} max={ns.get('max'):.4f} "
-          f"归一化正确={ns.get('is_normalized')}")
+    print(f"  L2 范数: min={ns.get('min'):.4f}  max={ns.get('max'):.4f}  "
+          f"（{ns.get('count')} 条）")
+    if ns.get("is_normalized"):
+        print("    -> 已归一化（ONNX 的 normed_embedding 模长恒为 1）")
+    elif args.ckpt:
+        # 这段解释是刻意写进输出的：看到"未归一化"很容易以为出错了
+        print("    -> 未归一化，这是**正常的**：自研模型末端是 BatchNorm1d，不是 L2 归一化。")
+        print(f"       512 维单位方差向量的期望模长 = sqrt(512) = {np.sqrt(512):.1f}，实测中心与之一致。")
+        print("       评分前 pair_scores() 会强制归一化；余弦与长度无关，指标不受影响。")
+        print("       （训练时的归一化由 ArcFace 损失内部完成，模型末端不必重复做。）")
+    else:
+        print("    -> ⚠️ 异常：ONNX 路径本应拿到 normed_embedding（模长应为 1），请检查取得是哪个字段")
 
     # ---------------- 指标 ----------------
     print("\n[4/5] 计算指标 ...")

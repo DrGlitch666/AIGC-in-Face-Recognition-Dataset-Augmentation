@@ -47,6 +47,23 @@ class Scores:
         return int((self.labels == 0).sum())
 
 
+def l2_normalize(matrix: np.ndarray, axis: int = -1) -> np.ndarray:
+    """L2 归一化（余弦相似度的前提）。
+
+    ⚠️ **任何比较 embedding 的代码都必须先过这一步。**
+
+    自研模型的输出**没有归一化**：末端是 ``BatchNorm1d``（每维单位方差），
+    所以 512 维向量的模长约在 ``sqrt(512) ≈ 22.6`` 附近浮动（实测 9.6~32）。
+
+    如果直接对这些向量算内积，结果是"**谁的向量更长谁得分更高**"，
+    与两脸是否相似无关 —— 判据完全失效。余弦相似度按定义与长度无关，
+    所以先归一化、再算内积，两者等价。
+    """
+    arr = np.asarray(matrix, dtype=np.float64)
+    norms = np.linalg.norm(arr, axis=axis, keepdims=True)
+    return arr / np.maximum(norms, 1e-12)
+
+
 def cosine(a: np.ndarray, b: np.ndarray) -> float:
     """两个向量的余弦相似度（显式归一化，不假设输入已归一化）。"""
     na, nb = float(np.linalg.norm(a)), float(np.linalg.norm(b))
@@ -104,10 +121,10 @@ def pair_scores(pairs, vectors: dict[str, np.ndarray]) -> Scores:
         return Scores(np.array([], dtype=np.int64), np.array([], dtype=np.float64),
                       np.array([], dtype=np.int64), dict(missing))
 
-    mat_a = np.stack(keep_a).astype(np.float64)
-    mat_b = np.stack(keep_b).astype(np.float64)
-    mat_a /= np.maximum(np.linalg.norm(mat_a, axis=1, keepdims=True), 1e-12)
-    mat_b /= np.maximum(np.linalg.norm(mat_b, axis=1, keepdims=True), 1e-12)
+    # 必须先归一化：自研模型的 embedding 未归一化（模长 ~9.6~32），
+    # 直接算内积会变成"谁的向量长谁赢"。
+    mat_a = l2_normalize(np.stack(keep_a))
+    mat_b = l2_normalize(np.stack(keep_b))
     scores_arr = np.einsum("ij,ij->i", mat_a, mat_b)
 
     return Scores(

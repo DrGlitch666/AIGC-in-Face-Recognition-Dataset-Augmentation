@@ -3,7 +3,7 @@
   "created_at": "2026-10-01T14:44:10+08:00",
   "config_path": "configs/exp/e1-real-only-seed0.yaml",
   "config_hash": "5db9a56038cc",
-  "git_commit": "e425030",
+  "git_commit": "1467e9d",
   "train_set": {
     "real_identities": 96,
     "real_images": 3590,
@@ -288,7 +288,7 @@
     "pairs_csv": "results\\runs\\e1-real-only-seed0\\pairs.csv"
   },
   "notes": "自研模型评测（F:\\aigcfr\\ckpt\\e1-real-only-seed0\\best.pth）。embedding 由 PyTorch 模型产生，检测与对齐复用 buffalo_l + norm_crop2（与训练完全一致）。filtered 协议已剔除 96 个训练身份。",
-  "evaluated_at": "2026-10-01T14:52:44+08:00",
+  "evaluated_at": "2026-10-01T14:57:34+08:00",
   "protocol_detail": {
     "official": {
       "dataset": "lfw",
@@ -328,14 +328,14 @@
       "mean": 18.830241760010836,
       "is_normalized": false
     },
-    "extract_seconds": 0.2,
-    "images_per_second": 38450.0,
-    "warmup_seconds": 12.92,
+    "extract_seconds": 0.3,
+    "images_per_second": 25633.33,
+    "warmup_seconds": 58.17,
     "detection": {
       "newly_processed": 11,
       "from_cache": 7690,
       "failed": 11,
-      "seconds": 0.2,
+      "seconds": 0.3,
       "face_count_hist": {},
       "multi_face_ratio": null,
       "det_score_mean": null

@@ -16,6 +16,7 @@ from aigcfr.eval.verify import (
     best_threshold,
     cosine,
     fold_metrics,
+    l2_normalize,
     norm_stats,
     pair_scores,
     summarize,
@@ -40,6 +41,35 @@ def test_cosine_ignores_length():
 
 def test_cosine_zero_vector_is_safe():
     assert cosine(np.zeros(3), np.ones(3)) == 0.0
+
+
+def test_l2_normalize_makes_unit_rows_and_handles_zero():
+    mat = np.array([[3.0, 4.0], [0.0, 5.0], [0.0, 0.0]])
+    out = l2_normalize(mat)
+    assert np.allclose(np.linalg.norm(out[:2], axis=1), 1.0)
+    assert np.all(np.isfinite(out))          # 零向量不能变成 NaN
+    assert np.allclose(out[2], 0.0)
+
+
+def test_pair_scores_is_scale_invariant():
+    """★ 把 embedding 整体缩放，余弦分数必须**完全不变**。
+
+    这条测试守着一个真实的坑：自研模型的输出未归一化（模长 9.6~32），
+    如果评分时忘了归一化，分数就变成"谁的向量长谁赢"。
+    """
+    base = {
+        "A/A_0001.jpg": np.array([1.0, 2.0, 3.0], dtype=np.float32),
+        "A/A_0002.jpg": np.array([1.1, 1.9, 3.2], dtype=np.float32),
+        "B/B_0001.jpg": np.array([-2.0, 1.0, 0.5], dtype=np.float32),
+    }
+    pairs = [_pair(1, "same", "A", "A"), _pair(1, "diff", "A", "B")]
+    sc_normal = pair_scores(pairs, base)
+
+    scaled = {k: v * 100.0 for k, v in base.items()}
+    sc_scaled = pair_scores(pairs, scaled)
+
+    assert np.allclose(sc_normal.scores, sc_scaled.scores, atol=1e-6), (
+        f"缩放后分数变了：{sc_normal.scores} vs {sc_scaled.scores} —— 说明没归一化")
 
 
 def test_norm_stats_detects_unnormalized():
