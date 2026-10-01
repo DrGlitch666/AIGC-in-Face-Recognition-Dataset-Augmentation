@@ -77,7 +77,11 @@ def main() -> int:
     ap.add_argument("--identities", type=int, default=None, help="只用前 N 个身份（冒烟用）")
     ap.add_argument("--steps", type=int, default=30)
     ap.add_argument("--guidance", type=float, default=5.0)
-    ap.add_argument("--scale", type=float, default=0.6, help="IP-Adapter 强度")
+    # ⚠️ 0.6 -> 0.8 是**实测扫描**的结果（2026-10-01）：
+    #    scale 0.0~0.4 时身份相似度基本是 0（IP-Adapter 等于没起作用），
+    #    0.6 起才明显有效，0.8 最好（id_sim 0.04 -> 0.39，差 10 倍）。
+    #    而且强度不够时生成的图**连人脸都检测不到**（条件是泛化人像而非本人）。
+    ap.add_argument("--scale", type=float, default=0.8, help="IP-Adapter 强度（实测 0.8 最佳，勿低于 0.6）")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=None, help="输出目录（默认 <synth_root>/<exp-id>）")
     ap.add_argument("--manifest", default=None, help="manifest 路径（默认 data/manifests/<exp-id>.jsonl）")
