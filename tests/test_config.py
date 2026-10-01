@@ -80,11 +80,27 @@ def test_load_config_merges_all_layers():
     assert cfg["_meta"]["profile"] == "b"
     assert cfg["exp_id"] == "e1-real-only-seed0"          # 来自 exp
     assert cfg["model"]["emb_dim"] == 512                 # 来自 base
-    assert cfg["train"]["epochs"] == 10                   # 来自 base
+    # ⚠️ 不要硬编码 epochs 的具体值 —— 它属于"科学设定"，会随实验进展被合理调整
+    #    （2026-10-01 就因为 E1 欠训练把它从 10 调到了 30，导致这条断言曾经红过）。
+    #    这里断言的是"值来自 base 且合法"。
+    assert isinstance(cfg["train"]["epochs"], int) and cfg["train"]["epochs"] > 0
     assert cfg["train"]["batch_size"] == 64               # 来自 profile b
     assert cfg["train"]["grad_accum"] == 2                # 来自 profile b
     assert cfg["seed"] == 0
     assert str(cfg["paths"]["data_root"]).startswith("F:")  # 来自 local a
+
+
+def test_exp_config_overrides_base_but_keeps_siblings():
+    """分层合并的核心行为：exp 覆盖 base 的**同名字段**，其余字段保留（深合并）。"""
+    tmp = Path(__file__).parent / "_tmp_exp_override.yaml"
+    tmp.write_text("train:\n  epochs: 3\n", encoding="utf-8")
+    try:
+        cfg = load_config(str(tmp), profile="b", local_path="configs/local.a.yaml")
+        assert cfg["train"]["epochs"] == 3                    # 被 exp 覆盖
+        assert cfg["train"]["batch_size"] == 64               # 同层其他字段保留
+        assert cfg["model"]["emb_dim"] == 512                 # 其他层完好
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def test_load_config_works_without_local():
