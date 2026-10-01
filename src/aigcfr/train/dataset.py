@@ -31,7 +31,7 @@ class ManifestDataset(Dataset):
 
     def __init__(
         self,
-        manifest_path: str | Path,
+        manifest_path: str | Path | list[str | Path],
         data_root: str | Path,
         split: str = "train",
         image_size: int = 112,
@@ -39,28 +39,31 @@ class ManifestDataset(Dataset):
         color_jitter: float = 0.0,
         sources: tuple[str, ...] | None = None,
     ):
+        """``manifest_path`` 可以是单个路径，也可以是**多个**（E4 要把真实+合成拼起来）。"""
         self.data_root = Path(data_root)
         self.image_size = image_size
         self.augment = augment
         self.color_jitter = color_jitter
 
+        paths = [manifest_path] if isinstance(manifest_path, (str, Path)) else list(manifest_path)
         records: list[dict] = []
-        path = Path(manifest_path)
-        if not path.exists():
-            raise FileNotFoundError(f"找不到 manifest: {path}（先跑 scripts/build_dataset.py）")
-        with open(path, encoding="utf-8") as fh:
-            for line in fh:
-                line = line.strip()
-                if not line:
-                    continue
-                rec = json.loads(line)
-                if rec.get("split") != split or rec.get("status") != "accepted":
-                    continue
-                if sources is not None and rec.get("source") not in sources:
-                    continue
-                records.append(rec)
+        for one in paths:
+            path = Path(one)
+            if not path.exists():
+                raise FileNotFoundError(f"找不到 manifest: {path}（先跑 scripts/build_dataset.py）")
+            with open(path, encoding="utf-8") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    rec = json.loads(line)
+                    if rec.get("split") != split or rec.get("status") != "accepted":
+                        continue
+                    if sources is not None and rec.get("source") not in sources:
+                        continue
+                    records.append(rec)
         if not records:
-            raise ValueError(f"manifest 里没有 split={split!r} / status='accepted' 的样本: {path}")
+            raise ValueError(f"这些 manifest 里没有 split={split!r} / status='accepted' 的样本: {paths}")
 
         # 类别索引按身份名排序 —— 保证两台机器、多次运行的 label 顺序一致
         identities = sorted({r["identity_id"] for r in records})

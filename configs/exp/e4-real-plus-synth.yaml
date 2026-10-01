@@ -1,0 +1,28 @@
+# ============================================================
+# E4：真实 + 合成（任务卡 #14 的第一个对照点）
+# ------------------------------------------------------------
+# 与 E1（只用真实）**唯一的差别**就是多了筛选后的合成图，其它一切不变：
+# 同一个模型、同样的 30 轮、同样的增广（只有水平翻转）、同样的 seed。
+#
+# 合成图来自 scripts/generate.py（SD1.5 + IP-Adapter-FaceID, scale 0.8），
+# 并经 scripts/filter_synth.py 按 id_sim 阈值筛选（只保留 status=accepted）。
+#
+# 用法：
+#   python scripts/train.py --exp-id e4-real-plus-synth-seed0 --exp configs/exp/e4-real-plus-synth.yaml
+# ============================================================
+
+exp_id: e4-real-plus-synth-seed0
+seed: 0
+
+data:
+  # 同时读两个清单：真实训练集 + 合成图
+  manifests:
+    - data/manifests/toy_train.jsonl
+    - data/manifests/syn-faceid.jsonl
+  synth_generator: ipadapter-faceid-sd15
+
+train:
+  real_only: false
+  # 用哪些来源训练：real（真实）+ synth（筛选通过的合成）
+  sources: [real, synth]
+  mix_ratio: null          # 实际比例由"筛选后剩多少张"决定，训练时会打印

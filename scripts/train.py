@@ -94,7 +94,12 @@ def main() -> int:
 
     data_root = Path(paths["data_root"])
     ckpt_root = Path(paths.get("ckpt_root", data_root.parent / "ckpt"))
-    manifest = REPO_ROOT / data_cfg.get("manifest", "data/manifests/toy_train.jsonl")
+    # data.manifests（列表）用于 E4：「真实 + 筛选后的合成」拼在一起训练；
+    # 只写 data.manifest（单个字符串）就是 E1 那种「只用真实」。
+    raw_manifests = data_cfg.get("manifests") or [data_cfg.get("manifest", "data/manifests/toy_train.jsonl")]
+    manifest_paths = [REPO_ROOT / m for m in raw_manifests]
+    # 用哪些来源的图训练：real / synth / aug
+    train_sources = tuple(train_cfg.get("sources", ["real"]))
     image_size = int(data_cfg.get("image_size", 112))
     emb_dim = int(model_cfg.get("emb_dim", 512))
     epochs = int(args.epochs or train_cfg.get("epochs", 10))
@@ -120,12 +125,21 @@ def main() -> int:
     print("=" * 72)
 
     # ---------------- 数据 ----------------
-    ds = ManifestDataset(manifest, data_root, split="train", image_size=image_size,
-                         augment=True, sources=("real",))
+    ds = ManifestDataset(manifest_paths, data_root, split="train", image_size=image_size,
+                         augment=True, sources=train_sources)
     counts = ds.class_counts()
     n_imgs, n_cls = len(ds), len(ds.classes)
-    print(f"\n[1/3] 数据: {n_imgs} 张图 / {n_cls} 个身份"
+    by_source: dict[str, int] = {}
+    for r in ds.records:
+        by_source[r["source"]] = by_source.get(r["source"], 0) + 1
+    src_txt = " + ".join(f"{k} {v}" for k, v in sorted(by_source.items()))
+    print(f"\n[1/3] 数据: {n_imgs} 张图 / {n_cls} 个身份（{src_txt}）"
           f"（每身份 {min(counts.values())}~{max(counts.values())} 张，均值 {n_imgs/n_cls:.1f}）")
+    if len(by_source) > 1:
+        real_n, synth_n = by_source.get("real", 0), by_source.get("synth", 0)
+        print(f"    合成图占比 = {synth_n}/{real_n + synth_n} = {synth_n/max(real_n+synth_n,1)*100:.1f}%")
+    for p in manifest_paths:
+        print(f"    manifest: {p.relative_to(REPO_ROOT)}")
     if n_cls < 2:
         print("!! 只有一个身份，无法用 ArcFace 训练")
         return 2
@@ -227,11 +241,13 @@ def main() -> int:
         "git_commit": git_commit(),
         "train_set": {
             "real_identities": n_cls,
-            "real_images": n_imgs,
-            "synth_images": 0,
-            "synth_ratio": 0.0,
-            "generator": None,
-            "manifest": str(manifest.relative_to(REPO_ROOT)),
+            "real_images": by_source.get("real", 0),
+            "synth_images": by_source.get("synth", 0),
+            "synth_ratio": round(by_source.get("synth", 0) / max(n_imgs, 1), 4),
+            "generator": data_cfg.get("synth_generator"),
+            "manifests": [str(p.relative_to(REPO_ROOT)) for p in manifest_paths],
+            "sources": list(train_sources),
+            "total_images": n_imgs,
         },
         "model": {
             "arch": model_cfg.get("arch", "iresnet18"),
