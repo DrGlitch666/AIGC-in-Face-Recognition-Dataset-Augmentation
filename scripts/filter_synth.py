@@ -56,7 +56,9 @@ def main() -> int:
     ap.add_argument("--train-manifest", default=None, help="真实训练集 manifest（默认取配置里的）")
     ap.add_argument("--threshold", type=float, default=None, help="id_sim 低于它就标 rejected")
     ap.add_argument("--report-only", action="store_true", help="只出报告，不改 manifest")
-    ap.add_argument("--det-size", type=int, default=None)
+    # ⚠️ 默认 320 而不是 640：见下面 load_app 处的说明（实测 640 会一张脸都检不出）
+    ap.add_argument("--det-size", type=int, default=320,
+                    help="检测输入尺寸（默认 320；生成图/对齐图用 640 会检不出人脸）")
     args = ap.parse_args()
 
     local_file = find_local_config()
@@ -68,7 +70,21 @@ def main() -> int:
     data_root = Path(paths["data_root"])
     models_root = Path(paths.get("models_root", data_root.parent / "models"))
     runtime = cfg.get("runtime", {})
-    det_size = args.det_size or int(runtime.get("onnx_det_size", 640))
+    # ⚠️⚠️ 这里**不能**用配置里的 onnx_det_size（640）。实测（2026-10-01）：
+    #
+    #     det_size   112x112 对齐图   512x512 生成图
+    #       160           1 张            1 张
+    #       320           1 张            1 张     <- 用这个
+    #       480           0 张            1 张
+    #       640           0 张            0 张     <- 一张都检不出
+    #
+    #   insightface 会把图像**长边缩放到 det_size**：对 112x112 的对齐图，
+    #   640 意味着放大 5.7 倍（人脸占满整个输入框），det_10g 反而失效。
+    #   结果就是"可评分 0/N"—— 一度被误判成"生成的图崩坏"，其实是检测配置错了。
+    #
+    #   注意：**E0/E1 评测仍然用 640**，因为那边输入是 250x250 的 LFW 原图
+    #   （人脸约占 40%），640 下检出正常且拿到了 0.9985 的准确率 —— 不要改那边。
+    det_size = args.det_size
 
     synth_manifest = (Path(args.manifest).resolve() if args.manifest
                       else REPO_ROOT / "data" / "manifests" / f"{args.exp_id}.jsonl")

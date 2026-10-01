@@ -28,7 +28,9 @@ ident = sorted({r["identity_id"] for r in real})[0]
 rec = sorted([r for r in real if r["identity_id"] == ident],
              key=lambda r: -r["meta"].get("det_score", 0))[0]
 
-app = load_app(models_root / "insightface", det_size=640, ctx_id=0)
+# ⚠️ 检测尺寸必须用 320：生成图在 640 下大量检不出，会造成**幸存者偏差**
+#    （能检出的恰恰是最不像本人的那些），我们在这上面栽过一次。
+app = load_app(models_root / "insightface", det_size=320, ctx_id=0)
 warmup(app)
 ref_emb = identity_embedding(app, data_root / rec["path"])
 print(f"参考身份 {ident}  参考图 {rec['path']}")
