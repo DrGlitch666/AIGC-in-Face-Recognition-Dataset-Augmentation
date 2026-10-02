@@ -143,8 +143,28 @@ def main() -> int:
     if n_cls < 2:
         print("!! 只有一个身份，无法用 ArcFace 训练")
         return 2
+    # ⚠️⚠️ 每个 DataLoader worker 必须**单独** seed numpy。
+    #
+    #   数据增强（dataset.py）用的是 `np.random`，而 PyTorch 的 DataLoader
+    #   **只负责 seed torch，不管 numpy**。num_workers>0 时每个 worker 都由 fork
+    #   产生，于是**继承同一份 numpy RNG 状态**，跑出完全相同的随机序列 ——
+    #   水平翻转的决策在所有 worker 间**同相位**，增强退化成"相关噪声"。
+    #
+    #   实测（2026-10-02，E4b 数据，前 3 轮 train_acc）：
+    #       num_workers=4（有 bug）  0.0000 / 0.0000 / 0.0000
+    #       num_workers=0（正常）    0.0007 / 0.0421 / 0.1320
+    #   同一份数据、同一 seed，只差 worker 数 —— 差的不是模型，是增强。
+    #
+    #   修法：worker_init_fn 里用 torch.initial_seed() 给 numpy 重新播种
+    #   （它在 worker 内已带上 worker_id，所以各 worker 互不相同）。
+    def _seed_worker(worker_id: int) -> None:
+        base = torch.initial_seed() % (2 ** 32)
+        np.random.seed(base)
+        random.seed(base)
+
     loader = DataLoader(ds, batch_size=batch_size, shuffle=True, num_workers=num_workers,
-                        pin_memory=(device.type == "cuda"), drop_last=False)
+                        pin_memory=(device.type == "cuda"), drop_last=False,
+                        worker_init_fn=_seed_worker if num_workers > 0 else None)
 
     # ---------------- 模型与损失 ----------------
     model = build_model(model_cfg.get("arch", "iresnet18"), emb_dim=emb_dim,
