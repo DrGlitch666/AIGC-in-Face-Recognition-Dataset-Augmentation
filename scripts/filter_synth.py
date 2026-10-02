@@ -192,6 +192,7 @@ def main() -> int:
 
     ok = [r for r in rows if r["id_sim"] is not None]
     sims = [r["id_sim"] for r in ok]
+    n_scored_raw = len(ok)
     print(f"    可评分 {len(ok)}/{len(rows)} 张")
 
     # ---------------- 冗余剪枝：每个身份保留 keep_per_identity 张 ----------------
@@ -246,8 +247,13 @@ def main() -> int:
 
     summary = {
         "n_synth": len(rows),
-        "n_scored": len(ok),
-        "n_failed": len(rows) - len(ok),
+        # ⚠️ 这几个数要分清：n_scored 是**成功算出 id_sim** 的张数（剪枝前），
+        #    n_kept 才是**最终保留**的张数。之前把"剪枝拒绝"错记成 n_failed，
+        #    报告里会出现"失败 205"这种误导性说法。
+        "n_scored": n_scored_raw,
+        "n_kept": len(ok),
+        "n_face_failed": sum(1 for r in rows if r["id_sim"] is None),
+        "n_rejected": sum(1 for r in rows if r["status"] == "rejected"),
         "id_sim_mean": round(statistics.fmean(sims), 4) if sims else None,
         "id_sim_median": round(statistics.median(sims), 4) if sims else None,
         "id_sim_min": round(min(sims), 4) if sims else None,
@@ -280,7 +286,12 @@ def main() -> int:
                                                 "id_sim", "note", "path"])
         writer.writeheader()
         for r in rows:
-            writer.writerow({**r, "id_sim": "" if r["id_sim"] is None else f"{r['id_sim']:.6f}"})
+            # ⚠️ rows 里带一个内部键 "_rec"（指向 manifest 记录，剪枝时要回写 status），
+            #    它是 dict 不是标量，直接丢给 csv 会报
+            #    "dict contains fields not in fieldnames: '_rec'"。这里剔除。
+            row = {k: v for k, v in r.items() if k != "_rec"}
+            row["id_sim"] = "" if r["id_sim"] is None else f"{r['id_sim']:.6f}"
+            writer.writerow(row)
 
     if args.threshold is not None and not args.report_only:
         with open(synth_manifest, "w", encoding="utf-8") as fh:

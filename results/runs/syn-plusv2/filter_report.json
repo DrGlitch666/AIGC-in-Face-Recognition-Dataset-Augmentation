@@ -1,0 +1,600 @@
+{
+  "exp_id": "syn-plusv2",
+  "created_at": "2026-10-02T14:43:31+08:00",
+  "embedding_model": "buffalo_l (w600k_r50)",
+  "reference": "center of accepted REAL images per identity",
+  "summary": {
+    "n_synth": 960,
+    "n_scored": 959,
+    "n_kept": 755,
+    "n_face_failed": 1,
+    "n_rejected": 205,
+    "id_sim_mean": 0.6154,
+    "id_sim_median": 0.6166,
+    "id_sim_min": 0.4505,
+    "id_sim_max": 0.805,
+    "id_sim_stdev": 0.0727,
+    "threshold": 0.45,
+    "keep_per_identity": 8,
+    "keep_criterion": "质量地板(threshold) + 冗余剪枝（迭代删掉与同身份其余图最相似的那张）；**不是**按 id_sim 排名取前 N —— 那会优先删掉多样化来源，抵消多样性收益",
+    "n_accepted": 755,
+    "identities": {
+      "Abdullah_Gul": {
+        "n": 8,
+        "mean": 0.6118,
+        "min": 0.5656,
+        "max": 0.6464
+      },
+      "Alejandro_Toledo": {
+        "n": 8,
+        "mean": 0.5878,
+        "min": 0.5036,
+        "max": 0.6267
+      },
+      "Alvaro_Uribe": {
+        "n": 8,
+        "mean": 0.6048,
+        "min": 0.5498,
+        "max": 0.6692
+      },
+      "Amelie_Mauresmo": {
+        "n": 8,
+        "mean": 0.6635,
+        "min": 0.573,
+        "max": 0.7156
+      },
+      "Andre_Agassi": {
+        "n": 8,
+        "mean": 0.5658,
+        "min": 0.5057,
+        "max": 0.6136
+      },
+      "Andy_Roddick": {
+        "n": 8,
+        "mean": 0.6234,
+        "min": 0.5602,
+        "max": 0.6526
+      },
+      "Angelina_Jolie": {
+        "n": 8,
+        "mean": 0.6883,
+        "min": 0.6408,
+        "max": 0.7573
+      },
+      "Ariel_Sharon": {
+        "n": 8,
+        "mean": 0.6486,
+        "min": 0.5389,
+        "max": 0.7321
+      },
+      "Arnold_Schwarzenegger": {
+        "n": 8,
+        "mean": 0.657,
+        "min": 0.5202,
+        "max": 0.7202
+      },
+      "Atal_Bihari_Vajpayee": {
+        "n": 8,
+        "mean": 0.6813,
+        "min": 0.618,
+        "max": 0.716
+      },
+      "Bill_Clinton": {
+        "n": 8,
+        "mean": 0.5793,
+        "min": 0.5461,
+        "max": 0.6044
+      },
+      "Bill_Gates": {
+        "n": 8,
+        "mean": 0.5901,
+        "min": 0.4998,
+        "max": 0.6788
+      },
+      "Bill_Simon": {
+        "n": 8,
+        "mean": 0.5244,
+        "min": 0.4927,
+        "max": 0.5719
+      },
+      "Carlos_Menem": {
+        "n": 8,
+        "mean": 0.6149,
+        "min": 0.5828,
+        "max": 0.6582
+      },
+      "Carlos_Moya": {
+        "n": 8,
+        "mean": 0.5883,
+        "min": 0.4661,
+        "max": 0.6694
+      },
+      "Colin_Powell": {
+        "n": 8,
+        "mean": 0.5415,
+        "min": 0.4869,
+        "max": 0.6125
+      },
+      "David_Beckham": {
+        "n": 8,
+        "mean": 0.6806,
+        "min": 0.6082,
+        "max": 0.7358
+      },
+      "Dominique_de_Villepin": {
+        "n": 8,
+        "mean": 0.6317,
+        "min": 0.54,
+        "max": 0.7028
+      },
+      "Donald_Rumsfeld": {
+        "n": 8,
+        "mean": 0.5674,
+        "min": 0.546,
+        "max": 0.6195
+      },
+      "Fidel_Castro": {
+        "n": 8,
+        "mean": 0.6462,
+        "min": 0.603,
+        "max": 0.6956
+      },
+      "George_Robertson": {
+        "n": 8,
+        "mean": 0.5586,
+        "min": 0.4854,
+        "max": 0.6145
+      },
+      "George_W_Bush": {
+        "n": 8,
+        "mean": 0.5709,
+        "min": 0.502,
+        "max": 0.612
+      },
+      "Gerhard_Schroeder": {
+        "n": 8,
+        "mean": 0.6625,
+        "min": 0.6017,
+        "max": 0.7027
+      },
+      "Gloria_Macapagal_Arroyo": {
+        "n": 8,
+        "mean": 0.7361,
+        "min": 0.6904,
+        "max": 0.7898
+      },
+      "Gray_Davis": {
+        "n": 8,
+        "mean": 0.6239,
+        "min": 0.5523,
+        "max": 0.6685
+      },
+      "Guillermo_Coria": {
+        "n": 8,
+        "mean": 0.6613,
+        "min": 0.5404,
+        "max": 0.7114
+      },
+      "Halle_Berry": {
+        "n": 8,
+        "mean": 0.6923,
+        "min": 0.5662,
+        "max": 0.7634
+      },
+      "Hamid_Karzai": {
+        "n": 8,
+        "mean": 0.6547,
+        "min": 0.6133,
+        "max": 0.6824
+      },
+      "Hans_Blix": {
+        "n": 7,
+        "mean": 0.5166,
+        "min": 0.4725,
+        "max": 0.5485
+      },
+      "Hu_Jintao": {
+        "n": 8,
+        "mean": 0.6138,
+        "min": 0.4916,
+        "max": 0.697
+      },
+      "Hugo_Chavez": {
+        "n": 8,
+        "mean": 0.6322,
+        "min": 0.4681,
+        "max": 0.7255
+      },
+      "Igor_Ivanov": {
+        "n": 8,
+        "mean": 0.5995,
+        "min": 0.4961,
+        "max": 0.7212
+      },
+      "Jack_Straw": {
+        "n": 7,
+        "mean": 0.5041,
+        "min": 0.4538,
+        "max": 0.5376
+      },
+      "Jacques_Chirac": {
+        "n": 8,
+        "mean": 0.6202,
+        "min": 0.4996,
+        "max": 0.6788
+      },
+      "Jean_Charest": {
+        "n": 8,
+        "mean": 0.5566,
+        "min": 0.5146,
+        "max": 0.5913
+      },
+      "Jean_Chretien": {
+        "n": 8,
+        "mean": 0.5656,
+        "min": 0.5129,
+        "max": 0.612
+      },
+      "Jennifer_Aniston": {
+        "n": 8,
+        "mean": 0.7594,
+        "min": 0.6966,
+        "max": 0.805
+      },
+      "Jennifer_Capriati": {
+        "n": 8,
+        "mean": 0.5787,
+        "min": 0.5282,
+        "max": 0.6164
+      },
+      "Jennifer_Lopez": {
+        "n": 8,
+        "mean": 0.6813,
+        "min": 0.6448,
+        "max": 0.7281
+      },
+      "Jeremy_Greenstock": {
+        "n": 8,
+        "mean": 0.6599,
+        "min": 0.5622,
+        "max": 0.6989
+      },
+      "Jiang_Zemin": {
+        "n": 8,
+        "mean": 0.6041,
+        "min": 0.478,
+        "max": 0.7122
+      },
+      "John_Ashcroft": {
+        "n": 8,
+        "mean": 0.5264,
+        "min": 0.5026,
+        "max": 0.5395
+      },
+      "John_Bolton": {
+        "n": 7,
+        "mean": 0.534,
+        "min": 0.4851,
+        "max": 0.6057
+      },
+      "John_Howard": {
+        "n": 5,
+        "mean": 0.5243,
+        "min": 0.4517,
+        "max": 0.5966
+      },
+      "John_Kerry": {
+        "n": 6,
+        "mean": 0.5883,
+        "min": 0.5485,
+        "max": 0.6165
+      },
+      "John_Negroponte": {
+        "n": 8,
+        "mean": 0.5392,
+        "min": 0.4796,
+        "max": 0.601
+      },
+      "John_Snow": {
+        "n": 8,
+        "mean": 0.5599,
+        "min": 0.4736,
+        "max": 0.6157
+      },
+      "Joschka_Fischer": {
+        "n": 8,
+        "mean": 0.6105,
+        "min": 0.5319,
+        "max": 0.6982
+      },
+      "Jose_Maria_Aznar": {
+        "n": 8,
+        "mean": 0.6488,
+        "min": 0.5958,
+        "max": 0.7221
+      },
+      "Juan_Carlos_Ferrero": {
+        "n": 8,
+        "mean": 0.6537,
+        "min": 0.5968,
+        "max": 0.6884
+      },
+      "Julianne_Moore": {
+        "n": 8,
+        "mean": 0.6758,
+        "min": 0.5781,
+        "max": 0.7216
+      },
+      "Julie_Gerberding": {
+        "n": 8,
+        "mean": 0.6145,
+        "min": 0.5889,
+        "max": 0.6862
+      },
+      "Junichiro_Koizumi": {
+        "n": 8,
+        "mean": 0.7062,
+        "min": 0.6527,
+        "max": 0.7439
+      },
+      "Kofi_Annan": {
+        "n": 8,
+        "mean": 0.7063,
+        "min": 0.663,
+        "max": 0.7609
+      },
+      "Lance_Armstrong": {
+        "n": 8,
+        "mean": 0.6006,
+        "min": 0.4903,
+        "max": 0.653
+      },
+      "Laura_Bush": {
+        "n": 8,
+        "mean": 0.6483,
+        "min": 0.598,
+        "max": 0.6826
+      },
+      "Lindsay_Davenport": {
+        "n": 8,
+        "mean": 0.6988,
+        "min": 0.649,
+        "max": 0.7683
+      },
+      "Lleyton_Hewitt": {
+        "n": 8,
+        "mean": 0.6125,
+        "min": 0.4904,
+        "max": 0.7044
+      },
+      "Luiz_Inacio_Lula_da_Silva": {
+        "n": 8,
+        "mean": 0.6834,
+        "min": 0.6401,
+        "max": 0.7043
+      },
+      "Mahmoud_Abbas": {
+        "n": 8,
+        "mean": 0.5876,
+        "min": 0.5197,
+        "max": 0.6555
+      },
+      "Megawati_Sukarnoputri": {
+        "n": 8,
+        "mean": 0.601,
+        "min": 0.5364,
+        "max": 0.6594
+      },
+      "Meryl_Streep": {
+        "n": 8,
+        "mean": 0.6257,
+        "min": 0.4764,
+        "max": 0.7294
+      },
+      "Michael_Bloomberg": {
+        "n": 8,
+        "mean": 0.7064,
+        "min": 0.6166,
+        "max": 0.7493
+      },
+      "Michael_Schumacher": {
+        "n": 8,
+        "mean": 0.5814,
+        "min": 0.4569,
+        "max": 0.6698
+      },
+      "Mohammed_Al-Douri": {
+        "n": 8,
+        "mean": 0.5746,
+        "min": 0.5246,
+        "max": 0.6316
+      },
+      "Nancy_Pelosi": {
+        "n": 8,
+        "mean": 0.6524,
+        "min": 0.6131,
+        "max": 0.7145
+      },
+      "Naomi_Watts": {
+        "n": 8,
+        "mean": 0.6027,
+        "min": 0.5256,
+        "max": 0.7043
+      },
+      "Nestor_Kirchner": {
+        "n": 8,
+        "mean": 0.6585,
+        "min": 0.4576,
+        "max": 0.7329
+      },
+      "Nicole_Kidman": {
+        "n": 8,
+        "mean": 0.606,
+        "min": 0.5022,
+        "max": 0.657
+      },
+      "Norah_Jones": {
+        "n": 8,
+        "mean": 0.6407,
+        "min": 0.576,
+        "max": 0.6813
+      },
+      "Paul_Bremer": {
+        "n": 8,
+        "mean": 0.4874,
+        "min": 0.4587,
+        "max": 0.506
+      },
+      "Pervez_Musharraf": {
+        "n": 8,
+        "mean": 0.5921,
+        "min": 0.5597,
+        "max": 0.646
+      },
+      "Pete_Sampras": {
+        "n": 8,
+        "mean": 0.6234,
+        "min": 0.4756,
+        "max": 0.7181
+      },
+      "Pierce_Brosnan": {
+        "n": 8,
+        "mean": 0.5647,
+        "min": 0.483,
+        "max": 0.633
+      },
+      "Recep_Tayyip_Erdogan": {
+        "n": 8,
+        "mean": 0.6675,
+        "min": 0.5818,
+        "max": 0.7318
+      },
+      "Renee_Zellweger": {
+        "n": 8,
+        "mean": 0.6993,
+        "min": 0.5472,
+        "max": 0.7741
+      },
+      "Ricardo_Lagos": {
+        "n": 8,
+        "mean": 0.6,
+        "min": 0.526,
+        "max": 0.6525
+      },
+      "Richard_Myers": {
+        "n": 8,
+        "mean": 0.597,
+        "min": 0.5301,
+        "max": 0.68
+      },
+      "Roh_Moo-hyun": {
+        "n": 8,
+        "mean": 0.6333,
+        "min": 0.5611,
+        "max": 0.7345
+      },
+      "Rudolph_Giuliani": {
+        "n": 8,
+        "mean": 0.5078,
+        "min": 0.4506,
+        "max": 0.6014
+      },
+      "Saddam_Hussein": {
+        "n": 8,
+        "mean": 0.6569,
+        "min": 0.5944,
+        "max": 0.6864
+      },
+      "Serena_Williams": {
+        "n": 8,
+        "mean": 0.6705,
+        "min": 0.566,
+        "max": 0.7483
+      },
+      "Silvio_Berlusconi": {
+        "n": 8,
+        "mean": 0.6277,
+        "min": 0.5818,
+        "max": 0.6639
+      },
+      "Spencer_Abraham": {
+        "n": 8,
+        "mean": 0.5677,
+        "min": 0.4611,
+        "max": 0.6477
+      },
+      "Taha_Yassin_Ramadan": {
+        "n": 8,
+        "mean": 0.6416,
+        "min": 0.5514,
+        "max": 0.7206
+      },
+      "Tiger_Woods": {
+        "n": 8,
+        "mean": 0.6556,
+        "min": 0.5109,
+        "max": 0.7358
+      },
+      "Tim_Henman": {
+        "n": 6,
+        "mean": 0.5313,
+        "min": 0.4997,
+        "max": 0.5543
+      },
+      "Tom_Daschle": {
+        "n": 8,
+        "mean": 0.5992,
+        "min": 0.5088,
+        "max": 0.6818
+      },
+      "Tom_Ridge": {
+        "n": 8,
+        "mean": 0.5289,
+        "min": 0.4582,
+        "max": 0.6179
+      },
+      "Tommy_Franks": {
+        "n": 8,
+        "mean": 0.5545,
+        "min": 0.4681,
+        "max": 0.5904
+      },
+      "Tony_Blair": {
+        "n": 8,
+        "mean": 0.62,
+        "min": 0.5549,
+        "max": 0.6882
+      },
+      "Trent_Lott": {
+        "n": 7,
+        "mean": 0.5576,
+        "min": 0.483,
+        "max": 0.6576
+      },
+      "Venus_Williams": {
+        "n": 8,
+        "mean": 0.6866,
+        "min": 0.5913,
+        "max": 0.768
+      },
+      "Vicente_Fox": {
+        "n": 8,
+        "mean": 0.6366,
+        "min": 0.5813,
+        "max": 0.7215
+      },
+      "Vladimir_Putin": {
+        "n": 8,
+        "mean": 0.6438,
+        "min": 0.5934,
+        "max": 0.7213
+      },
+      "Winona_Ryder": {
+        "n": 6,
+        "mean": 0.4735,
+        "min": 0.4505,
+        "max": 0.5224
+      }
+    }
+  }
+}

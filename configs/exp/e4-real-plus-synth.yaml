@@ -1,11 +1,18 @@
 # ============================================================
-# E4：真实 + 合成（任务卡 #14 的第一个对照点）
+# E4a：真实 + 合成（全部筛选通过的 755 张）
 # ------------------------------------------------------------
 # 与 E1（只用真实）**唯一的差别**就是多了筛选后的合成图，其它一切不变：
 # 同一个模型、同样的 30 轮、同样的增广（只有水平翻转）、同样的 seed。
 #
-# 合成图来自 scripts/generate.py（SD1.5 + IP-Adapter-FaceID, scale 0.8），
-# 并经 scripts/filter_synth.py 按 id_sim 阈值筛选（只保留 status=accepted）。
+# 合成图来源：scripts/generate_plusv2.py（IP-Adapter-FaceID-plusv2, shortcut=True,
+#            多参考图轮换），再经 scripts/filter_synth.py 做
+#            **质量地板 0.45 + 冗余剪枝** 保留，每身份 ≤8 张。
+#            实测 id_sim 均值 +0.6154（参照：真实同人 0.745，不同人 <0.25）
+#
+# 对照点：
+#   E1   纯真实 3590                                    （基线）
+#   E4a  真实 + 755 张合成     合成占比 ~17.4%           ← 本配置
+#   E4b  真实 + 448 张高质合成 合成占比 ~11.1%           （e4-highquality-synth.yaml）
 #
 # 用法：
 #   python scripts/train.py --exp-id e4-real-plus-synth-seed0 --exp configs/exp/e4-real-plus-synth.yaml
@@ -18,8 +25,8 @@ data:
   # 同时读两个清单：真实训练集 + 合成图
   manifests:
     - data/manifests/toy_train.jsonl
-    - data/manifests/syn-faceid.jsonl
-  synth_generator: ipadapter-faceid-sd15
+    - data/manifests/syn-plusv2.jsonl
+  synth_generator: ipadapter-faceid-plusv2-sd15
 
 train:
   real_only: false

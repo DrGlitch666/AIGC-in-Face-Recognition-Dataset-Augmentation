@@ -1,0 +1,31 @@
+# ============================================================
+# E4b：真实 + **高质量**合成子集
+# ------------------------------------------------------------
+# 与 E4a 的唯一差别：合成图只取 id_sim ≥ 0.60 的那一批（约 448 张），
+# 也就是"少而精"。用来回答：
+#
+#     合成数据的收益，是来自**数量**，还是来自**质量**？
+#
+# 两个对照点：
+#   E1   纯真实 3590                                        （基线）
+#   E4a  真实 + 全部 755 张合成     合成占比 ~17.4%          （数量优先）
+#   E4b  真实 + 448 张高质合成      合成占比 ~11.1%          （质量优先）
+#
+# 用法：
+#   python scripts/train.py --exp-id e4-highquality-synth-seed0 \
+#       --exp configs/exp/e4-highquality-synth.yaml
+# ============================================================
+
+exp_id: e4-highquality-synth-seed0
+seed: 0
+
+data:
+  manifests:
+    - data/manifests/toy_train.jsonl
+    - data/manifests/syn-plusv2-topq.jsonl     # 只把 id_sim ≥ 0.60 的标为 accepted
+  synth_generator: ipadapter-faceid-plusv2-sd15
+
+train:
+  real_only: false
+  sources: [real, synth]
+  mix_ratio: null
