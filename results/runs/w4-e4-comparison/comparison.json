@@ -1,0 +1,188 @@
+{
+  "far": 0.001,
+  "protocol": "LFW 10-fold",
+  "experiments": [
+    {
+      "exp_id": "e1-real-only-seed0",
+      "label": "E1 纯真实",
+      "train_set": "real 3590",
+      "train_images": 3590,
+      "synth_images": 0,
+      "synth_ratio": 0.0,
+      "best_train_acc": 0.9910863509749304,
+      "protocols": {
+        "official": {
+          "n_pairs": 5983,
+          "accuracy": 0.88133,
+          "accuracy_fold_mean": 0.881336,
+          "accuracy_fold_std": 0.017747,
+          "tar_at_1e-3": 0.357979,
+          "tar_mean": 0.403778,
+          "tar_std": 0.065039,
+          "tar_p05": 0.327083,
+          "tar_p95": 0.527391,
+          "n_boot": 1000
+        },
+        "filtered": {
+          "n_pairs": 5539,
+          "accuracy": 0.871999,
+          "accuracy_fold_mean": 0.872279,
+          "accuracy_fold_std": 0.017306,
+          "tar_at_1e-3": 0.275152,
+          "tar_mean": 0.308083,
+          "tar_std": 0.061809,
+          "tar_p05": 0.232166,
+          "tar_p95": 0.445961,
+          "n_boot": 1000
+        }
+      }
+    },
+    {
+      "exp_id": "e4-real-plus-synth-seed0",
+      "label": "E4a +755合成(17.4%)",
+      "train_set": "real 3590 + synth 755",
+      "train_images": 4345,
+      "synth_images": 755,
+      "synth_ratio": 0.1738,
+      "best_train_acc": 0.9986191024165708,
+      "protocols": {
+        "official": {
+          "n_pairs": 5983,
+          "accuracy": 0.890189,
+          "accuracy_fold_mean": 0.890183,
+          "accuracy_fold_std": 0.01752,
+          "tar_at_1e-3": 0.484443,
+          "tar_mean": 0.488714,
+          "tar_std": 0.035167,
+          "tar_p05": 0.433143,
+          "tar_p95": 0.550942,
+          "n_boot": 1000
+        },
+        "filtered": {
+          "n_pairs": 5539,
+          "accuracy": 0.882289,
+          "accuracy_fold_mean": 0.882632,
+          "accuracy_fold_std": 0.016631,
+          "tar_at_1e-3": 0.412729,
+          "tar_mean": 0.409492,
+          "tar_std": 0.036627,
+          "tar_p05": 0.355289,
+          "tar_p95": 0.476723,
+          "n_boot": 1000
+        }
+      },
+      "paired_vs_base": {
+        "official": {
+          "n_boot": 2000,
+          "delta_mean": 0.08695081218449689,
+          "delta_std": 0.06718678948747642,
+          "delta_p05": -0.044525268457026874,
+          "delta_p95": 0.17857112632620636,
+          "frac_positive": 0.8555
+        },
+        "filtered": {
+          "n_boot": 2000,
+          "delta_mean": 0.09928346981273502,
+          "delta_std": 0.07033753548960525,
+          "delta_p05": -0.04641639816245996,
+          "delta_p95": 0.19196489896973082,
+          "frac_positive": 0.8745
+        }
+      },
+      "paired_ttest_accuracy": {
+        "official": {
+          "n_folds": 10,
+          "mean_delta": 0.008847,
+          "std_delta": 0.013634,
+          "t": 2.052,
+          "folds_won": 7,
+          "crit_two_sided_p05": 2.262,
+          "crit_one_sided_p05": 1.833
+        },
+        "filtered": {
+          "n_folds": 10,
+          "mean_delta": 0.010353,
+          "std_delta": 0.014844,
+          "t": 2.2055,
+          "folds_won": 7,
+          "crit_two_sided_p05": 2.262,
+          "crit_one_sided_p05": 1.833
+        }
+      }
+    },
+    {
+      "exp_id": "e4-highquality-synth-seed0",
+      "label": "E4b +448高质合成(11.1%)",
+      "train_set": "real 3590 + synth 448",
+      "train_images": 4038,
+      "synth_images": 448,
+      "synth_ratio": 0.1109,
+      "best_train_acc": 0.9938088162456662,
+      "protocols": {
+        "official": {
+          "n_pairs": 5983,
+          "accuracy": 0.887515,
+          "accuracy_fold_mean": 0.887493,
+          "accuracy_fold_std": 0.019113,
+          "tar_at_1e-3": 0.459686,
+          "tar_mean": 0.477348,
+          "tar_std": 0.033115,
+          "tar_p05": 0.414353,
+          "tar_p95": 0.53347,
+          "n_boot": 1000
+        },
+        "filtered": {
+          "n_pairs": 5539,
+          "accuracy": 0.878859,
+          "accuracy_fold_mean": 0.879128,
+          "accuracy_fold_std": 0.018331,
+          "tar_at_1e-3": 0.384527,
+          "tar_mean": 0.396702,
+          "tar_std": 0.035667,
+          "tar_p05": 0.325676,
+          "tar_p95": 0.464191,
+          "n_boot": 1000
+        }
+      },
+      "paired_vs_base": {
+        "official": {
+          "n_boot": 2000,
+          "delta_mean": 0.07503733590954534,
+          "delta_std": 0.06113684206290885,
+          "delta_p05": -0.04178032760606373,
+          "delta_p95": 0.16104927890673743,
+          "frac_positive": 0.862
+        },
+        "filtered": {
+          "n_boot": 2000,
+          "delta_mean": 0.08712185135556064,
+          "delta_std": 0.0634390726379688,
+          "delta_p05": -0.04132809686867994,
+          "delta_p95": 0.18100910969333325,
+          "frac_positive": 0.8955
+        }
+      },
+      "paired_ttest_accuracy": {
+        "official": {
+          "n_folds": 10,
+          "mean_delta": 0.006157,
+          "std_delta": 0.010848,
+          "t": 1.7949,
+          "folds_won": 8,
+          "crit_two_sided_p05": 2.262,
+          "crit_one_sided_p05": 1.833
+        },
+        "filtered": {
+          "n_folds": 10,
+          "mean_delta": 0.006849,
+          "std_delta": 0.011251,
+          "t": 1.925,
+          "folds_won": 8,
+          "crit_two_sided_p05": 2.262,
+          "crit_one_sided_p05": 1.833
+        }
+      }
+    }
+  ],
+  "conclusion": "加入合成数据在两种协议下都提升 accuracy 与 TAR@FAR=1e-3，方向一致：accuracy 从 0.8813 提到 0.8902（E4a），TAR 从 0.3580 提到 0.4844（+35.3%）。统计上，**按折配对 t 检验**（n=10 折）显示 accuracy 的提升达到单侧 p<0.05（E4a official t=+2.05、filtered t=+2.21；临界值 1.83），且 7~8/10 折都变好。但 TAR@FAR=1e-3 的配对 bootstrap 90% 区间包含 0 —— 这不是结论不稳，而是 LFW 只有 3000 个非同类对，FAR=1e-3 的阈值仅由约 3 个 impostor 决定，分辨率不足以判定 0.13 量级的差异。要定论 TAR 需要更大的评测集或多个种子。accuracy@best 的提升只有约 0.9 个百分点，因为它是在测试集上扫阈值、对弱模型偏乐观 —— 这正是本项目两个指标都报的原因。另外：合成占比更高的 E4a（17.4%）在两项指标上都优于占比更低但单张质量更高的 E4b（11.1%），说明在这个质量水平上数量比边际质量更值钱。"
+}

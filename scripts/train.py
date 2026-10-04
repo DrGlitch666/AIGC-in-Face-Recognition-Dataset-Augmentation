@@ -219,6 +219,7 @@ def main() -> int:
     print(f"[3/3] 开始训练（{len(loader)} 步/轮）...\n")
     log_rows: list[dict] = []
     best_acc = -1.0
+    best_epoch: int | None = None
     t_start = time.time()
 
     for epoch in range(1, epochs + 1):
@@ -268,15 +269,29 @@ def main() -> int:
                  "image_size": image_size, "pooled": args.pooled}
         ckpt_dir.mkdir(parents=True, exist_ok=True)
         torch.save(state, ckpt_dir / "last.pth")
-        if acc > best_acc:
+        # ⚠️ 只在 **acc > 0 且创新高** 时才写 best.pth。
+        #
+        #    之前 best_acc 初值是 -1.0，于是**第 1 轮必然被存成 best**；一旦之后 acc 恒为 0，
+        #    `0 > 0` 为假，best.pth 就永远停在第 1 轮那个废模型上 —— 评测时拿到的是垃圾，
+        #    却完全看不出来（真实踩过：E4b 的 best.pth 停在 epoch 1，acc=0.0000）。
+        if acc > best_acc and acc > 0:
             best_acc = acc
             torch.save(state, ckpt_dir / "best.pth")
+            best_epoch = epoch
+        # 权重健康度：某类的范数远高于中位数 = 多数类变成"吸引子"，模型开始崩塌。
+        # 这是 E4b 那次崩塌的直接证据（最大/中位数 = 3.30，正常只有 1.75~1.91），
+        # 加进日志后一眼可见。
+        with torch.no_grad():
+            norms = head.weight.norm(dim=1)
+            ratio = float(norms.max() / norms.median())
+        log_rows[-1]["weight_max_median_ratio"] = round(ratio, 3)
 
     total_time = time.time() - t_start
 
     # ---------------- 落盘 ----------------
     with open(out_dir / "train_log.csv", "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=["epoch", "loss", "train_acc", "lr", "seconds"])
+        writer = csv.DictWriter(fh, fieldnames=["epoch", "loss", "train_acc", "lr", "seconds",
+                                                "weight_max_median_ratio"])
         writer.writeheader()
         writer.writerows(log_rows)
 
@@ -317,6 +332,9 @@ def main() -> int:
             "final_loss": log_rows[-1]["loss"],
             "final_train_acc": log_rows[-1]["train_acc"],
             "best_train_acc": best_acc,
+            "best_epoch": best_epoch,
+            "best_ckpt_written": best_epoch is not None,
+            "final_weight_max_median_ratio": log_rows[-1].get("weight_max_median_ratio"),
             "elapsed_seconds": round(total_time, 1),
             "log": str((out_dir / "train_log.csv").relative_to(REPO_ROOT)),
         },
@@ -340,7 +358,16 @@ def main() -> int:
 
     print(f"\n  用时 {total_time:.0f}s | 最终 loss {log_rows[-1]['loss']:.4f} | "
           f"训练准确率 {log_rows[-1]['train_acc']:.4f}（最好 {best_acc:.4f}）")
-    print(f"  checkpoint: {ckpt_dir / 'best.pth'}")
+    print(f"  权重健康度（最大/中位数范数）: {log_rows[-1].get('weight_max_median_ratio')}"
+          f"  — 远大于 2 说明多数类在变成吸引子")
+    if best_epoch is None:
+        # 从未写过 best.pth：整段训练 acc 恒为 0。**明确报出来**，
+        # 免得评测时拿着一个不存在的文件（或更糟：上一轮遗留的旧文件）当成结果。
+        print("  ⚠️  没有写出 best.pth —— 所有轮次的 train_acc 都是 0，模型没有学到东西。")
+        print("      请看 train_log.csv 的 weight_max_median_ratio 列排查。")
+        print(f"  checkpoint: {ckpt_dir / 'last.pth'}（仅最后一轮）")
+    else:
+        print(f"  checkpoint: {ckpt_dir / 'best.pth'}（第 {best_epoch} 轮，train_acc {best_acc:.4f}）")
     print(f"  metrics   : {out_dir / 'metrics.json'}")
     print("\n完成 ✅  下一步：python scripts/evaluate.py --exp-id <同一个 id> --ckpt <best.pth>")
     return 0
