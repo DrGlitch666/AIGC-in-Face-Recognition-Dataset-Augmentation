@@ -219,6 +219,27 @@ def main() -> int:
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
     scaler = torch.amp.GradScaler("cuda", enabled=amp_enabled)
 
+    # ---------------- 稳定性措施（必须，不是可选）----------------
+    # ⚠️⚠️ 背景：SGD lr=0.1 + 无 warmup + 无梯度裁剪时，ArcFace 的分类头会**随机崩塌** ——
+    #     某一类的权重范数爆掉、成为"吸引子"，模型把所有样本都推给它，
+    #     表现为 loss 掉到 ~16 就卡住、train_acc 恒为 0，且 best.pth 停在早期轮次。
+    #
+    #     实测（2026-10-02~04）：5 次训练里崩了 2 次
+    #       E4b seed0 workers=4  ❌ 崩
+    #       E4a seed1 workers=4  ❌ 崩
+    #       E1 seed0 / E4a seed0 / E4b seed0 workers=0  ✅ 正常
+    #     同一份数据、同一配置，只差随机流就崩 —— **不能靠换种子碰运气**。
+    #
+    #     两个措施：
+    #       * 梯度裁剪：把总梯度范数截到 clip_grad，直接掐掉权重爆炸的路径
+    #         （注意必须先 scaler.unscale_()，否则裁的是 AMP 缩放后的梯度，量级不对）
+    #       * LR warmup：前几轮从很小的 lr 线性升到目标 lr，避开早期的不稳定区
+    clip_grad = float(train_cfg.get("clip_grad", 5.0))
+    warmup_epochs = int(train_cfg.get("warmup_epochs", 3))
+    base_lr = float(train_cfg.get("lr", 0.1))
+    print(f"      稳定性: 梯度裁剪 {clip_grad}  LR warmup {warmup_epochs} 轮"
+          f"（前 {warmup_epochs} 轮 lr 从 {base_lr/warmup_epochs:.4f} 线性升到 {base_lr}）")
+
     # ---------------- 训练 ----------------
     print(f"[3/3] 开始训练（{len(loader)} 步/轮）...\n")
     log_rows: list[dict] = []
@@ -227,6 +248,12 @@ def main() -> int:
     t_start = time.time()
 
     for epoch in range(1, epochs + 1):
+        # LR warmup 必须在**轮次开头**生效，不能放在 scheduler.step() 之后 ——
+        # 放后面的话第 1 轮仍然跑在满 lr 上，而第 1 轮正是最容易崩的一轮
+        # （实测：放后面时日志里 epoch 1 的 lr 仍是 0.10000）。
+        if epoch <= warmup_epochs:
+            for g in optimizer.param_groups:
+                g["lr"] = base_lr * epoch / max(warmup_epochs, 1)
         # 先记下本轮**实际使用**的 lr：scheduler.step() 在轮末执行，改的是"下一轮"的 lr。
         # （之前把打印放在 scheduler.step() 之后，日志里的 lr 标签是错位的。）
         current_lr = optimizer.param_groups[0]["lr"]
@@ -246,6 +273,12 @@ def main() -> int:
             scaler.scale(loss).backward()
 
             if step % grad_accum == 0 or step == len(loader):
+                if clip_grad > 0:
+                    # 必须先 unscale_：AMP 的梯度是被 scaler 放大过的，
+                    # 直接裁剪等于按错误量级截断（裁了等于没裁，或者裁掉全部）。
+                    scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(
+                        list(model.parameters()) + list(head.parameters()), clip_grad)
                 scaler.step(optimizer)
                 scaler.update()
                 optimizer.zero_grad(set_to_none=True)

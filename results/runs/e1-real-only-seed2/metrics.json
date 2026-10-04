@@ -1,0 +1,66 @@
+{
+  "exp_id": "e1-real-only-seed2",
+  "created_at": "2026-10-04T22:30:08+08:00",
+  "config_path": "configs\\exp\\e1-real-only-seed0.yaml",
+  "config_hash": "0c5cc44556e8",
+  "git_commit": "9e14a3a",
+  "train_set": {
+    "real_identities": 96,
+    "real_images": 3590,
+    "synth_images": 0,
+    "synth_ratio": 0.0,
+    "generator": null,
+    "manifests": [
+      "data\\manifests\\toy_train.jsonl"
+    ],
+    "sources": [
+      "real"
+    ],
+    "total_images": 3590
+  },
+  "model": {
+    "arch": "iresnet18",
+    "loss": "arcface",
+    "margin": 0.5,
+    "scale": 64.0,
+    "emb_dim": 512,
+    "epochs": 30,
+    "seed": 2,
+    "params_total": 62556544,
+    "pooled_fc": false
+  },
+  "optim": {
+    "optimizer": "sgd",
+    "lr": 0.1,
+    "momentum": 0.9,
+    "weight_decay": 0.0005,
+    "scheduler": "cosine",
+    "batch_size": 64,
+    "grad_accum": 1,
+    "amp": true
+  },
+  "training": {
+    "final_loss": 0.035005,
+    "final_train_acc": 0.991643,
+    "best_train_acc": 0.9941504178272981,
+    "best_epoch": 29,
+    "best_ckpt_written": true,
+    "final_weight_max_median_ratio": 1.869,
+    "elapsed_seconds": 719.5,
+    "log": "results\\runs\\e1-real-only-seed2\\train_log.csv"
+  },
+  "benchmarks": {},
+  "hardware": {
+    "hardware_profile": "b",
+    "gpu_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "vram_gb": 7.96,
+    "torch_version": "2.11.0+cu128",
+    "python": "3.11.16"
+  },
+  "artifacts": {
+    "ckpt_last": "F:\\aigcfr\\ckpt\\e1-real-only-seed2\\last.pth",
+    "ckpt_best": "F:\\aigcfr\\ckpt\\e1-real-only-seed2\\best.pth",
+    "metrics": "results\\runs\\e1-real-only-seed2\\metrics.json"
+  },
+  "notes": ""
+}
