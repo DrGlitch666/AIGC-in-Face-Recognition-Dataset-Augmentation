@@ -112,6 +112,8 @@ def main() -> int:
     ap.add_argument("--pooled", action="store_true", help="用小 fc 版本（参数量 ~1/6）")
     ap.add_argument("--num-workers", type=int, default=None, help="DataLoader 进程数（默认取配置）")
     ap.add_argument("--ckpt-dir", default=None, help="checkpoint 目录（默认 <paths.ckpt_root>/<exp-id>）")
+    ap.add_argument("--seed", type=int, default=None,
+                    help="覆盖配置里的随机种子。跑多种子对照时用（同一配置换 seed 即为独立重复）")
     args = ap.parse_args()
 
     # ---------------- 配置 ----------------
@@ -140,7 +142,9 @@ def main() -> int:
     amp_enabled = bool(runtime.get("amp", True)) and torch.cuda.is_available()
     num_workers = int(args.num_workers if args.num_workers is not None
                       else runtime.get("num_workers", 0))
-    seed = int(cfg.get("seed", 0))
+    # 种子：CLI 覆盖配置。多种子对照就是"同一配置换 seed 跑几遍"，用以估计种子间方差
+    # ——那是 TAR@FAR 这类指标的主导不确定性来源（LFW 本身的评测分辨率不够）。
+    seed = int(args.seed if args.seed is not None else cfg.get("seed", 0))
 
     out_dir = (Path(args.out) if args.out else REPO_ROOT / "results" / "runs" / args.exp_id).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
