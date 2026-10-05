@@ -37,14 +37,25 @@ ARMS = [
     ("E4a", "E4a 真实+合成(17.4%)", "real 3590 + synth 755",
      ["e4-real-plus-synth-seed0", "e4-real-plus-synth-seed1", "e4-real-plus-synth-seed2"]),
 ]
-PROTOCOLS = [("lfw", "official"), ("lfw_filtered", "filtered")]
+# 协议：(metrics.json 里的键, 显示名, pairs csv 文件名)
+# ⚠️ lfw_heldout 是**补充协议**（身份与训练集无交集、125k 对），TAR 存在
+#    `tar_at_far_full` 里而不是 `tar_at_far`，且没有 per_fold（对子不是官方 10 折）。
+PROTOCOLS = [
+    ("lfw", "official", "pairs.csv"),
+    ("lfw_filtered", "filtered", "pairs.csv"),
+    ("lfw_heldout", "heldout", "pairs_heldout.csv"),
+]
 
 
-def pooled_pairs(exp: str, which: str) -> tuple[np.ndarray, np.ndarray]:
+def pooled_pairs(exp: str, which: str, pairs_file: str = "pairs.csv") -> tuple[np.ndarray, np.ndarray]:
     """某协议下该实验的全部配对分数与标签。"""
-    path = REPO_ROOT / "results" / "runs" / exp / "pairs.csv"
+    path = REPO_ROOT / "results" / "runs" / exp / pairs_file
+    if not path.exists():
+        return np.array([]), np.array([])
     rows = [r for r in csv.DictReader(open(path, encoding="utf-8"))
             if r["set"] == which and r.get("score", "").strip()]
+    if not rows:
+        return np.array([]), np.array([])
     scores = np.asarray([float(r["score"]) for r in rows], dtype=np.float64)
     labels = np.asarray([1 if r["label"].strip() == "1" else 0 for r in rows], dtype=np.int64)
     return scores, labels
@@ -61,14 +72,16 @@ def _tar(labels: np.ndarray, scores: np.ndarray) -> float:
 
 
 def paired_bootstrap(base_exp: str, other_exp: str, which: str,
-                     n_boot: int = 2000, seed: int = 0) -> dict:
+                     n_boot: int = 2000, seed: int = 0, pairs_file: str = "pairs.csv") -> dict:
     """配对 bootstrap：同一组重采样索引下比较两个模型，消掉共同噪声。
 
-    两个模型评测的是**同一批 6000 对**，是配对数据。若各自独立 bootstrap，
+    两个模型评测的是**同一批配对**，是配对数据。若各自独立 bootstrap，
     会把配对带来的方差抵消全部丢掉，严重低估显著性。
     """
-    sb, lb = pooled_pairs(base_exp, which)
-    so, lo = pooled_pairs(other_exp, which)
+    sb, lb = pooled_pairs(base_exp, which, pairs_file)
+    so, lo = pooled_pairs(other_exp, which, pairs_file)
+    if sb.size == 0 or so.size == 0:
+        return {"n_boot": 0}
     n = min(len(sb), len(so))
     rng = np.random.default_rng(seed)
     diffs = []
@@ -138,12 +151,14 @@ def main() -> int:
             row = {"exp_id": exp,
                    "best_train_acc": d.get("training", {}).get("best_train_acc"),
                    "weight_ratio": d.get("training", {}).get("final_weight_max_median_ratio")}
-            for key, pname in PROTOCOLS:
+            for key, pname, _ in PROTOCOLS:
                 if key in b:
-                    row[pname] = {"accuracy": b[key]["value"],
-                                  "tar": b[key]["tar_at_far"]["1e-03"]["tar"]}
+                    bench = b[key]
+                    tar_src = bench.get("tar_at_far_full") or bench.get("tar_at_far", {})
+                    row[pname] = {"accuracy": bench["value"],
+                                  "tar": tar_src["1e-03"]["tar"]}
             rec["seeds"].append(row)
-        for _, pname in PROTOCOLS:
+        for _, pname, _ in PROTOCOLS:
             accs = [s[pname]["accuracy"] for s in rec["seeds"] if pname in s]
             tars = [s[pname]["tar"] for s in rec["seeds"] if pname in s]
             rec["protocols"][pname] = {
@@ -158,7 +173,7 @@ def main() -> int:
         arms[name] = rec
 
     # ---------------- 终端表格 ----------------
-    for _, pname in PROTOCOLS:
+    for _, pname, _ in PROTOCOLS:
         print("=" * 108)
         print(f"[{pname}]  LFW 10 折   TAR@FAR={FAR:g}   3 个种子")
         print(f"{'方案':26}{'训练集':>24}{'accuracy（种子均值 ± std）':>30}{'TAR（种子均值 ± std）':>28}")
@@ -175,16 +190,23 @@ def main() -> int:
             print(f"  {metric:9} Δ {w['delta']:+.4f}   Welch t={w['t']:+.2f} (df={w['df']:.1f})"
                   f"   n={w['n_a']}v{w['n_b']}")
             summary["tests"].setdefault(pname, {})[f"welch_{key}"] = w
-        pb = paired_bootstrap(ARMS[0][3][0], ARMS[1][3][0], pname)
-        tt = paired_ttest_folds(ARMS[0][3][0], ARMS[1][3][0],
-                                "lfw" if pname == "official" else "lfw_filtered")
+        # ⚠️ heldout 协议的对子不在 pairs.csv（是 pairs_heldout.csv），
+        #    而且没有 per_fold（对子不是官方 10 折），所以按折配对 t 检验要跳过。
+        pairs_file = next(f for k, p, f in PROTOCOLS if p == pname) if pname in \
+            {p for _, p, _ in PROTOCOLS} else "pairs.csv"
+        pb = paired_bootstrap(ARMS[0][3][0], ARMS[1][3][0], pname, pairs_file=pairs_file)
         print(f"  配对 bootstrap（seed0，同一批配对）: ΔTAR {pb.get('delta_mean'):+.4f}  "
               f"90% 区间 [{pb.get('delta_p05'):+.4f}, {pb.get('delta_p95'):+.4f}]  "
               f"P(Δ>0)={pb.get('frac_positive'):.1%}")
-        print(f"  按折配对 t 检验（seed0，accuracy）: Δ {tt['mean_delta']:+.4f}  "
-              f"t={tt['t']:+.2f}  赢 {tt['folds_won']}/{tt['n_folds']} 折")
         summary["tests"][pname]["paired_bootstrap_seed0"] = pb
-        summary["tests"][pname]["paired_ttest_folds_seed0"] = tt
+        mkey = {"official": "lfw", "filtered": "lfw_filtered"}.get(pname)
+        if mkey:
+            tt = paired_ttest_folds(ARMS[0][3][0], ARMS[1][3][0], mkey)
+            print(f"  按折配对 t 检验（seed0，accuracy）: Δ {tt['mean_delta']:+.4f}  "
+                  f"t={tt['t']:+.2f}  赢 {tt['folds_won']}/{tt['n_folds']} 折")
+            summary["tests"][pname]["paired_ttest_folds_seed0"] = tt
+        else:
+            print("  （该协议无 per_fold，跳过按折配对 t 检验；用种子间 Welch t 即可）")
         print("=" * 108)
         print()
 

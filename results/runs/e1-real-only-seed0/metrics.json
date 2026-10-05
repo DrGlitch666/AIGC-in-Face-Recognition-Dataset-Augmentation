@@ -281,6 +281,142 @@
       "description": "剔除含训练身份的对，自训练模型的主结论用这个",
       "train_identities": 96,
       "train_images": 3595
+    },
+    "lfw_heldout": {
+      "n_pairs_used": 22667,
+      "n_pairs_missing": 96,
+      "n_same": 11346,
+      "n_diff": 11321,
+      "metric": "accuracy",
+      "value": 0.871487,
+      "threshold": 0.207569,
+      "tar_at_far": {
+        "1e-02": {
+          "tar": 0.580028,
+          "threshold": 0.378854,
+          "actual_far": 0.009981
+        },
+        "1e-03": {
+          "tar": 0.367178,
+          "threshold": 0.478752,
+          "actual_far": 0.000972
+        }
+      },
+      "same_score": {
+        "mean": 0.40604,
+        "std": 0.186191,
+        "min": -0.387783,
+        "p05": 0.085104,
+        "p50": 0.417196,
+        "p95": 0.698968,
+        "max": 0.988355
+      },
+      "diff_score": {
+        "mean": 0.009971,
+        "std": 0.157614,
+        "min": -0.495822,
+        "p05": -0.243777,
+        "p50": 0.007763,
+        "p95": 0.273951,
+        "max": 0.595679
+      },
+      "per_fold": [
+        {
+          "fold": 1,
+          "n_pairs": 2295,
+          "n_same": 1127,
+          "n_diff": 1168,
+          "accuracy": 0.886275
+        },
+        {
+          "fold": 2,
+          "n_pairs": 2305,
+          "n_same": 1167,
+          "n_diff": 1138,
+          "accuracy": 0.878091
+        },
+        {
+          "fold": 3,
+          "n_pairs": 2285,
+          "n_same": 1121,
+          "n_diff": 1164,
+          "accuracy": 0.856018
+        },
+        {
+          "fold": 4,
+          "n_pairs": 2336,
+          "n_same": 1143,
+          "n_diff": 1193,
+          "accuracy": 0.878425
+        },
+        {
+          "fold": 5,
+          "n_pairs": 2305,
+          "n_same": 1157,
+          "n_diff": 1148,
+          "accuracy": 0.855965
+        },
+        {
+          "fold": 6,
+          "n_pairs": 2226,
+          "n_same": 1125,
+          "n_diff": 1101,
+          "accuracy": 0.85894
+        },
+        {
+          "fold": 7,
+          "n_pairs": 2199,
+          "n_same": 1080,
+          "n_diff": 1119,
+          "accuracy": 0.874488
+        },
+        {
+          "fold": 8,
+          "n_pairs": 2247,
+          "n_same": 1146,
+          "n_diff": 1101,
+          "accuracy": 0.88162
+        },
+        {
+          "fold": 9,
+          "n_pairs": 2257,
+          "n_same": 1171,
+          "n_diff": 1086,
+          "accuracy": 0.873726
+        },
+        {
+          "fold": 10,
+          "n_pairs": 2212,
+          "n_same": 1109,
+          "n_diff": 1103,
+          "accuracy": 0.871157
+        }
+      ],
+      "accuracy_per_fold_mean": 0.871471,
+      "accuracy_per_fold_std": 0.010319,
+      "protocol": "heldout-large-sample (identities disjoint from training)",
+      "n_pairs_full": 124635,
+      "n_same_full": 11381,
+      "tar_at_far_full": {
+        "1e-02": {
+          "tar": 0.564252,
+          "threshold": 0.386768,
+          "actual_far": 0.009992
+        },
+        "1e-03": {
+          "tar": 0.330777,
+          "threshold": 0.496267,
+          "actual_far": 0.000997
+        }
+      },
+      "accuracy_note": "accuracy 在平衡子集上算（same 全用 + 等量 diff）；TAR@FAR 在全量集上算（只依赖 impostor 分布）",
+      "impostors_at_far_1e-3": 113,
+      "model": {
+        "arch": "iresnet18",
+        "epochs": 26,
+        "ckpt": "F:\\aigcfr\\ckpt\\e1-real-only-seed0\\best.pth",
+        "embedding_source": "torch"
+      }
     }
   },
   "hardware": {
@@ -322,6 +458,30 @@
       "num_diff_kept": 2920,
       "num_pairs_removed": 447,
       "num_identities_kept": 4161
+    },
+    "lfw_heldout": {
+      "pairs_manifest": "data\\manifests\\verify_heldout.jsonl",
+      "n_pairs": 125191,
+      "n_same": 11381,
+      "n_diff": 113810,
+      "n_images_needed": 5569,
+      "n_aligned": 5558,
+      "n_align_failed": {
+        "Arlen_Specter/Arlen_Specter_0003.jpg": "no_face",
+        "Chan_Gailey/Chan_Gailey_0001.jpg": "no_face",
+        "Geno_Auriemma/Geno_Auriemma_0001.jpg": "no_face",
+        "Lisa_Raymond/Lisa_Raymond_0002.jpg": "no_face",
+        "Morgan_Freeman/Morgan_Freeman_0002.jpg": "no_face",
+        "Padraig_Harrington/Padraig_Harrington_0004.jpg": "no_face",
+        "Richard_Gephardt/Richard_Gephardt_0007.jpg": "no_face",
+        "Roseanne_Barr/Roseanne_Barr_0002.jpg": "no_face",
+        "Stan_Heath/Stan_Heath_0001.jpg": "no_face",
+        "Tommy_Haas/Tommy_Haas_0006.jpg": "no_face",
+        "Yasser_Arafat/Yasser_Arafat_0007.jpg": "no_face"
+      },
+      "raw_root": "F:\\aigcfr\\data\\raw\\lfw\\lfw",
+      "aligned_dir": "F:\\aigcfr\\data\\cache\\aligned_lfw_heldout\\center",
+      "evaluated_at": "2026-10-05T15:29:58+08:00"
     }
   },
   "embedding": {
