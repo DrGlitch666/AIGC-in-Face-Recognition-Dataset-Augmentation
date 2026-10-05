@@ -1,30 +1,32 @@
 {
-  "exp_id": "e1-real-only-seed1",
-  "created_at": "2026-10-05T14:06:09+08:00",
-  "config_path": "configs\\exp\\e1-real-only-seed0.yaml",
+  "exp_id": "e4-real-plus-synth-seed2",
+  "created_at": "2026-10-05T14:59:51+08:00",
+  "config_path": "configs\\exp\\e4-real-plus-synth.yaml",
   "config_hash": "5db9a56038cc",
   "git_commit": "a5d6bc4",
   "train_set": {
     "real_identities": 96,
     "real_images": 3590,
-    "synth_images": 0,
-    "synth_ratio": 0.0,
-    "generator": null,
+    "synth_images": 755,
+    "synth_ratio": 0.1738,
+    "generator": "ipadapter-faceid-plusv2-sd15",
     "manifests": [
-      "data\\manifests\\toy_train.jsonl"
+      "data\\manifests\\toy_train.jsonl",
+      "data\\manifests\\syn-plusv2.jsonl"
     ],
     "sources": [
-      "real"
+      "real",
+      "synth"
     ],
-    "total_images": 3590
+    "total_images": 4345
   },
   "model": {
     "arch": "iresnet18",
     "loss": "arcface (self-trained)",
-    "epochs": 26,
+    "epochs": 24,
     "seed": null,
     "params_total": 62556544,
-    "ckpt": "F:\\aigcfr\\ckpt\\e1-real-only-seed1\\best.pth",
+    "ckpt": "F:\\aigcfr\\ckpt\\e4-real-plus-synth-seed2\\best.pth",
     "embedding_source": "torch",
     "face_select": "center",
     "det_size": 640
@@ -40,14 +42,14 @@
     "amp": true
   },
   "training": {
-    "final_loss": 0.004196,
-    "final_train_acc": 0.998886,
+    "final_loss": 0.001094,
+    "final_train_acc": 0.99977,
     "best_train_acc": 1.0,
-    "best_epoch": 26,
+    "best_epoch": 24,
     "best_ckpt_written": true,
-    "final_weight_max_median_ratio": 1.448,
-    "elapsed_seconds": 746.4,
-    "log": "results\\runs\\e1-real-only-seed1\\train_log.csv"
+    "final_weight_max_median_ratio": 1.378,
+    "elapsed_seconds": 825.0,
+    "log": "results\\runs\\e4-real-plus-synth-seed2\\train_log.csv"
   },
   "benchmarks": {
     "lfw": {
@@ -56,37 +58,37 @@
       "n_same": 2989,
       "n_diff": 2994,
       "metric": "accuracy",
-      "value": 0.882835,
-      "threshold": 0.205231,
+      "value": 0.888183,
+      "threshold": 0.2331,
       "tar_at_far": {
         "1e-02": {
-          "tar": 0.613583,
-          "threshold": 0.381264,
+          "tar": 0.640348,
+          "threshold": 0.381035,
           "actual_far": 0.009686
         },
         "1e-03": {
-          "tar": 0.422215,
-          "threshold": 0.492447,
+          "tar": 0.484778,
+          "threshold": 0.465214,
           "actual_far": 0.000668
         }
       },
       "same_score": {
-        "mean": 0.446502,
-        "std": 0.203083,
-        "min": -0.240889,
-        "p05": 0.108926,
-        "p50": 0.448585,
-        "p95": 0.757068,
-        "max": 0.971534
+        "mean": 0.4549,
+        "std": 0.204122,
+        "min": -0.210524,
+        "p05": 0.109492,
+        "p50": 0.457766,
+        "p95": 0.771603,
+        "max": 0.967922
       },
       "diff_score": {
-        "mean": 0.013964,
-        "std": 0.155753,
-        "min": -0.481546,
-        "p05": -0.235882,
-        "p50": 0.011496,
-        "p95": 0.273088,
-        "max": 0.513395
+        "mean": 0.007863,
+        "std": 0.155613,
+        "min": -0.478879,
+        "p05": -0.239583,
+        "p50": 0.007565,
+        "p95": 0.267893,
+        "max": 0.540021
       },
       "per_fold": [
         {
@@ -94,74 +96,74 @@
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.888333
+          "accuracy": 0.903333
         },
         {
           "fold": 2,
           "n_pairs": 599,
           "n_same": 299,
           "n_diff": 300,
-          "accuracy": 0.894825
+          "accuracy": 0.886477
         },
         {
           "fold": 3,
           "n_pairs": 598,
           "n_same": 300,
           "n_diff": 298,
-          "accuracy": 0.884615
+          "accuracy": 0.867893
         },
         {
           "fold": 4,
           "n_pairs": 592,
           "n_same": 296,
           "n_diff": 296,
-          "accuracy": 0.856419
+          "accuracy": 0.891892
         },
         {
           "fold": 5,
           "n_pairs": 599,
           "n_same": 299,
           "n_diff": 300,
-          "accuracy": 0.861436
+          "accuracy": 0.869783
         },
         {
           "fold": 6,
           "n_pairs": 598,
           "n_same": 298,
           "n_diff": 300,
-          "accuracy": 0.892977
+          "accuracy": 0.908027
         },
         {
           "fold": 7,
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.91
+          "accuracy": 0.918333
         },
         {
           "fold": 8,
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.868333
+          "accuracy": 0.873333
         },
         {
           "fold": 9,
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.873333
+          "accuracy": 0.868333
         },
         {
           "fold": 10,
           "n_pairs": 597,
           "n_same": 297,
           "n_diff": 300,
-          "accuracy": 0.897822
+          "accuracy": 0.894472
         }
       ],
-      "accuracy_per_fold_mean": 0.882809,
-      "accuracy_per_fold_std": 0.016428,
+      "accuracy_per_fold_mean": 0.888188,
+      "accuracy_per_fold_std": 0.017185,
       "protocol": "official-6000pairs-10fold",
       "description": "官方全量 6000 对，用于与文献对照"
     },
@@ -171,37 +173,37 @@
       "n_same": 2624,
       "n_diff": 2915,
       "metric": "accuracy",
-      "value": 0.874526,
-      "threshold": 0.205231,
+      "value": 0.880123,
+      "threshold": 0.190786,
       "tar_at_far": {
         "1e-02": {
-          "tar": 0.559832,
-          "threshold": 0.381264,
+          "tar": 0.59032,
+          "threshold": 0.381035,
           "actual_far": 0.009949
         },
         "1e-03": {
-          "tar": 0.341845,
-          "threshold": 0.492447,
+          "tar": 0.41311,
+          "threshold": 0.465214,
           "actual_far": 0.000686
         }
       },
       "same_score": {
-        "mean": 0.408694,
-        "std": 0.186431,
-        "min": -0.240889,
-        "p05": 0.093827,
-        "p50": 0.413128,
-        "p95": 0.706745,
-        "max": 0.971534
+        "mean": 0.416499,
+        "std": 0.186857,
+        "min": -0.210524,
+        "p05": 0.097208,
+        "p50": 0.420264,
+        "p95": 0.71301,
+        "max": 0.967922
       },
       "diff_score": {
-        "mean": 0.014503,
-        "std": 0.156121,
-        "min": -0.481546,
-        "p05": -0.235021,
-        "p50": 0.012333,
-        "p95": 0.273988,
-        "max": 0.513395
+        "mean": 0.00838,
+        "std": 0.156093,
+        "min": -0.478879,
+        "p05": -0.239561,
+        "p50": 0.008543,
+        "p95": 0.270762,
+        "max": 0.540021
       },
       "per_fold": [
         {
@@ -209,74 +211,74 @@
           "n_pairs": 543,
           "n_same": 251,
           "n_diff": 292,
-          "accuracy": 0.876611
+          "accuracy": 0.911602
         },
         {
           "fold": 2,
           "n_pairs": 531,
           "n_same": 246,
           "n_diff": 285,
-          "accuracy": 0.883239
+          "accuracy": 0.864407
         },
         {
           "fold": 3,
           "n_pairs": 566,
           "n_same": 275,
           "n_diff": 291,
-          "accuracy": 0.878092
+          "accuracy": 0.871025
         },
         {
           "fold": 4,
           "n_pairs": 550,
           "n_same": 261,
           "n_diff": 289,
-          "accuracy": 0.849091
+          "accuracy": 0.885455
         },
         {
           "fold": 5,
           "n_pairs": 573,
           "n_same": 276,
           "n_diff": 297,
-          "accuracy": 0.855148
+          "accuracy": 0.862129
         },
         {
           "fold": 6,
           "n_pairs": 561,
           "n_same": 265,
           "n_diff": 296,
-          "accuracy": 0.887701
+          "accuracy": 0.898396
         },
         {
           "fold": 7,
           "n_pairs": 538,
           "n_same": 251,
           "n_diff": 287,
-          "accuracy": 0.899628
+          "accuracy": 0.892193
         },
         {
           "fold": 8,
           "n_pairs": 553,
           "n_same": 260,
           "n_diff": 293,
-          "accuracy": 0.857143
+          "accuracy": 0.860759
         },
         {
           "fold": 9,
           "n_pairs": 572,
           "n_same": 278,
           "n_diff": 294,
-          "accuracy": 0.868881
+          "accuracy": 0.863636
         },
         {
           "fold": 10,
           "n_pairs": 552,
           "n_same": 261,
           "n_diff": 291,
-          "accuracy": 0.891304
+          "accuracy": 0.893116
         }
       ],
-      "accuracy_per_fold_mean": 0.874684,
-      "accuracy_per_fold_std": 0.01592,
+      "accuracy_per_fold_mean": 0.880272,
+      "accuracy_per_fold_std": 0.017228,
       "protocol": "official-excluding-train-identities(min_images=15)",
       "description": "剔除含训练身份的对，自训练模型的主结论用这个",
       "train_identities": 96,
@@ -291,13 +293,13 @@
     "python": "3.11.16"
   },
   "artifacts": {
-    "ckpt_last": "F:\\aigcfr\\ckpt\\e1-real-only-seed1\\last.pth",
-    "ckpt_best": "F:\\aigcfr\\ckpt\\e1-real-only-seed1\\best.pth",
-    "metrics": "results\\runs\\e1-real-only-seed1\\metrics.json",
-    "pairs_csv": "results\\runs\\e1-real-only-seed1\\pairs.csv"
+    "ckpt_last": "F:\\aigcfr\\ckpt\\e4-real-plus-synth-seed2\\last.pth",
+    "ckpt_best": "F:\\aigcfr\\ckpt\\e4-real-plus-synth-seed2\\best.pth",
+    "metrics": "results\\runs\\e4-real-plus-synth-seed2\\metrics.json",
+    "pairs_csv": "results\\runs\\e4-real-plus-synth-seed2\\pairs.csv"
   },
-  "notes": "自研模型评测（F:\\aigcfr\\ckpt\\e1-real-only-seed1\\best.pth）。embedding 由 PyTorch 模型产生，检测与对齐复用 buffalo_l + norm_crop2（与训练完全一致）。filtered 协议已剔除 96 个训练身份。",
-  "evaluated_at": "2026-10-05T15:03:33+08:00",
+  "notes": "自研模型评测（F:\\aigcfr\\ckpt\\e4-real-plus-synth-seed2\\best.pth）。embedding 由 PyTorch 模型产生，检测与对齐复用 buffalo_l + norm_crop2（与训练完全一致）。filtered 协议已剔除 96 个训练身份。",
+  "evaluated_at": "2026-10-05T15:06:15+08:00",
   "protocol_detail": {
     "official": {
       "dataset": "lfw",
@@ -332,19 +334,19 @@
     },
     "norm_stats": {
       "count": 7690,
-      "min": 8.166565895080566,
-      "max": 31.037437438964844,
-      "mean": 17.486924657834056,
+      "min": 7.0382304191589355,
+      "max": 30.131107330322266,
+      "mean": 17.20930045596645,
       "is_normalized": false
     },
-    "extract_seconds": 0.3,
-    "images_per_second": 25633.33,
-    "warmup_seconds": 11.07,
+    "extract_seconds": 0.2,
+    "images_per_second": 38450.0,
+    "warmup_seconds": 10.99,
     "detection": {
       "newly_processed": 11,
       "from_cache": 7690,
       "failed": 11,
-      "seconds": 0.3,
+      "seconds": 0.2,
       "face_count_hist": {},
       "multi_face_ratio": null,
       "det_score_mean": null

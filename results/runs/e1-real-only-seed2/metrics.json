@@ -1,9 +1,9 @@
 {
   "exp_id": "e1-real-only-seed2",
-  "created_at": "2026-10-04T22:30:08+08:00",
+  "created_at": "2026-10-05T14:18:36+08:00",
   "config_path": "configs\\exp\\e1-real-only-seed0.yaml",
-  "config_hash": "0c5cc44556e8",
-  "git_commit": "9e14a3a",
+  "config_hash": "5db9a56038cc",
+  "git_commit": "a5d6bc4",
   "train_set": {
     "real_identities": 96,
     "real_images": 3590,
@@ -20,14 +20,14 @@
   },
   "model": {
     "arch": "iresnet18",
-    "loss": "arcface",
-    "margin": 0.5,
-    "scale": 64.0,
-    "emb_dim": 512,
-    "epochs": 30,
-    "seed": 2,
+    "loss": "arcface (self-trained)",
+    "epochs": 25,
+    "seed": null,
     "params_total": 62556544,
-    "pooled_fc": false
+    "ckpt": "F:\\aigcfr\\ckpt\\e1-real-only-seed2\\best.pth",
+    "embedding_source": "torch",
+    "face_select": "center",
+    "det_size": 640
   },
   "optim": {
     "optimizer": "sgd",
@@ -40,16 +40,249 @@
     "amp": true
   },
   "training": {
-    "final_loss": 0.035005,
-    "final_train_acc": 0.991643,
-    "best_train_acc": 0.9941504178272981,
-    "best_epoch": 29,
+    "final_loss": 0.003913,
+    "final_train_acc": 0.999443,
+    "best_train_acc": 0.9997214484679666,
+    "best_epoch": 25,
     "best_ckpt_written": true,
-    "final_weight_max_median_ratio": 1.869,
-    "elapsed_seconds": 719.5,
+    "final_weight_max_median_ratio": 1.406,
+    "elapsed_seconds": 742.4,
     "log": "results\\runs\\e1-real-only-seed2\\train_log.csv"
   },
-  "benchmarks": {},
+  "benchmarks": {
+    "lfw": {
+      "n_pairs_used": 5983,
+      "n_pairs_missing": 17,
+      "n_same": 2989,
+      "n_diff": 2994,
+      "metric": "accuracy",
+      "value": 0.877486,
+      "threshold": 0.216858,
+      "tar_at_far": {
+        "1e-02": {
+          "tar": 0.602543,
+          "threshold": 0.38309,
+          "actual_far": 0.009686
+        },
+        "1e-03": {
+          "tar": 0.416193,
+          "threshold": 0.482291,
+          "actual_far": 0.000668
+        }
+      },
+      "same_score": {
+        "mean": 0.438964,
+        "std": 0.20413,
+        "min": -0.256645,
+        "p05": 0.093085,
+        "p50": 0.437248,
+        "p95": 0.75872,
+        "max": 0.956798
+      },
+      "diff_score": {
+        "mean": 0.016216,
+        "std": 0.156873,
+        "min": -0.48428,
+        "p05": -0.239177,
+        "p50": 0.016206,
+        "p95": 0.281792,
+        "max": 0.49765
+      },
+      "per_fold": [
+        {
+          "fold": 1,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.89
+        },
+        {
+          "fold": 2,
+          "n_pairs": 599,
+          "n_same": 299,
+          "n_diff": 300,
+          "accuracy": 0.889816
+        },
+        {
+          "fold": 3,
+          "n_pairs": 598,
+          "n_same": 300,
+          "n_diff": 298,
+          "accuracy": 0.871237
+        },
+        {
+          "fold": 4,
+          "n_pairs": 592,
+          "n_same": 296,
+          "n_diff": 296,
+          "accuracy": 0.861486
+        },
+        {
+          "fold": 5,
+          "n_pairs": 599,
+          "n_same": 299,
+          "n_diff": 300,
+          "accuracy": 0.844741
+        },
+        {
+          "fold": 6,
+          "n_pairs": 598,
+          "n_same": 298,
+          "n_diff": 300,
+          "accuracy": 0.882943
+        },
+        {
+          "fold": 7,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.91
+        },
+        {
+          "fold": 8,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.861667
+        },
+        {
+          "fold": 9,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.881667
+        },
+        {
+          "fold": 10,
+          "n_pairs": 597,
+          "n_same": 297,
+          "n_diff": 300,
+          "accuracy": 0.881072
+        }
+      ],
+      "accuracy_per_fold_mean": 0.877463,
+      "accuracy_per_fold_std": 0.017445,
+      "protocol": "official-6000pairs-10fold",
+      "description": "官方全量 6000 对，用于与文献对照"
+    },
+    "lfw_filtered": {
+      "n_pairs_used": 5539,
+      "n_pairs_missing": 14,
+      "n_same": 2624,
+      "n_diff": 2915,
+      "metric": "accuracy",
+      "value": 0.868207,
+      "threshold": 0.216858,
+      "tar_at_far": {
+        "1e-02": {
+          "tar": 0.547256,
+          "threshold": 0.38309,
+          "actual_far": 0.009949
+        },
+        "1e-03": {
+          "tar": 0.334985,
+          "threshold": 0.482291,
+          "actual_far": 0.000686
+        }
+      },
+      "same_score": {
+        "mean": 0.400333,
+        "std": 0.186475,
+        "min": -0.256645,
+        "p05": 0.075591,
+        "p50": 0.405197,
+        "p95": 0.700903,
+        "max": 0.956798
+      },
+      "diff_score": {
+        "mean": 0.01659,
+        "std": 0.157589,
+        "min": -0.48428,
+        "p05": -0.2393,
+        "p50": 0.016776,
+        "p95": 0.281946,
+        "max": 0.49765
+      },
+      "per_fold": [
+        {
+          "fold": 1,
+          "n_pairs": 543,
+          "n_same": 251,
+          "n_diff": 292,
+          "accuracy": 0.878453
+        },
+        {
+          "fold": 2,
+          "n_pairs": 531,
+          "n_same": 246,
+          "n_diff": 285,
+          "accuracy": 0.875706
+        },
+        {
+          "fold": 3,
+          "n_pairs": 566,
+          "n_same": 275,
+          "n_diff": 291,
+          "accuracy": 0.865724
+        },
+        {
+          "fold": 4,
+          "n_pairs": 550,
+          "n_same": 261,
+          "n_diff": 289,
+          "accuracy": 0.852727
+        },
+        {
+          "fold": 5,
+          "n_pairs": 573,
+          "n_same": 276,
+          "n_diff": 297,
+          "accuracy": 0.837696
+        },
+        {
+          "fold": 6,
+          "n_pairs": 561,
+          "n_same": 265,
+          "n_diff": 296,
+          "accuracy": 0.875223
+        },
+        {
+          "fold": 7,
+          "n_pairs": 538,
+          "n_same": 251,
+          "n_diff": 287,
+          "accuracy": 0.899628
+        },
+        {
+          "fold": 8,
+          "n_pairs": 553,
+          "n_same": 260,
+          "n_diff": 293,
+          "accuracy": 0.84991
+        },
+        {
+          "fold": 9,
+          "n_pairs": 572,
+          "n_same": 278,
+          "n_diff": 294,
+          "accuracy": 0.877622
+        },
+        {
+          "fold": 10,
+          "n_pairs": 552,
+          "n_same": 261,
+          "n_diff": 291,
+          "accuracy": 0.871377
+        }
+      ],
+      "accuracy_per_fold_mean": 0.868407,
+      "accuracy_per_fold_std": 0.016756,
+      "protocol": "official-excluding-train-identities(min_images=15)",
+      "description": "剔除含训练身份的对，自训练模型的主结论用这个",
+      "train_identities": 96,
+      "train_images": 3595
+    }
+  },
   "hardware": {
     "hardware_profile": "b",
     "gpu_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
@@ -60,7 +293,62 @@
   "artifacts": {
     "ckpt_last": "F:\\aigcfr\\ckpt\\e1-real-only-seed2\\last.pth",
     "ckpt_best": "F:\\aigcfr\\ckpt\\e1-real-only-seed2\\best.pth",
-    "metrics": "results\\runs\\e1-real-only-seed2\\metrics.json"
+    "metrics": "results\\runs\\e1-real-only-seed2\\metrics.json",
+    "pairs_csv": "results\\runs\\e1-real-only-seed2\\pairs.csv"
   },
-  "notes": ""
+  "notes": "自研模型评测（F:\\aigcfr\\ckpt\\e1-real-only-seed2\\best.pth）。embedding 由 PyTorch 模型产生，检测与对齐复用 buffalo_l + norm_crop2（与训练完全一致）。filtered 协议已剔除 96 个训练身份。",
+  "evaluated_at": "2026-10-05T15:04:14+08:00",
+  "protocol_detail": {
+    "official": {
+      "dataset": "lfw",
+      "protocol": "official-6000pairs-10fold",
+      "num_pairs": 6000,
+      "num_same": 3000,
+      "num_diff": 3000,
+      "folds": 10,
+      "num_identities": 4281
+    },
+    "filtered": {
+      "dataset": "lfw",
+      "protocol": "official-6000pairs-10fold",
+      "num_pairs": 6000,
+      "num_same": 3000,
+      "num_diff": 3000,
+      "folds": 10,
+      "num_identities": 4281,
+      "filtered": true,
+      "num_pairs_kept": 5553,
+      "num_same_kept": 2633,
+      "num_diff_kept": 2920,
+      "num_pairs_removed": 447,
+      "num_identities_kept": 4161
+    }
+  },
+  "embedding": {
+    "num_used": 7690,
+    "num_failed": 11,
+    "failure_reasons": {
+      "no_face": 11
+    },
+    "norm_stats": {
+      "count": 7690,
+      "min": 7.649970531463623,
+      "max": 30.19449806213379,
+      "mean": 17.644555039957687,
+      "is_normalized": false
+    },
+    "extract_seconds": 0.3,
+    "images_per_second": 25633.33,
+    "warmup_seconds": 11.08,
+    "detection": {
+      "newly_processed": 11,
+      "from_cache": 7690,
+      "failed": 11,
+      "seconds": 0.3,
+      "face_count_hist": {},
+      "multi_face_ratio": null,
+      "det_score_mean": null
+    },
+    "aligned_cache": "F:\\aigcfr\\data\\cache\\aligned_lfw\\center"
+  }
 }

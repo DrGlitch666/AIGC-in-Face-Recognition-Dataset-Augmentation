@@ -1,9 +1,9 @@
 {
   "exp_id": "e4-real-plus-synth-seed0",
-  "created_at": "2026-10-03T00:03:00+08:00",
+  "created_at": "2026-10-05T14:32:16+08:00",
   "config_path": "configs\\exp\\e4-real-plus-synth.yaml",
   "config_hash": "5db9a56038cc",
-  "git_commit": "3702d45",
+  "git_commit": "a5d6bc4",
   "train_set": {
     "real_identities": 96,
     "real_images": 3590,
@@ -23,7 +23,7 @@
   "model": {
     "arch": "iresnet18",
     "loss": "arcface (self-trained)",
-    "epochs": 26,
+    "epochs": 24,
     "seed": null,
     "params_total": 62556544,
     "ckpt": "F:\\aigcfr\\ckpt\\e4-real-plus-synth-seed0\\best.pth",
@@ -42,10 +42,13 @@
     "amp": true
   },
   "training": {
-    "final_loss": 0.008074,
-    "final_train_acc": 0.997929,
-    "best_train_acc": 0.9986191024165708,
-    "elapsed_seconds": 826.8,
+    "final_loss": 0.000805,
+    "final_train_acc": 1.0,
+    "best_train_acc": 1.0,
+    "best_epoch": 24,
+    "best_ckpt_written": true,
+    "final_weight_max_median_ratio": 1.375,
+    "elapsed_seconds": 814.7,
     "log": "results\\runs\\e4-real-plus-synth-seed0\\train_log.csv"
   },
   "benchmarks": {
@@ -55,37 +58,37 @@
       "n_same": 2989,
       "n_diff": 2994,
       "metric": "accuracy",
-      "value": 0.890189,
-      "threshold": 0.223192,
+      "value": 0.892863,
+      "threshold": 0.240377,
       "tar_at_far": {
         "1e-02": {
-          "tar": 0.66176,
-          "threshold": 0.384719,
+          "tar": 0.647039,
+          "threshold": 0.377936,
           "actual_far": 0.009686
         },
         "1e-03": {
-          "tar": 0.484443,
-          "threshold": 0.490591,
+          "tar": 0.420877,
+          "threshold": 0.505656,
           "actual_far": 0.000668
         }
       },
       "same_score": {
-        "mean": 0.467156,
-        "std": 0.200567,
-        "min": -0.273927,
-        "p05": 0.119095,
-        "p50": 0.479964,
-        "p95": 0.757703,
-        "max": 0.952952
+        "mean": 0.458701,
+        "std": 0.204042,
+        "min": -0.243005,
+        "p05": 0.117139,
+        "p50": 0.458909,
+        "p95": 0.771628,
+        "max": 0.959181
       },
       "diff_score": {
-        "mean": 0.009247,
-        "std": 0.164992,
-        "min": -0.498528,
-        "p05": -0.256848,
-        "p50": 0.009143,
-        "p95": 0.283878,
-        "max": 0.521426
+        "mean": 0.013166,
+        "std": 0.156207,
+        "min": -0.445465,
+        "p05": -0.241725,
+        "p50": 0.014266,
+        "p95": 0.266878,
+        "max": 0.567786
       },
       "per_fold": [
         {
@@ -93,14 +96,14 @@
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.893333
+          "accuracy": 0.898333
         },
         {
           "fold": 2,
           "n_pairs": 599,
           "n_same": 299,
           "n_diff": 300,
-          "accuracy": 0.911519
+          "accuracy": 0.8798
         },
         {
           "fold": 3,
@@ -114,53 +117,53 @@
           "n_pairs": 592,
           "n_same": 296,
           "n_diff": 296,
-          "accuracy": 0.891892
+          "accuracy": 0.89527
         },
         {
           "fold": 5,
           "n_pairs": 599,
           "n_same": 299,
           "n_diff": 300,
-          "accuracy": 0.854758
+          "accuracy": 0.874791
         },
         {
           "fold": 6,
           "n_pairs": 598,
           "n_same": 298,
           "n_diff": 300,
-          "accuracy": 0.886288
+          "accuracy": 0.891304
         },
         {
           "fold": 7,
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.921667
+          "accuracy": 0.933333
         },
         {
           "fold": 8,
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.895
+          "accuracy": 0.886667
         },
         {
           "fold": 9,
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.881667
+          "accuracy": 0.893333
         },
         {
           "fold": 10,
           "n_pairs": 597,
           "n_same": 297,
           "n_diff": 300,
-          "accuracy": 0.891122
+          "accuracy": 0.901173
         }
       ],
-      "accuracy_per_fold_mean": 0.890183,
-      "accuracy_per_fold_std": 0.01752,
+      "accuracy_per_fold_mean": 0.892859,
+      "accuracy_per_fold_std": 0.016171,
       "protocol": "official-6000pairs-10fold",
       "description": "官方全量 6000 对，用于与文献对照"
     },
@@ -170,37 +173,37 @@
       "n_same": 2624,
       "n_diff": 2915,
       "metric": "accuracy",
-      "value": 0.882289,
-      "threshold": 0.223192,
+      "value": 0.885178,
+      "threshold": 0.240377,
       "tar_at_far": {
         "1e-02": {
-          "tar": 0.616616,
-          "threshold": 0.383513,
+          "tar": 0.604421,
+          "threshold": 0.375586,
           "actual_far": 0.009949
         },
         "1e-03": {
-          "tar": 0.412729,
-          "threshold": 0.490591,
+          "tar": 0.34032,
+          "threshold": 0.505656,
           "actual_far": 0.000686
         }
       },
       "same_score": {
-        "mean": 0.435629,
-        "std": 0.192388,
-        "min": -0.273927,
-        "p05": 0.103766,
-        "p50": 0.442638,
-        "p95": 0.73249,
-        "max": 0.952952
+        "mean": 0.42065,
+        "std": 0.187264,
+        "min": -0.243005,
+        "p05": 0.102363,
+        "p50": 0.42407,
+        "p95": 0.713673,
+        "max": 0.959181
       },
       "diff_score": {
-        "mean": 0.009705,
-        "std": 0.165069,
-        "min": -0.498528,
-        "p05": -0.255908,
-        "p50": 0.009655,
-        "p95": 0.283848,
-        "max": 0.521426
+        "mean": 0.013637,
+        "std": 0.156339,
+        "min": -0.445465,
+        "p05": -0.241708,
+        "p50": 0.014294,
+        "p95": 0.267145,
+        "max": 0.567786
       },
       "per_fold": [
         {
@@ -208,14 +211,14 @@
           "n_pairs": 543,
           "n_same": 251,
           "n_diff": 292,
-          "accuracy": 0.882136
+          "accuracy": 0.887661
         },
         {
           "fold": 2,
           "n_pairs": 531,
           "n_same": 246,
           "n_diff": 285,
-          "accuracy": 0.902072
+          "accuracy": 0.864407
         },
         {
           "fold": 3,
@@ -229,53 +232,53 @@
           "n_pairs": 550,
           "n_same": 261,
           "n_diff": 289,
-          "accuracy": 0.885455
+          "accuracy": 0.889091
         },
         {
           "fold": 5,
           "n_pairs": 573,
           "n_same": 276,
           "n_diff": 297,
-          "accuracy": 0.848168
+          "accuracy": 0.86911
         },
         {
           "fold": 6,
           "n_pairs": 561,
           "n_same": 265,
           "n_diff": 296,
-          "accuracy": 0.878788
+          "accuracy": 0.885918
         },
         {
           "fold": 7,
           "n_pairs": 538,
           "n_same": 251,
           "n_diff": 287,
-          "accuracy": 0.912639
+          "accuracy": 0.925651
         },
         {
           "fold": 8,
           "n_pairs": 553,
           "n_same": 260,
           "n_diff": 293,
-          "accuracy": 0.886076
+          "accuracy": 0.877034
         },
         {
           "fold": 9,
           "n_pairs": 572,
           "n_same": 278,
           "n_diff": 294,
-          "accuracy": 0.877622
+          "accuracy": 0.88986
         },
         {
           "fold": 10,
           "n_pairs": 552,
           "n_same": 261,
           "n_diff": 291,
-          "accuracy": 0.88587
+          "accuracy": 0.896739
         }
       ],
-      "accuracy_per_fold_mean": 0.882632,
-      "accuracy_per_fold_std": 0.016631,
+      "accuracy_per_fold_mean": 0.885296,
+      "accuracy_per_fold_std": 0.016983,
       "protocol": "official-excluding-train-identities(min_images=15)",
       "description": "剔除含训练身份的对，自训练模型的主结论用这个",
       "train_identities": 96,
@@ -296,7 +299,7 @@
     "pairs_csv": "results\\runs\\e4-real-plus-synth-seed0\\pairs.csv"
   },
   "notes": "自研模型评测（F:\\aigcfr\\ckpt\\e4-real-plus-synth-seed0\\best.pth）。embedding 由 PyTorch 模型产生，检测与对齐复用 buffalo_l + norm_crop2（与训练完全一致）。filtered 协议已剔除 96 个训练身份。",
-  "evaluated_at": "2026-10-04T21:58:40+08:00",
+  "evaluated_at": "2026-10-05T15:04:54+08:00",
   "protocol_detail": {
     "official": {
       "dataset": "lfw",
@@ -331,14 +334,14 @@
     },
     "norm_stats": {
       "count": 7690,
-      "min": 8.739604949951172,
-      "max": 31.8949031829834,
-      "mean": 18.359994272323828,
+      "min": 6.832427501678467,
+      "max": 29.95246124267578,
+      "mean": 17.206664096487515,
       "is_normalized": false
     },
     "extract_seconds": 0.3,
     "images_per_second": 25633.33,
-    "warmup_seconds": 10.66,
+    "warmup_seconds": 11.21,
     "detection": {
       "newly_processed": 11,
       "from_cache": 7690,

@@ -1,9 +1,9 @@
 {
   "exp_id": "e1-real-only-seed0",
-  "created_at": "2026-10-02T23:48:15+08:00",
+  "created_at": "2026-10-05T13:53:35+08:00",
   "config_path": "configs\\exp\\e1-real-only-seed0.yaml",
   "config_hash": "5db9a56038cc",
-  "git_commit": "3702d45",
+  "git_commit": "a5d6bc4",
   "train_set": {
     "real_identities": 96,
     "real_images": 3590,
@@ -21,7 +21,7 @@
   "model": {
     "arch": "iresnet18",
     "loss": "arcface (self-trained)",
-    "epochs": 28,
+    "epochs": 26,
     "seed": null,
     "params_total": 62556544,
     "ckpt": "F:\\aigcfr\\ckpt\\e1-real-only-seed0\\best.pth",
@@ -40,10 +40,13 @@
     "amp": true
   },
   "training": {
-    "final_loss": 0.047077,
-    "final_train_acc": 0.988022,
-    "best_train_acc": 0.9910863509749304,
-    "elapsed_seconds": 763.2,
+    "final_loss": 0.002776,
+    "final_train_acc": 0.999164,
+    "best_train_acc": 1.0,
+    "best_epoch": 26,
+    "best_ckpt_written": true,
+    "final_weight_max_median_ratio": 1.409,
+    "elapsed_seconds": 731.8,
     "log": "results\\runs\\e1-real-only-seed0\\train_log.csv"
   },
   "benchmarks": {
@@ -53,37 +56,37 @@
       "n_same": 2989,
       "n_diff": 2994,
       "metric": "accuracy",
-      "value": 0.88133,
-      "threshold": 0.262958,
+      "value": 0.883336,
+      "threshold": 0.206545,
       "tar_at_far": {
         "1e-02": {
-          "tar": 0.652392,
-          "threshold": 0.384485,
+          "tar": 0.614587,
+          "threshold": 0.393093,
           "actual_far": 0.009686
         },
         "1e-03": {
-          "tar": 0.357979,
-          "threshold": 0.552045,
+          "tar": 0.423888,
+          "threshold": 0.495281,
           "actual_far": 0.000668
         }
       },
       "same_score": {
-        "mean": 0.458033,
-        "std": 0.201508,
-        "min": -0.264683,
-        "p05": 0.104177,
-        "p50": 0.474139,
-        "p95": 0.756078,
-        "max": 0.963722
+        "mean": 0.450829,
+        "std": 0.20504,
+        "min": -0.387783,
+        "p05": 0.106448,
+        "p50": 0.454441,
+        "p95": 0.762797,
+        "max": 0.961138
       },
       "diff_score": {
-        "mean": 0.009156,
-        "std": 0.16505,
-        "min": -0.530406,
-        "p05": -0.258354,
-        "p50": 0.005988,
-        "p95": 0.288353,
-        "max": 0.5783
+        "mean": 0.01069,
+        "std": 0.159158,
+        "min": -0.454054,
+        "p05": -0.243955,
+        "p50": 0.006981,
+        "p95": 0.283055,
+        "max": 0.541873
       },
       "per_fold": [
         {
@@ -91,74 +94,74 @@
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.893333
+          "accuracy": 0.898333
         },
         {
           "fold": 2,
           "n_pairs": 599,
           "n_same": 299,
           "n_diff": 300,
-          "accuracy": 0.894825
+          "accuracy": 0.874791
         },
         {
           "fold": 3,
           "n_pairs": 598,
           "n_same": 300,
           "n_diff": 298,
-          "accuracy": 0.879599
+          "accuracy": 0.882943
         },
         {
           "fold": 4,
           "n_pairs": 592,
           "n_same": 296,
           "n_diff": 296,
-          "accuracy": 0.885135
+          "accuracy": 0.886824
         },
         {
           "fold": 5,
           "n_pairs": 599,
           "n_same": 299,
           "n_diff": 300,
-          "accuracy": 0.859766
+          "accuracy": 0.853088
         },
         {
           "fold": 6,
           "n_pairs": 598,
           "n_same": 298,
           "n_diff": 300,
-          "accuracy": 0.882943
+          "accuracy": 0.884615
         },
         {
           "fold": 7,
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.916667
+          "accuracy": 0.903333
         },
         {
           "fold": 8,
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.855
+          "accuracy": 0.87
         },
         {
           "fold": 9,
           "n_pairs": 600,
           "n_same": 300,
           "n_diff": 300,
-          "accuracy": 0.861667
+          "accuracy": 0.878333
         },
         {
           "fold": 10,
           "n_pairs": 597,
           "n_same": 297,
           "n_diff": 300,
-          "accuracy": 0.884422
+          "accuracy": 0.901173
         }
       ],
-      "accuracy_per_fold_mean": 0.881336,
-      "accuracy_per_fold_std": 0.017747,
+      "accuracy_per_fold_mean": 0.883343,
+      "accuracy_per_fold_std": 0.014655,
       "protocol": "official-6000pairs-10fold",
       "description": "官方全量 6000 对，用于与文献对照"
     },
@@ -168,37 +171,37 @@
       "n_same": 2624,
       "n_diff": 2915,
       "metric": "accuracy",
-      "value": 0.871999,
-      "threshold": 0.262958,
+      "value": 0.875248,
+      "threshold": 0.206545,
       "tar_at_far": {
         "1e-02": {
-          "tar": 0.60404,
-          "threshold": 0.384485,
+          "tar": 0.560976,
+          "threshold": 0.393093,
           "actual_far": 0.009949
         },
         "1e-03": {
-          "tar": 0.275152,
-          "threshold": 0.552045,
+          "tar": 0.34375,
+          "threshold": 0.495281,
           "actual_far": 0.000686
         }
       },
       "same_score": {
-        "mean": 0.427538,
-        "std": 0.19449,
-        "min": -0.264683,
-        "p05": 0.087925,
-        "p50": 0.436439,
-        "p95": 0.725083,
-        "max": 0.963722
+        "mean": 0.413007,
+        "std": 0.188875,
+        "min": -0.387783,
+        "p05": 0.092135,
+        "p50": 0.420864,
+        "p95": 0.710614,
+        "max": 0.961138
       },
       "diff_score": {
-        "mean": 0.009706,
-        "std": 0.165706,
-        "min": -0.530406,
-        "p05": -0.258336,
-        "p50": 0.005939,
-        "p95": 0.289515,
-        "max": 0.5783
+        "mean": 0.011338,
+        "std": 0.159377,
+        "min": -0.454054,
+        "p05": -0.243537,
+        "p50": 0.007308,
+        "p95": 0.283241,
+        "max": 0.541873
       },
       "per_fold": [
         {
@@ -206,74 +209,74 @@
           "n_pairs": 543,
           "n_same": 251,
           "n_diff": 292,
-          "accuracy": 0.882136
+          "accuracy": 0.887661
         },
         {
           "fold": 2,
           "n_pairs": 531,
           "n_same": 246,
           "n_diff": 285,
-          "accuracy": 0.883239
+          "accuracy": 0.862524
         },
         {
           "fold": 3,
           "n_pairs": 566,
           "n_same": 275,
           "n_diff": 291,
-          "accuracy": 0.872792
+          "accuracy": 0.878092
         },
         {
           "fold": 4,
           "n_pairs": 550,
           "n_same": 261,
           "n_diff": 289,
-          "accuracy": 0.876364
+          "accuracy": 0.88
         },
         {
           "fold": 5,
           "n_pairs": 573,
           "n_same": 276,
           "n_diff": 297,
-          "accuracy": 0.853403
+          "accuracy": 0.846422
         },
         {
           "fold": 6,
           "n_pairs": 561,
           "n_same": 265,
           "n_diff": 296,
-          "accuracy": 0.875223
+          "accuracy": 0.877005
         },
         {
           "fold": 7,
           "n_pairs": 538,
           "n_same": 251,
           "n_diff": 287,
-          "accuracy": 0.907063
+          "accuracy": 0.894052
         },
         {
           "fold": 8,
           "n_pairs": 553,
           "n_same": 260,
           "n_diff": 293,
-          "accuracy": 0.842676
+          "accuracy": 0.860759
         },
         {
           "fold": 9,
           "n_pairs": 572,
           "n_same": 278,
           "n_diff": 294,
-          "accuracy": 0.854895
+          "accuracy": 0.874126
         },
         {
           "fold": 10,
           "n_pairs": 552,
           "n_same": 261,
           "n_diff": 291,
-          "accuracy": 0.875
+          "accuracy": 0.893116
         }
       ],
-      "accuracy_per_fold_mean": 0.872279,
-      "accuracy_per_fold_std": 0.017306,
+      "accuracy_per_fold_mean": 0.875376,
+      "accuracy_per_fold_std": 0.014369,
       "protocol": "official-excluding-train-identities(min_images=15)",
       "description": "剔除含训练身份的对，自训练模型的主结论用这个",
       "train_identities": 96,
@@ -294,7 +297,7 @@
     "pairs_csv": "results\\runs\\e1-real-only-seed0\\pairs.csv"
   },
   "notes": "自研模型评测（F:\\aigcfr\\ckpt\\e1-real-only-seed0\\best.pth）。embedding 由 PyTorch 模型产生，检测与对齐复用 buffalo_l + norm_crop2（与训练完全一致）。filtered 协议已剔除 96 个训练身份。",
-  "evaluated_at": "2026-10-04T21:58:00+08:00",
+  "evaluated_at": "2026-10-05T15:02:53+08:00",
   "protocol_detail": {
     "official": {
       "dataset": "lfw",
@@ -329,14 +332,14 @@
     },
     "norm_stats": {
       "count": 7690,
-      "min": 9.965799331665039,
-      "max": 31.670618057250977,
-      "mean": 18.8971788881349,
+      "min": 7.976855754852295,
+      "max": 32.2121696472168,
+      "mean": 17.537433636855088,
       "is_normalized": false
     },
     "extract_seconds": 0.5,
     "images_per_second": 15380.0,
-    "warmup_seconds": 56.55,
+    "warmup_seconds": 13.06,
     "detection": {
       "newly_processed": 11,
       "from_cache": 7690,

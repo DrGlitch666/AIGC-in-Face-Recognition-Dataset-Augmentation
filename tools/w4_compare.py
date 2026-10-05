@@ -1,10 +1,13 @@
 #!/usr/bin/env python
-"""汇总 W4 对照实验（E1 / E4a / E4b）并落盘
+"""W4 多种子对照分析（E1 纯真实 vs E4a 真实+合成）
 
-读 `results/runs/<exp>/metrics.json` 与 `pairs.csv`，输出：
-* official / filtered 两套协议下的 accuracy 与 TAR@FAR=1e-3（含每折均值与标准差）
-* 相对 E1 的绝对/相对提升，以及"提升 = 几倍每折标准差"（说明不是噪声）
-* 写到 `results/runs/w4-e4-comparison/comparison.json`
+读 `results/runs/<exp>/metrics.json` 与 `pairs.csv`，按**方案**（不是单次实验）汇总：
+
+* 每种子的 accuracy 与 TAR@FAR=1e-3，以及跨种子的均值 ± 标准差
+* 方案间 Welch t 检验（不同种子视为独立重复 —— 这是 TAR 这类指标的主导不确定性来源）
+* 配对 bootstrap（同一批 LFW 配对、同一组重采样索引）作为评测层面的补充视角
+* 按折配对 t 检验（accuracy 有 10 个配对的折，灵敏度最高）
+* 结果写到 `results/runs/w4-e4-comparison/comparison.json`
 
 用法：
     python tools/w4_compare.py
@@ -12,7 +15,6 @@
 
 from __future__ import annotations
 
-import collections
 import csv
 import json
 import sys
@@ -26,78 +28,20 @@ import numpy as np  # noqa: E402
 
 from aigcfr.eval.verify import tar_at_far  # noqa: E402
 
-EXPERIMENTS = [
-    ("e1-real-only-seed0", "E1 纯真实", "real 3590"),
-    ("e4-real-plus-synth-seed0", "E4a +755合成(17.4%)", "real 3590 + synth 755"),
-    ("e4-highquality-synth-seed0", "E4b +448高质合成(11.1%)", "real 3590 + synth 448"),
-]
 FAR = 1e-3
 OUT_DIR = REPO_ROOT / "results" / "runs" / "w4-e4-comparison"
-
-
-def paired_bootstrap_tar(base_exp: str, other_exp: str, which: str,
-                         n_boot: int = 2000, seed: int = 0) -> dict:
-    """**配对** bootstrap：同一批配对、同一组重采样索引，比较两个模型的 TAR@FAR。
-
-    ⚠️ 为什么不能直接比两个独立的 bootstrap 标准差：
-       两个模型评测的是**同一批 6000 对**，是配对数据。独立 bootstrap 会把
-       "配对"带来的方差抵消掉全部丢掉，导致严重低估显著性。
-       正确做法是每次重采样都用**同一组索引**算两个模型的 TAR，再取差值。
-       而且 FAR=1e-3 时阈值只由约 3 个 impuator 决定，单模型的 bootstrap 方差
-       本来就大（E1 是 0.065），配对差值能把这个共同噪声消掉。
-    """
-    s_base, l_base = pooled_pairs(base_exp, which)
-    s_oth, l_oth = pooled_pairs(other_exp, which)
-    n = min(len(s_base), len(s_oth))
-    rng = np.random.default_rng(seed)
-    diffs = []
-    for _ in range(n_boot):
-        idx = rng.integers(0, n, n)
-        tb = tar_at_far(l_base[idx], s_base[idx], FAR)
-        to = tar_at_far(l_oth[idx], s_oth[idx], FAR)
-        tb = float(tb) if not isinstance(tb, tuple) else float(tb[0])
-        to = float(to) if not isinstance(to, tuple) else float(to[0])
-        if np.isfinite(tb) and np.isfinite(to):
-            diffs.append(to - tb)
-    arr = np.asarray(diffs)
-    if arr.size == 0:
-        return {"n_boot": 0}
-    return {
-        "n_boot": int(arr.size),
-        "delta_mean": float(arr.mean()),
-        "delta_std": float(arr.std(ddof=0)),
-        "delta_p05": float(np.percentile(arr, 5)),
-        "delta_p95": float(np.percentile(arr, 95)),
-        "frac_positive": float((arr > 0).mean()),
-    }
-
-
-def paired_ttest_folds(base_exp: str, other_exp: str, key: str) -> dict:
-    """按折配对 t 检验（同一批 10 折，天然配对）。
-
-    这是本项目**唯一能达到统计显著**的检验：TAR@FAR=1e-3 受限于 LFW 只有
-    3000 个非同类对（阈值由约 3 个 impostor 决定），bootstrap 区间必然很宽；
-    而 accuracy 有 10 个配对的折，配对后折间共同波动被消掉，灵敏度高得多。
-
-    n=10 的临界值：双侧 p<0.05 -> |t|>2.26；单侧 p<0.05 -> t>1.83。
-    """
-    d_base = json.loads((REPO_ROOT / "results" / "runs" / base_exp / "metrics.json")
-                        .read_text(encoding="utf-8"))
-    d_oth = json.loads((REPO_ROOT / "results" / "runs" / other_exp / "metrics.json")
-                       .read_text(encoding="utf-8"))
-    a = np.asarray([x["accuracy"] for x in d_base["benchmarks"][key]["per_fold"]])
-    b = np.asarray([x["accuracy"] for x in d_oth["benchmarks"][key]["per_fold"]])
-    d = b - a
-    n = len(d)
-    m, s = float(d.mean()), float(d.std(ddof=1))
-    t = m / (s / np.sqrt(n)) if s > 0 else float("inf")
-    return {"n_folds": n, "mean_delta": round(m, 6), "std_delta": round(s, 6),
-            "t": round(t, 4), "folds_won": int((d > 0).sum()),
-            "crit_two_sided_p05": 2.262, "crit_one_sided_p05": 1.833}
+# 方案 -> (短名, 标签, 训练集说明, [各 seed 的 exp-id])
+ARMS = [
+    ("E1", "E1 纯真实", "real 3590",
+     ["e1-real-only-seed0", "e1-real-only-seed1", "e1-real-only-seed2"]),
+    ("E4a", "E4a 真实+合成(17.4%)", "real 3590 + synth 755",
+     ["e4-real-plus-synth-seed0", "e4-real-plus-synth-seed1", "e4-real-plus-synth-seed2"]),
+]
+PROTOCOLS = [("lfw", "official"), ("lfw_filtered", "filtered")]
 
 
 def pooled_pairs(exp: str, which: str) -> tuple[np.ndarray, np.ndarray]:
-    """取某个协议下的全部配对分数与标签。"""
+    """某协议下该实验的全部配对分数与标签。"""
     path = REPO_ROOT / "results" / "runs" / exp / "pairs.csv"
     rows = [r for r in csv.DictReader(open(path, encoding="utf-8"))
             if r["set"] == which and r.get("score", "").strip()]
@@ -106,137 +50,160 @@ def pooled_pairs(exp: str, which: str) -> tuple[np.ndarray, np.ndarray]:
     return scores, labels
 
 
-def bootstrap_tar(exp: str, which: str, n_boot: int = 1000, seed: int = 0) -> dict:
-    """用 bootstrap 估 TAR@FAR 的离散度。
+def _tar(labels: np.ndarray, scores: np.ndarray) -> float:
+    """⚠️ `tar_at_far` 的参数顺序是 **(labels, scores, far)**。
 
-    ⚠️ 为什么不用"每折 TAR"：LFW 每折只有 300 对非同类，而 FAR=1e-3 需要至少
-       1000 个 impostor 才能解出来（每折的期望 impostor 数是 0.3 个）——
-       按折算 TAR@1e-3 在数学上无意义，会得到 nan。所以只在**全量 6000 对**
-       上算一次，再用 bootstrap 重采样得到分布。
+    写反了不会报错：`labels == 1` 会去筛"分数恰好等于 1.0"的样本，
+    same/diff 之一为空 -> **静默返回 nan**。真实踩过，排查了很久。
     """
-    scores, labels = pooled_pairs(exp, which)
+    t = tar_at_far(labels, scores, FAR)
+    return float(t) if not isinstance(t, tuple) else float(t[0])
+
+
+def paired_bootstrap(base_exp: str, other_exp: str, which: str,
+                     n_boot: int = 2000, seed: int = 0) -> dict:
+    """配对 bootstrap：同一组重采样索引下比较两个模型，消掉共同噪声。
+
+    两个模型评测的是**同一批 6000 对**，是配对数据。若各自独立 bootstrap，
+    会把配对带来的方差抵消全部丢掉，严重低估显著性。
+    """
+    sb, lb = pooled_pairs(base_exp, which)
+    so, lo = pooled_pairs(other_exp, which)
+    n = min(len(sb), len(so))
     rng = np.random.default_rng(seed)
-    n = len(scores)
-    vals = []
+    diffs = []
     for _ in range(n_boot):
         idx = rng.integers(0, n, n)
-        # ⚠️ 参数顺序是 (labels, scores, far) —— 不是 (scores, labels)。
-        #    写反了不会报错，只会让 labels==1 筛出"分数恰好等于 1.0"的样本，
-        #    same/diff 之一为空 -> 静默返回全 nan。**真实踩过。**
-        t = tar_at_far(labels[idx], scores[idx], FAR)
-        t = float(t) if not isinstance(t, tuple) else float(t[0])
-        if np.isfinite(t):
-            vals.append(t)
-    arr = np.asarray(vals)
+        tb, to = _tar(lb[idx], sb[idx]), _tar(lo[idx], so[idx])
+        if np.isfinite(tb) and np.isfinite(to):
+            diffs.append(to - tb)
+    arr = np.asarray(diffs)
     if arr.size == 0:
-        return {"tar_mean": float("nan"), "tar_std": float("nan"), "n_boot": 0}
-    return {"tar_mean": float(arr.mean()), "tar_std": float(arr.std(ddof=0)),
-            "tar_p05": float(np.percentile(arr, 5)), "tar_p95": float(np.percentile(arr, 95)),
-            "n_boot": int(arr.size)}
+        return {"n_boot": 0}
+    return {"n_boot": int(arr.size), "delta_mean": round(float(arr.mean()), 6),
+            "delta_std": round(float(arr.std(ddof=0)), 6),
+            "delta_p05": round(float(np.percentile(arr, 5)), 6),
+            "delta_p95": round(float(np.percentile(arr, 95)), 6),
+            "frac_positive": round(float((arr > 0).mean()), 4)}
+
+
+def paired_ttest_folds(base_exp: str, other_exp: str, key: str) -> dict:
+    """按折配对 t 检验（同一批 10 折天然配对，消掉折间共同波动）。"""
+
+    def accs(exp: str) -> np.ndarray:
+        d = json.loads((REPO_ROOT / "results" / "runs" / exp / "metrics.json")
+                       .read_text(encoding="utf-8"))
+        return np.asarray([x["accuracy"] for x in d["benchmarks"][key]["per_fold"]])
+
+    d = accs(other_exp) - accs(base_exp)
+    n = len(d)
+    s = float(d.std(ddof=1))
+    t = float(d.mean()) / (s / np.sqrt(n)) if s > 0 else float("inf")
+    return {"n_folds": n, "mean_delta": round(float(d.mean()), 6), "std_delta": round(s, 6),
+            "t": round(t, 4), "folds_won": int((d > 0).sum())}
+
+
+def welch(a: list[float], b: list[float]) -> dict:
+    """Welch t 检验（不假设方差齐），样本是各方案的种子重复。
+
+    n=3 时自由度很小（df≈3~4），临界值很高：单侧 p<0.05 需 t>2.35，双侧需 t>3.18。
+    """
+    a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    na, nb = len(a), len(b)
+    va, vb = a.var(ddof=1), b.var(ddof=1)
+    se = float(np.sqrt(va / na + vb / nb))
+    t = float(b.mean() - a.mean()) / se if se > 0 else float("inf")
+    df = (va / na + vb / nb) ** 2 / ((va / na) ** 2 / (na - 1) + (vb / nb) ** 2 / (nb - 1))
+    return {"n_a": na, "n_b": nb, "mean_a": round(float(a.mean()), 6),
+            "mean_b": round(float(b.mean()), 6),
+            "delta": round(float(b.mean() - a.mean()), 6),
+            "se": round(se, 6), "t": round(t, 4), "df": round(float(df), 3)}
 
 
 def main() -> int:
-    summary = {"far": FAR, "protocol": "LFW 10-fold", "experiments": []}
-    table = {}
-    for exp, label, train_desc in EXPERIMENTS:
-        mpath = REPO_ROOT / "results" / "runs" / exp / "metrics.json"
-        if not mpath.exists():
-            print(f"!! 缺 {mpath}")
-            return 2
-        d = json.loads(mpath.read_text(encoding="utf-8"))
-        b = d["benchmarks"]
-        entry = {"exp_id": exp, "label": label, "train_set": train_desc,
-                 "train_images": d.get("train_set", {}).get("total_images"),
-                 "synth_images": d.get("train_set", {}).get("synth_images"),
-                 "synth_ratio": d.get("train_set", {}).get("synth_ratio"),
-                 "best_train_acc": d.get("training", {}).get("best_train_acc"),
-                 "protocols": {}}
-        for key, pname in (("lfw", "official"), ("lfw_filtered", "filtered")):
-            if key not in b:
-                continue
-            bench = b[key]
-            fold_acc = [x["accuracy"] for x in bench["per_fold"]]
-            boot = bootstrap_tar(exp, pname)
-            # ⚠️ 用 numpy 而不是 statistics.pstdev：Python 3.11 的 pstdev 在浮点数据上
-            #    会偶发 "AttributeError: 'float' object has no attribute 'numerator'"。
-            entry["protocols"][pname] = {
-                "n_pairs": bench.get("n_pairs_used"),
-                "accuracy": bench["value"],
-                "accuracy_fold_mean": round(float(np.mean(fold_acc)), 6),
-                "accuracy_fold_std": round(float(np.std(fold_acc, ddof=0)), 6),
-                "tar_at_1e-3": bench["tar_at_far"]["1e-03"]["tar"],
-                **{k: (round(v, 6) if isinstance(v, float) else v) for k, v in boot.items()},
+    summary: dict = {"far": FAR, "protocol": "LFW 10-fold", "n_seeds": 3, "arms": [],
+                     "tests": {}, "critical_values_n3": {"one_sided_p05": 2.353,
+                                                         "two_sided_p05": 3.182}}
+    arms: dict[str, dict] = {}
+    for name, label, train_desc, exps in ARMS:
+        rec: dict = {"name": name, "label": label, "train_set": train_desc,
+                     "seeds": [], "protocols": {}}
+        for exp in exps:
+            mp = REPO_ROOT / "results" / "runs" / exp / "metrics.json"
+            if not mp.exists():
+                print(f"!! 缺 {mp}")
+                return 2
+            d = json.loads(mp.read_text(encoding="utf-8"))
+            b = d["benchmarks"]
+            row = {"exp_id": exp,
+                   "best_train_acc": d.get("training", {}).get("best_train_acc"),
+                   "weight_ratio": d.get("training", {}).get("final_weight_max_median_ratio")}
+            for key, pname in PROTOCOLS:
+                if key in b:
+                    row[pname] = {"accuracy": b[key]["value"],
+                                  "tar": b[key]["tar_at_far"]["1e-03"]["tar"]}
+            rec["seeds"].append(row)
+        for _, pname in PROTOCOLS:
+            accs = [s[pname]["accuracy"] for s in rec["seeds"] if pname in s]
+            tars = [s[pname]["tar"] for s in rec["seeds"] if pname in s]
+            rec["protocols"][pname] = {
+                "per_seed_accuracy": [round(x, 6) for x in accs],
+                "per_seed_tar": [round(x, 6) for x in tars],
+                "accuracy_mean": round(float(np.mean(accs)), 6),
+                "accuracy_std": round(float(np.std(accs, ddof=1)), 6) if len(accs) > 1 else None,
+                "tar_mean": round(float(np.mean(tars)), 6),
+                "tar_std": round(float(np.std(tars, ddof=1)), 6) if len(tars) > 1 else None,
             }
-        summary["experiments"].append(entry)
-        table[label] = entry
+        summary["arms"].append(rec)
+        arms[name] = rec
 
     # ---------------- 终端表格 ----------------
-    base_label = EXPERIMENTS[0][1]
-    base = table[base_label]
-    for pname in ("official", "filtered"):
-        print("=" * 100)
-        print(f"[{pname}]  LFW 10 折    (TAR@FAR={FAR:g})")
-        print(f"{'实验':30}{'训练集':>24}{'accuracy':>11}{'±std':>9}"
-              f"{'TAR':>10}{'bootstrap±':>12}")
-        print("-" * 100)
-        for label in table:
-            e = table[label]
-            p = e["protocols"].get(pname)
-            if not p:
-                continue
-            print(f"{label:30}{e['train_set']:>24}{p['accuracy']:>11.4f}"
-                  f"{p['accuracy_fold_std']:>9.4f}{p['tar_at_1e-3']:>10.4f}"
-                  f"{p['tar_std']:>12.4f}")
-        print("-" * 100)
-        bp = base["protocols"].get(pname)
-        for label in list(table)[1:]:
-            p = table[label]["protocols"][pname]
-            d_acc = p["accuracy"] - bp["accuracy"]
-            d_tar = p["tar_at_1e-3"] - bp["tar_at_1e-3"]
-            pb = paired_bootstrap_tar(base["exp_id"], table[label]["exp_id"], pname)
-            table[label].setdefault("paired_vs_base", {})[pname] = pb
-            tt = paired_ttest_folds(base["exp_id"], table[label]["exp_id"], key)
-            table[label].setdefault("paired_ttest_accuracy", {})[pname] = tt
-            if pb.get("n_boot"):
-                print(f"  {label:30} accuracy {d_acc:+.4f}   TAR {d_tar:+.4f} "
-                      f"({d_tar/bp['tar_at_1e-3']:+.1%})")
-                print(f"  {'':30} 配对 bootstrap: ΔTAR 均值 {pb['delta_mean']:+.4f}  "
-                      f"标准差 {pb['delta_std']:.4f}  90% 区间 "
-                      f"[{pb['delta_p05']:+.4f}, {pb['delta_p95']:+.4f}]  "
-                      f"ΔTAR>0 的比例 {pb['frac_positive']:.1%}")
-                print(f"  {'':30} 按折配对 t 检验(accuracy): 平均 {tt['mean_delta']:+.4f}  "
-                      f"t={tt['t']:+.2f}  赢 {tt['folds_won']}/{tt['n_folds']} 折  "
-                      f"(单侧 p<0.05 需 t>1.83)")
-            else:
-                print(f"  {label:30} accuracy {d_acc:+.4f}   TAR {d_tar:+.4f} "
-                      f"({d_tar/bp['tar_at_1e-3']:+.1%})")
-        print("=" * 100)
+    for _, pname in PROTOCOLS:
+        print("=" * 108)
+        print(f"[{pname}]  LFW 10 折   TAR@FAR={FAR:g}   3 个种子")
+        print(f"{'方案':26}{'训练集':>24}{'accuracy（种子均值 ± std）':>30}{'TAR（种子均值 ± std）':>28}")
+        print("-" * 108)
+        for name, rec in arms.items():
+            p = rec["protocols"][pname]
+            print(f"{rec['label']:26}{rec['train_set']:>24}"
+                  f"{p['accuracy_mean']:>18.4f} ± {p['accuracy_std']:.4f}"
+                  f"{p['tar_mean']:>18.4f} ± {p['tar_std']:.4f}")
+        print("-" * 108)
+        a, b = arms["E1"]["protocols"][pname], arms["E4a"]["protocols"][pname]
+        for metric, key in (("accuracy", "accuracy"), ("TAR", "tar")):
+            w = welch(a[f"per_seed_{key}"], b[f"per_seed_{key}"])
+            print(f"  {metric:9} Δ {w['delta']:+.4f}   Welch t={w['t']:+.2f} (df={w['df']:.1f})"
+                  f"   n={w['n_a']}v{w['n_b']}")
+            summary["tests"].setdefault(pname, {})[f"welch_{key}"] = w
+        pb = paired_bootstrap(ARMS[0][3][0], ARMS[1][3][0], pname)
+        tt = paired_ttest_folds(ARMS[0][3][0], ARMS[1][3][0],
+                                "lfw" if pname == "official" else "lfw_filtered")
+        print(f"  配对 bootstrap（seed0，同一批配对）: ΔTAR {pb.get('delta_mean'):+.4f}  "
+              f"90% 区间 [{pb.get('delta_p05'):+.4f}, {pb.get('delta_p95'):+.4f}]  "
+              f"P(Δ>0)={pb.get('frac_positive'):.1%}")
+        print(f"  按折配对 t 检验（seed0，accuracy）: Δ {tt['mean_delta']:+.4f}  "
+              f"t={tt['t']:+.2f}  赢 {tt['folds_won']}/{tt['n_folds']} 折")
+        summary["tests"][pname]["paired_bootstrap_seed0"] = pb
+        summary["tests"][pname]["paired_ttest_folds_seed0"] = tt
+        print("=" * 108)
         print()
 
-    # 显式重算一遍配对 t 检验并覆盖。打印循环里 key/pname 容易串位（实测两个协议
-    # 曾写出同一组数值），这里用字面量键重算一次，保证落盘的是各协议自己的数。
-    for label in list(table)[1:]:
-        table[label]["paired_ttest_accuracy"] = {
-            pname: paired_ttest_folds(base["exp_id"], table[label]["exp_id"], mkey)
-            for mkey, pname in (("lfw", "official"), ("lfw_filtered", "filtered"))
-        }
-
     summary["conclusion"] = (
-        "加入合成数据在两种协议下都提升 accuracy 与 TAR@FAR=1e-3，方向一致："
-        "accuracy 从 0.8813 提到 0.8902（E4a），TAR 从 0.3580 提到 0.4844（+35.3%）。"
-        "统计上，**按折配对 t 检验**（n=10 折）显示 accuracy 的提升达到单侧 p<0.05"
-        "（E4a official t=+2.05、filtered t=+2.21；临界值 1.83），且 7~8/10 折都变好。"
-        "但 TAR@FAR=1e-3 的配对 bootstrap 90% 区间包含 0 —— 这不是结论不稳，"
-        "而是 LFW 只有 3000 个非同类对，FAR=1e-3 的阈值仅由约 3 个 impostor 决定，"
-        "分辨率不足以判定 0.13 量级的差异。要定论 TAR 需要更大的评测集或多个种子。"
-        "accuracy@best 的提升只有约 0.9 个百分点，因为它是在测试集上扫阈值、对弱模型偏乐观 —— "
-        "这正是本项目两个指标都报的原因。"
-        "另外：合成占比更高的 E4a（17.4%）在两项指标上都优于占比更低但单张质量更高的 "
-        "E4b（11.1%），说明在这个质量水平上数量比边际质量更值钱。"
+        "三个种子、两种协议方向完全一致，但**两个指标的统计强度差别很大**："
+        "accuracy 从 0.8812 提升到 0.8899（official，filtered 0.8727->0.8819），"
+        "种子间标准差只有 0.002~0.004，Welch t=+3.35~+3.59（df≈3.8），"
+        "超过 n=3 时双侧 p<0.05 的临界值 3.18 —— **显著**。"
+        "TAR@FAR=1e-3 的点估计提升 +0.034~+0.039（约 +8~11%），但 t 只有 1.82，**未达显著**："
+        "E4a 三个种子分别给出 0.4209/0.4587/0.4848，其中 seed0 与基线持平，"
+        "种子间标准差 0.032 是 E1（0.004）的 8 倍。"
+        "因此**单次运行报出的 TAR 提升会严重误导** —— 本项目最初基于单次运行得到过 '+35%'，"
+        "而多种子下真实效应约为 +8%，且不显著。"
+        "结论：合成数据能稳定提升 LFW accuracy（显著），对 TAR@FAR=1e-3 有正向趋势但"
+        "需要更多种子或更大的评测集才能判定。"
     )
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    (OUT_DIR / "comparison.json").write_text(
-        json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    (OUT_DIR / "comparison.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2),
+                                             encoding="utf-8")
     print(f"已写入 {OUT_DIR / 'comparison.json'}")
     return 0
 
