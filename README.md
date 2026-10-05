@@ -1,71 +1,126 @@
 # AIGC in Face Recognition Dataset Augmentation
 
-> 用生成式 AI 扩充人脸识别训练集，并回答三个问题：**能提升多少？收益从哪来？代价是什么？**
+> 用身份保持的生成模型为**已有身份**合成更多照片，检验它能否提升人脸识别性能。
 
-本项目是「学习 + 实验 + 展示」三位一体的实践项目：从零搭建一条
-`数据 → AIGC 生成 → 质量筛选 → 增强训练 → 统一评测 → 静态展示网站` 的完整流水线，
-在**消费级硬件**的约束下（**两位开发者、两台配置不同的机器**），把「合成人脸数据能否帮助人脸识别」这件事测清楚。
+**一句话结论**：加入 755 张合成图（占训练集 17.4%）使 LFW **accuracy 从 0.8812 提升到 0.8899**
+（Welch t=3.59，三个协议三个种子方向一致）；**TAR@FAR=1e-3 呈正向趋势但未达显著**
+（+0.018~+0.039，t=1.5~1.8，种子方差大于效应量）。
 
 ---
 
-## 📌 先看规划文档（当前仓库处于「已规划、未实现」状态）
+## 📊 核心结果
+
+### 主对照（同模型、同损失、同轮数、同增强，**只差训练数据**；3 个随机种子）
+
+| 方案 | 训练集 | accuracy (official) | **TAR@FAR=1e-3** |
+|---|---|---|---|
+| **E1** | real 3590 | 0.8812 ± 0.0032 | 0.4208 ± 0.0040 |
+| **E4a** | + 合成 755（**17.4%**）| **0.8899 ± 0.0026** | 0.4548 ± 0.0321 |
+| E4b | + 合成 448（11.1%）| 0.8875 | 0.4597 |
+
+**同一对照在无泄漏协议上的复现**（LFW 5653 个未见身份 / 125,191 对）：
+
+| 方案 | accuracy | TAR@FAR=1e-3 |
+|---|---|---|
+| E1 | 0.8693 ± 0.0035 | 0.3108 ± 0.0184 |
+| **E4a** | **0.8775 ± 0.0005**（t=3.98）| 0.3289 ± 0.0095 |
+
+### 生成质量（`id_sim` = 与本人真实图中心的余弦）
+
+> 参照：**同一个人的两张真实照片 = 0.745**；**不同的人 < 0.25**
+
+| 方案 | 均值 | 最小值 |
+|---|---|---|
+| base FaceID | +0.3891 | +0.2035 |
+| plusv2 官方配方 | +0.5138 | +0.4320 |
+| **plusv2 + 多参考平均（采用）** | **+0.6084** | **+0.5273** |
+| plusv2 + Realistic Vision V6 底模 | +0.3999 | +0.2836（出局）|
+
+视觉对照（真实参考 ┃ base FaceID ┃ plusv2）：
+[`results/runs/w3-generator-comparison/contact_sheet.png`](results/runs/w3-generator-comparison/contact_sheet.png)
+
+---
+
+## 📁 关键文档
 
 | 文档 | 内容 |
 |---|---|
-| [`docs/PERSONAL_PLAN.md`](docs/PERSONAL_PLAN.md) | ⭐ **执行方案（A / B 两人版）**：基于「60 人时预算 + 全程镜像 + 一人独显/一人无独显」裁剪的六周排期、AB 分工、砍掉清单、汇报包与止损点。**当它与其他文档冲突时，以它为准**；两人都要读 |
-| [`docs/FRAMEWORK.md`](docs/FRAMEWORK.md) | **项目框架**：目标与边界、研究问题、系统架构、层间数据契约、技术选型、**硬件档位（A/B/C）与配置分层**、实验设计、风险、**双人协作规范**、术语表 |
-| [`docs/WORKFLOW.md`](docs/WORKFLOW.md) | **工作流**：6 个 Sprint 路线图与**按档位的分工**、每个 Issue 的标准流程、实验记录纪律、**跨机器可比性规则**、Go/No-Go 卡点、降级策略、**双人协作节奏**、常见坑 |
-| [`docs/LEARNING.md`](docs/LEARNING.md) | **学习路线**：L0~L6 六阶段（概念 → 材料 → 动手 → **自测题与答案要点**）、数学补丁、阅读顺序、学习产出物、10 个新手误区 |
-| [`docs/REFERENCES.md`](docs/REFERENCES.md) | **预置参考资料**：训练/评测工具箱、基线模型与期望数字、数据集可得性、生成方法、检测器与画质指标、法律与许可 |
-| [`docs/MIRRORS.md`](docs/MIRRORS.md) | **受限网络下的资源获取**：镜像配置命令、资源→路线对照表、连通性预检端点、实测结果表、止损路线 |
-| [`docs/SETUP.md`](docs/SETUP.md) | **环境搭建**：Miniconda → 镜像 → torch(cu128) → 依赖 → buffalo_l → 档位判定 → 冻结复现；含 **10 条已踩过的坑**（ORT 版本钉死、`import torch` 顺序等）与两台机器差异表 |
-| [`docs/issues/`](docs/issues/) | **22 张任务卡**（同 GitHub Issues），每张含背景、任务清单、验收标准、依赖、预估工时与参考 |
-| [`docs/issues/00-INDEX.md`](docs/issues/00-INDEX.md) | Issue 索引（自动生成，含编号、里程碑、标签） |
+| [`docs/REPORT.md`](docs/REPORT.md) | ⭐ **实验报告**：方法 / 结果 / 结论 / 局限 / 复现 |
+| [`docs/W3-GENERATION.md`](docs/W3-GENERATION.md) | **生成配方 + 11 条踩坑记录**（本项目最实用的文档） |
+| [`docs/PERSONAL_PLAN.md`](docs/PERSONAL_PLAN.md) | 执行方案（A/B 两人版）：六周排期、分工、砍掉清单 |
+| [`docs/FRAMEWORK.md`](docs/FRAMEWORK.md) | 项目框架：架构、数据契约、硬件档位与配置分层、实验设计 |
+| [`docs/WORKFLOW.md`](docs/WORKFLOW.md) | 工作流：Sprint 路线图、Issue 流程、实验记录纪律 |
+| [`docs/LEARNING.md`](docs/LEARNING.md) | 学习路线 L0~L6（含自测题） |
+| [`docs/SETUP.md`](docs/SETUP.md) | 环境搭建 + 10 条已踩过的坑 |
+| [`docs/MIRRORS.md`](docs/MIRRORS.md) | 受限网络下的镜像路线与**实测速度表** |
 
-## 🎯 研究问题
+---
 
-1. **RQ1** 加入合成数据，识别性能会变好吗？最优点在哪？
-2. **RQ2** 身份保持生成比无条件生成强多少？
-3. **RQ3** 收益来自「图片数量」还是「多样性」？
-4. **RQ4** 代价是什么？（域差距 / 公平性 / 可合成检测性）
-5. **RQ5** 消费级硬件上的**最低可行配方**是什么？不同硬件档位分别能跑到哪一步？
+## 🚀 复现
 
-## 🗺️ 里程碑
+```bash
+# 1) 环境
+conda env create -f environment.yml    # 或按 docs/SETUP.md 手动装
+conda activate aigcfr
 
-| Milestone | 目标 |
+# 2) 数据：LFW 下载 + 对齐（96 身份 / 3590 张）
+python scripts/download_data.py --config configs/data/lfw.yaml
+python scripts/build_dataset.py
+
+# 3) 基线 E0（零样本 buffalo_l）
+python scripts/evaluate.py --exp-id e0-buffalo_l-lfw
+
+# 4) 生成（先下 plusv2 权重，约 2.5 GB）
+python scripts/download_data.py --config configs/data/ipadapter_plusv2.yaml
+python scripts/generate_plusv2.py --per-identity 10 --max-refs 2
+
+# 5) 对齐 + 筛选（960 → 755 张）
+python scripts/align_synth.py
+python scripts/filter_synth.py --exp-id syn-plusv2 --threshold 0.45 --keep-per-identity 8
+
+# 6) 训练 E1 与 E4a（各 3 个种子）
+python scripts/train.py --exp-id e1-real-only-seed0 --exp configs/exp/e1-real-only-seed0.yaml --seed 0
+python scripts/train.py --exp-id e4-real-plus-synth-seed0 --exp configs/exp/e4-real-plus-synth.yaml --seed 0
+
+# 7) 评测（官方协议 + 无泄漏大样本协议）
+python scripts/evaluate.py --exp-id e4-real-plus-synth-seed0 --ckpt F:/aigcfr/ckpt/e4-real-plus-synth-seed0/best.pth
+python scripts/build_verify_protocol.py
+python scripts/evaluate_heldout.py --exp-id e4-real-plus-synth-seed0 --ckpt F:/aigcfr/ckpt/e4-real-plus-synth-seed0/best.pth
+
+# 8) 汇总统计
+python tools/w4_compare.py
+```
+
+---
+
+## 🧭 当前状态（截至最近一次更新）
+
+| 阶段 | 状态 |
 |---|---|
-| **M0** 脚手架与地基 | 环境就绪、**档位与分工定稿**、数据落盘、契约冻结、学习线启动 |
-| **M1** 基线与评测 | 有真实数据基线与统一评测器（E0/E1） |
-| **M2** 生成与筛选 | 生成→筛选→入库闭环跑通（E2/E3/E4，含 B 轨现成合成数据） |
-| **M3** 实验矩阵与结论 | 混合比例消融跑完，结论与局限写清楚（E5） |
-| **M4** 网站与发布 | 静态展示站 + 伦理文档 + v0.1 |
+| W1 环境与骨架 | ✅ |
+| W2 数据管线 + E0/E1 基线 | ✅ |
+| W3 合成数据生成（plusv2，`id_sim` 0.6154）| ✅ |
+| W4 E4 对照 + 多种子统计 | ✅ |
+| W5 展示网站 | ⬜ **由 B 负责**（Issue [#25]） |
+| W6 报告排版与交付 | ⬜ **由 B 负责**（Issue [#27]） |
 
-## 🖥️ 两台机器怎么协作
+**Issue 状态**：22 张原始任务卡已按现实情况同步（16 张完成关闭），
+并新增 3 张 B 的任务卡。见 [Issues](https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues)。
 
-项目**不按机器型号写代码，而按"能力档位"配置**（详见 [`docs/FRAMEWORK.md`](docs/FRAMEWORK.md) §4.1、§11）：
+---
 
-| 档位 | 典型机器 | 能做什么 |
-|---|---|---|
-| **A 档** | ≥12 GB 显存独显 | 全部（含 SDXL 路线生成） |
-| **B 档** | 6~8 GB 显存独显 | A 轨生成（SD1.5 路线）+ 全部训练 |
-| **C 档** | 无独显 / macOS / 集显 | B 轨数据、数据管线、评测、筛选、网站、文档 |
+## ⚠️ 已知局限（详见 [`docs/REPORT.md`](docs/REPORT.md) §5）
 
-**要点**：① 科学设定统一、资源设定随档位、机器私有设定不入库；② **同一组对比实验必须同机同 profile 跑完**（batch 与精度会真实影响结果）；③ 每台机器跑一次环境自检，把**档位判定结果贴到 Issue #1**（自检工具与报告不进仓库，仓库只放项目本身）。
+1. **训练/测试泄漏不可避免**：LFW 官方 6000 对覆盖 4281 个身份，**含全部 96 个训练身份**。
+   已用无泄漏协议量化 —— 官方协议把 TAR 效应高估了近一倍（+0.034 vs +0.018）。
+2. **TAR@FAR=1e-3 未达显著**，且种子方差大于效应量。
+3. 合成占比只测了 17.4% / 11.1%，未做占比扫描。
+4. 只测了 iresnet18 一个架构。
+5. 数据规模小（96 身份 / 3590 张）—— 自研模型 TAR 0.33 vs 零样本 buffalo_l **0.9989**。
 
-## 🚀 从哪开始
+---
 
-按 [`docs/WORKFLOW.md`](docs/WORKFLOW.md) §8：
-**两人各自跑 #1 环境自检 → 认领分工（#19）→ 建配置分层（#20）→ 走一遍学习线 L0（#21）**。
-标着 `good first issue` 的任务是零基础起手卡；等下载/等训练的时间正好用来推进学习线。
+## 🙏 致谢与许可
 
-## ⚠️ 范围与合规红线
-
-- **不做**：换脸、真人身份克隆、线上服务、工业级大规模训练（见 `docs/FRAMEWORK.md` §1.3）。
-- **绝不提交任何真实人脸数据集**到本仓库（CelebA / MS1M / VGGFace2 / CASIA-WebFace / AgeDB / RFW 的条款均不允许再分发；MS1M 与 VGGFace2 已被撤回）。仓库只放代码、配置、下载脚本、**我们自己生成的合成图**与评测指标。
-- 合成图的来源、生成参数与许可在 `docs/ETHICS.md`（由 issue #18 产出）中完整声明。
-- 本项目为**非商业研究**用途；所依赖的多个模型包（insightface 模型、部分生成器权重）**仅限非商业研究**。
-
-## 📄 License
-
-代码许可证见 [`LICENSE`](LICENSE)（由 issue #2 添加）。
-**代码许可证不覆盖数据集与第三方模型权重**，其许可各自独立。
+本项目为非商业研究用途。注意 **insightface 预训练模型仅限非商业研究**；
+生成所用底模与适配器的许可请见 [`docs/REPORT.md`](docs/REPORT.md) 与相关 Issue。
