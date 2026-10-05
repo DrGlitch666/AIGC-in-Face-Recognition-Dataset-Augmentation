@@ -1,0 +1,15 @@
+{
+  "protocol": "heldout-large-sample",
+  "n_pairs": 4000,
+  "n_same": 2000,
+  "n_diff": 2000,
+  "n_identities": 1545,
+  "n_train_identities": 96,
+  "train_identities_overlap": 0,
+  "folds": 10,
+  "seed": 0,
+  "raw_root": "F:\\aigcfr\\data\\raw\\lfw\\lfw",
+  "impostors_at_far_1e-3": 2,
+  "note": "补充协议，不是 LFW 官方协议。identity 与训练身份交集为 0，因此不存在训练/测试泄漏；非同类对数远多于官方，FAR=1e-3 的分辨率显著更好。",
+  "pairs_manifest": "results\\runs\\_proto_test.jsonl"
+}
