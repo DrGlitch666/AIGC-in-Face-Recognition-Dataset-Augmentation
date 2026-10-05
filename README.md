@@ -46,6 +46,7 @@
 | 文档 | 内容 |
 |---|---|
 | [`docs/REPORT.md`](docs/REPORT.md) | ⭐ **实验报告**：方法 / 结果 / 结论 / 局限 / 复现 |
+| [`docs/B-GUIDE.md`](docs/B-GUIDE.md) | ⭐ **B 的工作指引**：现状数字、三张任务卡、素材路径、硬性规矩、验收标准 |
 | [`docs/W3-GENERATION.md`](docs/W3-GENERATION.md) | **生成配方 + 11 条踩坑记录**（本项目最实用的文档） |
 | [`docs/PERSONAL_PLAN.md`](docs/PERSONAL_PLAN.md) | 执行方案（A/B 两人版）：六周排期、分工、砍掉清单 |
 | [`docs/FRAMEWORK.md`](docs/FRAMEWORK.md) | 项目框架：架构、数据契约、硬件档位与配置分层、实验设计 |
