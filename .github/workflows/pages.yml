@@ -1,0 +1,49 @@
+name: Deploy showcase site to GitHub Pages
+
+# 只在这个文件或 site/ 变化时触发 —— 跑实验、改报告都不会白白部署一次。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'tools/check_site.py'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# Pages 部署需要的权限。缺 id-token 会在 deploy 步骤失败。
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 连续推送时只保留最后一次部署，避免两个部署互相覆盖。
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 关键闸门：引用坏了直接失败，不把破站发上线。
+      # 这个脚本只用标准库，不需要装任何依赖。
+      - name: 发布前自检（引用可解析 / 无外链 / 体积达标）
+        run: python3 tools/check_site.py site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
