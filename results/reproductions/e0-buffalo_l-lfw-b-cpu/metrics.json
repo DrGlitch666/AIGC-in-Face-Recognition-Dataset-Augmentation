@@ -1,0 +1,342 @@
+{
+  "exp_id": "e0-buffalo_l-lfw",
+  "created_at": "2026-10-07T16:41:31+08:00",
+  "evaluated_at": "2026-10-07T16:41:31+08:00",
+  "config_path": null,
+  "config_hash": "b788b96322b2",
+  "git_commit": "66181b6",
+  "train_set": null,
+  "model": {
+    "arch": "buffalo_l (w600k_r50, ResNet50 + ArcFace)",
+    "loss": "arcface (pretrained)",
+    "epochs": 0,
+    "seed": null,
+    "onnx_providers": [
+      "CPUExecutionProvider"
+    ],
+    "det_size": 640,
+    "face_select": "center",
+    "embedding_source": "onnx"
+  },
+  "benchmarks": {
+    "lfw": {
+      "n_pairs_used": 5983,
+      "n_pairs_missing": 17,
+      "n_same": 2989,
+      "n_diff": 2994,
+      "metric": "accuracy",
+      "value": 0.998496,
+      "threshold": 0.249185,
+      "tar_at_far": {
+        "1e-02": {
+          "tar": 0.997658,
+          "threshold": 0.141665,
+          "actual_far": 0.009686,
+          "n_impostor": 2994,
+          "far_resolution": 0.00033400133600534405,
+          "status": "ok"
+        },
+        "1e-03": {
+          "tar": 0.996989,
+          "threshold": 0.226113,
+          "actual_far": 0.000668,
+          "n_impostor": 2994,
+          "far_resolution": 0.00033400133600534405,
+          "status": "ok"
+        }
+      },
+      "same_score": {
+        "mean": 0.672812,
+        "std": 0.103714,
+        "min": 0.005538,
+        "p05": 0.49942,
+        "p50": 0.679566,
+        "p95": 0.8227,
+        "max": 0.965993
+      },
+      "diff_score": {
+        "mean": 0.004142,
+        "std": 0.057663,
+        "min": -0.184328,
+        "p05": -0.088697,
+        "p50": 0.004138,
+        "p95": 0.098065,
+        "max": 0.244884
+      },
+      "per_fold": [
+        {
+          "fold": 1,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.996667
+        },
+        {
+          "fold": 2,
+          "n_pairs": 599,
+          "n_same": 299,
+          "n_diff": 300,
+          "accuracy": 1.0
+        },
+        {
+          "fold": 3,
+          "n_pairs": 598,
+          "n_same": 300,
+          "n_diff": 298,
+          "accuracy": 1.0
+        },
+        {
+          "fold": 4,
+          "n_pairs": 592,
+          "n_same": 296,
+          "n_diff": 296,
+          "accuracy": 0.998311
+        },
+        {
+          "fold": 5,
+          "n_pairs": 599,
+          "n_same": 299,
+          "n_diff": 300,
+          "accuracy": 0.994992
+        },
+        {
+          "fold": 6,
+          "n_pairs": 598,
+          "n_same": 298,
+          "n_diff": 300,
+          "accuracy": 1.0
+        },
+        {
+          "fold": 7,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.996667
+        },
+        {
+          "fold": 8,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 1.0
+        },
+        {
+          "fold": 9,
+          "n_pairs": 600,
+          "n_same": 300,
+          "n_diff": 300,
+          "accuracy": 0.998333
+        },
+        {
+          "fold": 10,
+          "n_pairs": 597,
+          "n_same": 297,
+          "n_diff": 300,
+          "accuracy": 1.0
+        }
+      ],
+      "accuracy_per_fold_mean": 0.998497,
+      "accuracy_per_fold_std": 0.001742,
+      "protocol": "official-6000pairs-10fold",
+      "description": "官方全量 6000 对，用于与文献对照"
+    },
+    "lfw_filtered": {
+      "n_pairs_used": 5539,
+      "n_pairs_missing": 14,
+      "n_same": 2624,
+      "n_diff": 2915,
+      "metric": "accuracy",
+      "value": 0.998375,
+      "threshold": 0.249185,
+      "tar_at_far": {
+        "1e-02": {
+          "tar": 0.997332,
+          "threshold": 0.141257,
+          "actual_far": 0.009949,
+          "n_impostor": 2915,
+          "far_resolution": 0.00034305317324185246,
+          "status": "ok"
+        },
+        "1e-03": {
+          "tar": 0.99657,
+          "threshold": 0.226113,
+          "actual_far": 0.000686,
+          "n_impostor": 2915,
+          "far_resolution": 0.00034305317324185246,
+          "status": "ok"
+        }
+      },
+      "same_score": {
+        "mean": 0.674137,
+        "std": 0.105376,
+        "min": 0.005538,
+        "p05": 0.498545,
+        "p50": 0.681351,
+        "p95": 0.826549,
+        "max": 0.965993
+      },
+      "diff_score": {
+        "mean": 0.004051,
+        "std": 0.057709,
+        "min": -0.184328,
+        "p05": -0.089089,
+        "p50": 0.004193,
+        "p95": 0.098065,
+        "max": 0.244884
+      },
+      "per_fold": [
+        {
+          "fold": 1,
+          "n_pairs": 543,
+          "n_same": 251,
+          "n_diff": 292,
+          "accuracy": 0.996317
+        },
+        {
+          "fold": 2,
+          "n_pairs": 531,
+          "n_same": 246,
+          "n_diff": 285,
+          "accuracy": 1.0
+        },
+        {
+          "fold": 3,
+          "n_pairs": 566,
+          "n_same": 275,
+          "n_diff": 291,
+          "accuracy": 1.0
+        },
+        {
+          "fold": 4,
+          "n_pairs": 550,
+          "n_same": 261,
+          "n_diff": 289,
+          "accuracy": 0.998182
+        },
+        {
+          "fold": 5,
+          "n_pairs": 573,
+          "n_same": 276,
+          "n_diff": 297,
+          "accuracy": 0.994764
+        },
+        {
+          "fold": 6,
+          "n_pairs": 561,
+          "n_same": 265,
+          "n_diff": 296,
+          "accuracy": 1.0
+        },
+        {
+          "fold": 7,
+          "n_pairs": 538,
+          "n_same": 251,
+          "n_diff": 287,
+          "accuracy": 0.996283
+        },
+        {
+          "fold": 8,
+          "n_pairs": 553,
+          "n_same": 260,
+          "n_diff": 293,
+          "accuracy": 1.0
+        },
+        {
+          "fold": 9,
+          "n_pairs": 572,
+          "n_same": 278,
+          "n_diff": 294,
+          "accuracy": 0.998252
+        },
+        {
+          "fold": 10,
+          "n_pairs": 552,
+          "n_same": 261,
+          "n_diff": 291,
+          "accuracy": 1.0
+        }
+      ],
+      "accuracy_per_fold_mean": 0.99838,
+      "accuracy_per_fold_std": 0.001868,
+      "protocol": "official-excluding-train-identities(min_images=15)",
+      "description": "剔除含训练身份的对，自训练模型的主结论用这个",
+      "train_identities": 96,
+      "train_images": 3595
+    }
+  },
+  "protocol_detail": {
+    "official": {
+      "dataset": "lfw",
+      "protocol": "official-6000pairs-10fold",
+      "num_pairs": 6000,
+      "num_same": 3000,
+      "num_diff": 3000,
+      "folds": 10,
+      "num_identities": 4281
+    },
+    "filtered": {
+      "dataset": "lfw",
+      "protocol": "official-6000pairs-10fold",
+      "num_pairs": 6000,
+      "num_same": 3000,
+      "num_diff": 3000,
+      "folds": 10,
+      "num_identities": 4281,
+      "filtered": true,
+      "num_pairs_kept": 5553,
+      "num_same_kept": 2633,
+      "num_diff_kept": 2920,
+      "num_pairs_removed": 447,
+      "num_identities_kept": 4161
+    }
+  },
+  "embedding": {
+    "num_used": 7690,
+    "num_failed": 11,
+    "failure_reasons": {
+      "no_face": 11
+    },
+    "norm_stats": {
+      "count": 7690,
+      "min": 0.9999998807907104,
+      "max": 1.0000001192092896,
+      "mean": 0.9999999827386808,
+      "is_normalized": true
+    },
+    "extract_seconds": 6906.79,
+    "images_per_second": 1.11,
+    "warmup_seconds": 0.0,
+    "detection": {
+      "face_count_hist": {
+        "1": 6150,
+        "2": 1187,
+        "3": 262,
+        "4": 56,
+        "5": 20,
+        "6": 6,
+        "7": 5,
+        "8": 2,
+        "9": 1,
+        "17": 1
+      },
+      "multi_face_images": 1540,
+      "multi_face_ratio": 0.2003,
+      "det_score_mean": 0.8359,
+      "det_score_p05": 0.7712,
+      "det_score_min": 0.547
+    },
+    "aligned_cache": null
+  },
+  "hardware": {
+    "hardware_profile": "cpu",
+    "gpu_name": null,
+    "vram_gb": null,
+    "torch_version": "2.14.0+cpu",
+    "python": "3.11.16"
+  },
+  "artifacts": {
+    "metrics": "results\\reproductions\\e0-buffalo_l-lfw-b-cpu\\metrics.json",
+    "pairs_csv": "results\\reproductions\\e0-buffalo_l-lfw-b-cpu\\pairs.csv"
+  },
+  "notes": "E0 零样本基线：不训练，直接用预训练 buffalo_l 验证整条评测管线。official 用于与文献对照（阈值在测试集上选，是 LFW 惯例）；filtered 剔除训练身份后更干净，后续自训练模型主结论用它。"
+}
