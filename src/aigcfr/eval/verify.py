@@ -8,10 +8,15 @@
 
 ## 报告两类指标（都必须写清楚，否则数字没有意义）
 
-* ``accuracy@best``：在**测试集自身**上扫出最佳阈值后的准确率。
-  这是 LFW 论文的惯例做法，所以文献数字普遍偏高 —— 用它来**对照文献**。
+* ``accuracy@best``：在**测试集自身**上扫出最佳阈值后的描述性准确率。
+  这不是在其他折校准阈值、再在留出折验证的交叉验证成绩，不能直接等同文献数字。
 * ``TAR@FAR=k``：先用**异人对**的分数分布定出 FAR=k 的阈值，再看同人对的通过率。
-  它不依赖测试集里同人/异人的比例，**更严格、也不依赖测试集调参** —— 用它来**做主结论**。
+  它不依赖测试集里同人/异人的比例，但阈值仍由当前评测集的异人分数校准，
+  并不等同于独立校准集上的部署验证。
+
+正的目标 FAR 若小于 ``1 / n_impostor``，按本项目约定返回 NaN，
+避免把最大异人分数处的经验零误接受率冒充目标 FAR 的有分辨率估计。
+这是最小分辨率保护，不代表达到这一最低样本数就有充分统计精度。
 
 > 参考：docs/FRAMEWORK.md 契约 B（metrics.json）
 """
@@ -135,6 +140,37 @@ def pair_scores(pairs, vectors: dict[str, np.ndarray]) -> Scores:
     )
 
 
+def _validated_labels_scores(labels, scores) -> tuple[np.ndarray, np.ndarray]:
+    """Reject malformed inputs, including the usual swapped labels/scores call.
+
+    Two arrays that both happen to be binary cannot be distinguished by values;
+    callers must still obey the public ``(labels, scores, ...)`` signature.
+    """
+    y = np.asarray(labels)
+    s = np.asarray(scores)
+    if y.ndim != 1 or s.ndim != 1:
+        raise ValueError("labels and scores must be one-dimensional arrays")
+    if y.size != s.size:
+        raise ValueError("labels and scores must have the same length")
+    if y.dtype.kind not in "biuf" or not np.all(np.isfinite(y)):
+        raise ValueError("labels must contain only finite binary values 0 or 1")
+    if not np.all((y == 0) | (y == 1)):
+        raise ValueError("labels must be binary values 0 or 1; check argument order (labels, scores)")
+    if s.dtype.kind not in "biuf" or not np.all(np.isfinite(s)):
+        raise ValueError("scores must contain only finite real numbers")
+    return y, s.astype(np.float64, copy=False)
+
+
+def _validated_scalar(value, name: str, allow_infinite: bool = False) -> float:
+    arr = np.asarray(value)
+    if arr.ndim != 0 or arr.dtype.kind not in "iuf":
+        raise ValueError(f"{name} must be a real scalar")
+    number = float(arr)
+    if np.isnan(number) or (not allow_infinite and not np.isfinite(number)):
+        raise ValueError(f"{name} must be {'non-NaN' if allow_infinite else 'finite'}")
+    return number
+
+
 def accuracy_at(labels: np.ndarray, scores: np.ndarray, threshold: float) -> float:
     """给定阈值下的准确率。
 
@@ -142,6 +178,8 @@ def accuracy_at(labels: np.ndarray, scores: np.ndarray, threshold: float) -> flo
     选严格大于而不是大于等于，是为了在分数并列时不出现"阈值等于分数本身、
     却把整簇都接受"的怪现象（:func:`tar_at_far` 上踩过这个坑）。
     """
+    labels, scores = _validated_labels_scores(labels, scores)
+    threshold = _validated_scalar(threshold, "threshold", allow_infinite=True)
     if labels.size == 0:
         return float("nan")
     pred = scores > threshold
@@ -151,14 +189,14 @@ def accuracy_at(labels: np.ndarray, scores: np.ndarray, threshold: float) -> flo
 def best_threshold(labels: np.ndarray, scores: np.ndarray) -> tuple[float, float]:
     """扫出使准确率最高的阈值，返回 ``(threshold, accuracy)``。
 
-    ⚠️ 阈值是在**测试集自身**上选的 —— 这是 LFW 论文的惯例，会略微高估。
-    所以它只用于**对照文献**；主结论请用 :func:`tar_at_far`。
+    ⚠️ 阈值是在**测试集自身**上选的，结果偏乐观。
+    它是描述性指标，不能直接当作独立校准或官方交叉验证成绩。
 
     ⚠️ 实现要点：候选阈值取**相邻不同分数之间的中点**，而不是分数本身。
-    因为分数会有并列值 —— 若直接把观测值当阈值，在"最大异人分"与"最小同人分"
-    之间就没有候选点，两边会被判成同一类，准确率会莫名其妙地掉到 0.5。
-    （这个坑真实踩过：30 同人 + 30 异人完全可分，却算出 accuracy = 0.5000。）
+    并列分数必须作为一整组切分，不能逐个拆开。对于相邻浮点数，若中点舍入为
+    较高分数，则退回较低分数；严格 ``>`` 语义下仍能正确分开两组。
     """
+    labels, scores = _validated_labels_scores(labels, scores)
     if labels.size == 0:
         return float("nan"), float("nan")
 
@@ -169,11 +207,20 @@ def best_threshold(labels: np.ndarray, scores: np.ndarray) -> tuple[float, float
 
     uniq = np.unique(s)
     eps = 1e-9
+    below = uniq[0] - eps
+    if below >= uniq[0]:
+        with np.errstate(over="ignore"):
+            below = np.nextafter(uniq[0], -np.inf)
+    above = uniq[-1] + eps
     if uniq.size == 1:
-        candidates = np.array([uniq[0] - eps, uniq[0] + eps])
+        candidates = np.array([below, above])
     else:
-        mid = (uniq[:-1] + uniq[1:]) / 2.0
-        candidates = np.concatenate([[uniq[0] - eps], mid, [uniq[-1] + eps]])
+        with np.errstate(over="ignore", invalid="ignore"):
+            mid = (uniq[:-1] + uniq[1:]) / 2.0
+        bad = ~np.isfinite(mid)
+        mid[bad] = uniq[:-1][bad] / 2.0 + uniq[1:][bad] / 2.0
+        mid = np.where(mid >= uniq[1:], uniq[:-1], mid)
+        candidates = np.concatenate([[below], mid, [above]])
 
     # 语义：score > thr 判为同人 → 负预测数量 = #(score <= thr)
     cut = np.searchsorted(s, candidates, side="right")
@@ -204,10 +251,20 @@ def tar_at_far(
 
     ⚠️ **不要用分位数**：分数并列时 ``np.quantile`` 会返回该值本身，
     而 ``>=`` 会把整簇并列分数一次全接受 —— 全常数分数时 FAR 直接变成 1.0。
+
+    FAR 必须在 [0, 1] 内。缺少任一类别，或正目标 FAR 的样本分辨率不足
+    （``far * n_impostor < 1``），返回三个 NaN。FAR=0 表示最大异人分数处
+    的经验零误接受率边界，不能解释为总体 FAR 为零；FAR=1 接受所有有限分数。
     """
+    labels, scores = _validated_labels_scores(labels, scores)
+    far = _validated_scalar(far, "far")
+    if not 0.0 <= far <= 1.0:
+        raise ValueError("far must be between 0 and 1 inclusive")
     same = scores[labels == 1]
     diff = scores[labels == 0]
     if same.size == 0 or diff.size == 0:
+        return float("nan"), float("nan"), float("nan")
+    if 0.0 < far < 1.0 and far * diff.size < 1.0:
         return float("nan"), float("nan"), float("nan")
 
     diff_desc = np.sort(diff)[::-1]
@@ -261,13 +318,23 @@ def summarize(
 
     thr_best, acc_best = best_threshold(sc.labels, sc.scores)
 
-    tar_block: dict[str, dict[str, float]] = {}
+    tar_block: dict[str, dict[str, object]] = {}
+    n_impostor = sc.num_diff
     for far in far_targets:
         tar, thr, actual = tar_at_far(sc.labels, sc.scores, far)
+        if sc.num_same == 0 or n_impostor == 0:
+            status = "missing_class"
+        elif 0.0 < far < 1.0 and far * n_impostor < 1.0:
+            status = "insufficient_far_resolution"
+        else:
+            status = "ok"
         tar_block[f"{far:.0e}"] = {
             "tar": round(tar, 6),
             "threshold": round(thr, 6),
             "actual_far": round(actual, 6),
+            "n_impostor": n_impostor,
+            "far_resolution": 1.0 / n_impostor if n_impostor else None,
+            "status": status,
         }
 
     per_fold = fold_metrics(sc.labels, sc.scores, sc.folds, thr_best)
@@ -281,11 +348,11 @@ def summarize(
         "n_pairs_missing": sum(sc.missing.values()),
         "n_same": sc.num_same,
         "n_diff": sc.num_diff,
-        # —— 与文献可比（测试集自选阈值）——
+        # —— 描述性准确率（测试集自选阈值）——
         "metric": "accuracy",
         "value": round(acc_best, 6),
         "threshold": round(thr_best, 6),
-        # —— 更严格：不用测试集调参 ——
+        # —— 当前异人分数校准阈值后的 TAR ——
         "tar_at_far": tar_block,
         "same_score": _dist(same),
         "diff_score": _dist(diff),

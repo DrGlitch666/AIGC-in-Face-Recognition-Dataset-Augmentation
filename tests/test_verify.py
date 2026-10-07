@@ -178,8 +178,9 @@ def test_best_threshold_empty():
 # ---------------------------------------------------------------- TAR@FAR
 
 def test_tar_at_far_perfect_separation():
-    labels = np.array([1] * 100 + [0] * 100)
-    scores = np.concatenate([np.full(100, 0.8), np.full(100, 0.2)])
+    # FAR=1e-3 的最小经验分辨率需要至少 1000 个异人对。
+    labels = np.array([1] * 100 + [0] * 1000)
+    scores = np.concatenate([np.full(100, 0.8), np.full(1000, 0.2)])
     tar, thr, actual_far = tar_at_far(labels, scores, 1e-3)
     assert tar == pytest.approx(1.0)
     assert 0.2 <= thr <= 0.8
