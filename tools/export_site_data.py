@@ -164,6 +164,8 @@ def build(root):
             "train_set": {k: train_set.get(k) for k in (
                 "real_identities", "real_images", "synth_images", "total_images", "synth_ratio")},
             "model": {k: model.get(k) for k in ("arch", "loss", "epochs", "params_total")},
+            "optim": {k: optional_object(metrics.get("optim"), f"{exp_id}.optim").get(k) for k in (
+                "optimizer", "lr", "momentum", "weight_decay", "scheduler", "batch_size", "grad_accum", "amp")},
             "protocols": protocols,
             "protocol_detail": {k: v for k, v in protocol_detail.items() if k in ("official", "filtered")},
         }
@@ -211,6 +213,47 @@ def build(root):
             "generation": "The recipe comparison's small sample and the screened training corpus have different populations; their id_sim means must not be conflated.",
         },
     }
+    # This record is independent of the frozen GPU experiments above.
+    repro_path = "results/reproductions/e0-buffalo_l-lfw-b-cpu/metrics.json"
+    if (root / repro_path).is_file():
+        repro = load_json(root, repro_path, sources)
+        model = optional_object(repro.get("model"), "CPU reproduction model")
+        hardware = optional_object(repro.get("hardware"), "CPU reproduction hardware")
+        if model.get("onnx_providers") != ["CPUExecutionProvider"] or hardware.get("hardware_profile") != "cpu":
+            raise ValueError("Reproduction record must describe CPU-only evaluation")
+        original = load_json(root, "results/runs/e0-buffalo_l-lfw/metrics.json", [])
+        for setting in ("arch", "det_size", "face_select"):
+            if model.get(setting) != original["model"].get(setting):
+                raise ValueError(f"CPU reproduction: different {setting}")
+        views = {p: benchmark_view(repro, p) for p in ("official", "filtered")}
+        for protocol, view in views.items():
+            if view is None:
+                raise ValueError(f"CPU reproduction missing {protocol}")
+            recorded = runs["e0-buffalo_l-lfw"]["protocols"][protocol]
+            for metric in ("accuracy", "tar", "actual_far"):
+                if f"{number(view[metric], metric):.6f}" != f"{number(recorded[metric], metric):.6f}":
+                    raise ValueError(f"CPU reproduction: {protocol}/{metric} differs at six recorded decimals")
+        proof_paths = [repro_path, "reports/e0_cpu_reproduction.b.md", "reports/e0_cpu_reproduction.b.pytest.txt"]
+        proofs = []
+        for path in proof_paths:
+            raw = (root / path).read_bytes()
+            digest = hashlib.sha256(raw).hexdigest()
+            if path != repro_path:
+                sources.append({"path": path, "sha256": digest})
+            proofs.append({"path": path, "sha256": digest, "filename": Path(path).name})
+        log = (root / proof_paths[-1]).read_text(encoding="utf-8-sig")
+        passed = re.search(r"(?m)^(\d+) passed(?: in ([\d.]+)s)?", log)
+        if not passed or re.search(r"\b[1-9]\d* (?:failed|errors?)\b", log):
+            raise ValueError("CPU reproduction test log must contain a successful pytest summary")
+        data["cpu_reproduction"] = {
+            "source": repro_path, "evaluated_at": repro.get("evaluated_at", repro.get("created_at")),
+            "protocols": views, "model": {k: model.get(k) for k in ("arch", "det_size", "face_select", "onnx_providers")},
+            "hardware": {k: hardware.get(k) for k in ("hardware_profile", "python", "torch_version")},
+            "embedding": {k: repro.get("embedding", {}).get(k) for k in ("num_used", "num_failed", "extract_seconds")},
+            "tests_passed": int(passed.group(1)), "test_seconds": float(passed.group(2)) if passed.group(2) else None,
+            "matches_recorded_six_decimals": True, "evidence": proofs,
+            "command": 'python scripts/evaluate.py --exp-id e0-buffalo_l-lfw --cpu --no-cache --out "results/reproductions/e0-buffalo_l-lfw-b-cpu"',
+        }
     # Validate serialization before writing either output.
     json.dumps(data, ensure_ascii=False, allow_nan=False)
     return data

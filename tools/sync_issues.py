@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 """把 GitHub 上的所有 issue 同步到项目真实现状，并给 B 提新任务。
 
-用法（需要 GH_TOKEN 环境变量，从 Windows 凭据管理器取）：
+只读刷新本地 Issue 索引（公开仓库不需要 token）：
+    python tools/sync_issues.py --export-index
+    python tools/sync_issues.py --export-index --git-auth  # 复用已保存的 GitHub Git 登录
+
+以下为历史写入模式，刷新索引无需执行（需要 GH_TOKEN）：
     python tools/sync_issues.py --dry-run     # 只看要做什么
     python tools/sync_issues.py               # 真正执行
 
@@ -362,13 +366,256 @@ def api(path: str, method: str = "GET", body: dict | None = None):
         raise RuntimeError(f"{method} {path} -> {e.code} {e.read().decode('utf-8')[:200]}") from e
 
 
+class IndexRateLimit(RuntimeError):
+    def __init__(self, resource, reset):
+        self.resource = resource
+        super().__init__(f"GitHub {resource} API quota exhausted; reset timestamp {reset or 'unknown'}")
+
+
+_INDEX_GIT_TOKEN = None
+
+
+def enable_index_git_auth(root):
+    """With the explicit --git-auth flag, reuse only github.com's Git credential."""
+    import subprocess
+    global _INDEX_GIT_TOKEN
+    env = dict(os.environ)
+    env.update({"GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "false", "GCM_GUI_PROMPT": "false"})
+    # Disable askpass commands; use an already saved credential only.
+    env.pop("GIT_ASKPASS", None)
+    env.pop("SSH_ASKPASS", None)
+    result = subprocess.run(
+        ["git", "-c", "core.askPass=", "-c", "credential.interactive=false", "credential", "fill"],
+        cwd=root, env=env, input=f"protocol=https\nhost=github.com\npath={REPO}.git\n\n",
+        text=True, capture_output=True, timeout=30,
+    )
+    if result.returncode:
+        # Never expose credential helper output, which may contain credentials.
+        raise ValueError("No saved GitHub Git credential available; no files changed")
+    fields = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
+    secret = fields.get("password", "")
+    if not secret or fields.get("host", "github.com") != "github.com":
+        raise ValueError("No saved GitHub Git credential available; no files changed")
+    _INDEX_GIT_TOKEN = secret
+    print("Using existing GitHub Git credential for authenticated GET; credential is not printed or saved", flush=True)
+
+
+def index_get(url):
+    """Only GET. Never log authorization headers or loop on rate-limit errors."""
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "aigcfr-index-export"}
+    token = _INDEX_GIT_TOKEN or os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(url, headers=headers, method="GET")
+    if token:
+        from urllib.parse import urlparse
+        class GitHubRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, redirect_headers, newurl):
+                target = urlparse(newurl)
+                if target.scheme != "https" or target.hostname != "api.github.com":
+                    raise ValueError("Blocked authenticated redirect outside api.github.com")
+                return super().redirect_request(req, fp, code, msg, redirect_headers, newurl)
+        if urlparse(url).scheme != "https" or urlparse(url).hostname != "api.github.com":
+            raise ValueError("Authenticated issue read must target api.github.com")
+        open_request = urllib.request.build_opener(GitHubRedirect()).open
+    else:
+        open_request = urllib.request.urlopen
+    try:
+        with open_request(request, timeout=30) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        remaining = exc.headers.get("X-RateLimit-Remaining") if exc.headers else None
+        resource = exc.headers.get("X-RateLimit-Resource", "core") if exc.headers else "core"
+        reset = exc.headers.get("X-RateLimit-Reset") if exc.headers else None
+        if exc.code in (403, 429) and remaining == "0":
+            raise IndexRateLimit(resource, reset) from exc
+        try:
+            message = str(json.loads(exc.read().decode("utf-8")).get("message", ""))[:180]
+        except (UnicodeError, ValueError, AttributeError):
+            message = ""
+        raise RuntimeError(f"Issue index GET failed: HTTP {exc.code}; {message}") from exc
+
+
+def normalize_index_item(item, seen, source, strict_repository=False):
+    if not isinstance(item, dict):
+        raise ValueError("Invalid GitHub issue record")
+    if "pull_request" in item:
+        return None
+    number = item.get("number")
+    if type(number) is not int or number <= 0 or number in seen:
+        raise ValueError("Invalid or duplicated issue number; no index written")
+    if item.get("state") not in {"open", "closed"}:
+        raise ValueError("Unknown issue state")
+    expected_url = f"https://github.com/{REPO}/issues/{number}"
+    if strict_repository and (str(item.get("html_url", "")).casefold() != expected_url.casefold()
+            or str(item.get("repository_url", "")).casefold() != API.casefold()):
+        raise ValueError("Search returned an issue outside the requested repository")
+    seen.add(number)
+    return {
+        "number": number, "title": str(item["title"]), "state": item["state"],
+        "html_url": expected_url, "labels": [str(label["name"]) for label in item.get("labels", [])],
+        "milestone": (item.get("milestone") or {}).get("title", "—"),
+        "retrieval_source": source,
+    }
+
+
+def read_direct_index():
+    rows, seen = [], set()
+    for page in range(1, 101):
+        batch = index_get(f"{API}/issues?state=all&per_page=100&sort=created&direction=asc&page={page}")
+        if not isinstance(batch, list):
+            raise ValueError("GitHub returned a non-list issue response")
+        for item in batch:
+            row = normalize_index_item(item, seen, "GitHub REST issue list")
+            if row is not None:
+                rows.append(row)
+        if len(batch) < 100:
+            return sorted(rows, key=lambda row: row["number"])
+    raise RuntimeError("Issue pagination exceeded 100 pages; no index written")
+
+
+def read_search_index():
+    """Use the documented issue-search quota; reject partial or truncated results."""
+    from urllib.parse import urlencode
+    rows, seen, total = [], set(), None
+    for page in range(1, 11):
+        query = urlencode({"q": f"repo:{REPO} is:issue", "per_page": 100,
+                           "sort": "created", "order": "asc", "page": page})
+        result = index_get(f"https://api.github.com/search/issues?{query}")
+        if not isinstance(result, dict) or result.get("incomplete_results") is not False:
+            raise ValueError("GitHub search is incomplete; no index written")
+        count = result.get("total_count")
+        if type(count) is not int or not 0 <= count <= 1000:
+            raise ValueError("Search count invalid or over the 1000-result limit; no index written")
+        if total is None:
+            total = count
+        elif count != total:
+            raise ValueError("Issue search count changed between pages; no index written")
+        batch = result.get("items")
+        if not isinstance(batch, list):
+            raise ValueError("Search items missing; no index written")
+        for item in batch:
+            row = normalize_index_item(item, seen, "GitHub Search API (is:issue)", strict_repository=True)
+            if row is None:
+                raise ValueError("Issue-only search unexpectedly returned a PR; no index written")
+            rows.append(row)
+        if len(rows) == total:
+            return sorted(rows, key=lambda row: row["number"])
+        if len(batch) < 100 or len(rows) > total:
+            raise ValueError("Issue search count does not match returned records; no index written")
+    raise ValueError("Issue search pagination incomplete; no index written")
+
+
+def read_index_issues():
+    try:
+        return read_direct_index()
+    except IndexRateLimit as exc:
+        if exc.resource != "core":
+            raise
+        print("Core API quota exhausted; trying GET issue search with its separate quota", flush=True)
+        return read_search_index()
+def index_artifacts(root, issues):
+    """Keep existing task-card links and record the observed, not assumed, count."""
+    from datetime import datetime, timezone
+    import hashlib
+    from pathlib import Path
+    import re
+
+    path = Path(root) / "docs/issues/00-INDEX.md"
+    previous = path.read_text(encoding="utf-8-sig") if path.is_file() else ""
+    cards = {}
+    for line in previous.splitlines():
+        number = re.match(r"\|\s*\[#(\d+)\]", line)
+        card = re.search(r"(\[`[^`]+`\]\([^)]+\))\s*\|\s*$", line)
+        if number and card:
+            cards[int(number[1])] = card[1]
+    if not issues:
+        raise ValueError("Empty issue list; no index written")
+    source = issues[0].get("retrieval_source", "GitHub REST issue list")
+    stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    opened = sum(row["state"] == "open" for row in issues)
+    closed = len(issues) - opened
+    lines = [
+        "# Issue 索引（自动生成，请勿手工修改）", "",
+        f"> 由 `tools/sync_issues.py --export-index` 于 {stamp} 读取 GitHub 生成，共 {len(issues)} 条 Issue：开放 {opened}、关闭 {closed}；已排除 Pull Request。",
+        "> 重新生成：`python tools/sync_issues.py --export-index`。仅发送 GET 请求，不修改 GitHub。",
+        f"> 读取来源：{source}。搜索来源可能存在索引延迟；完整性按返回总数核对。",
+        "> 状态为读取时的快照；Issue 关闭状态与本地验收记录分别保留。", "",
+        "| # | 标题 | 状态 | 里程碑 | 标签 | 任务卡 |",
+        "|---|---|---|---|---|---|",
+    ]
+    def cell(value):
+        return str(value).replace("|", "&#124;").replace("\r", " ").replace("\n", " ")
+    for row in issues:
+        number = row["number"]
+        values = [f"[#{number}]({row['html_url']})", row["title"],
+                  "开放" if row["state"] == "open" else "关闭", row["milestone"],
+                  " ".join(row["labels"]) or "—", cards.get(number, "—（见 GitHub 任务卡）")]
+        lines.append("| " + " | ".join(cell(value) for value in values) + " |")
+    text = "\n".join(lines) + "\n"
+    encoded = text.encode("utf-8")
+    snapshot = {
+        "schema_version": 1, "repo": REPO, "captured_at": stamp,
+        "request_method": "GET", "pull_requests_excluded": True, "retrieval_source": source,
+        "issue_count": len(issues), "open_count": opened, "closed_count": closed,
+        "index_path": "docs/issues/00-INDEX.md",
+        "index_sha256": hashlib.sha256(encoded).hexdigest(), "issues": issues,
+    }
+    return encoded, (json.dumps(snapshot, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def write_index(root):
+    from pathlib import Path
+    root = Path(root).resolve()
+    index, snapshot = index_artifacts(root, read_index_issues())
+    outputs = {"docs/issues/00-INDEX.md": index, "reports/issue_index_snapshot.b.json": snapshot}
+    originals = {rel: (root / rel).read_bytes() if (root / rel).is_file() else None for rel in outputs}
+    try:
+        for rel, content in outputs.items():
+            path = root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            pending = path.with_name(path.name + ".tmp")
+            pending.write_bytes(content)
+            pending.replace(path)
+    except Exception:
+        for rel, content in originals.items():
+            path = root / rel
+            path.with_name(path.name + ".tmp").unlink(missing_ok=True)
+            if content is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_bytes(content)
+        raise
+    result = json.loads(snapshot)
+    print(f"Index OK: {result['issue_count']} issues ({result['open_count']} open, {result['closed_count']} closed); PRs excluded")
+    print("Read-only GitHub GET; no comments, issue creation or state changes")
+    return 0
+
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(allow_abbrev=False)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--only-issues", action="store_true", help="只同步 issue，不建新卡片")
     ap.add_argument("--only-new", action="store_true", help="只建新卡片")
+    ap.add_argument("--export-index", action="store_true", help="只读取 GitHub Issue 并更新本地索引，排除 PR")
+    ap.add_argument("--git-auth", action="store_true", help="只读索引使用 Git 已保存的 GitHub 凭据，不输出或保存凭据")
+    from pathlib import Path
+    ap.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     args = ap.parse_args()
+    if args.export_index:
+        if args.dry_run or args.only_issues or args.only_new:
+            ap.error("--export-index cannot be combined with historical synchronization flags")
+        try:
+            if args.git_auth:
+                enable_index_git_auth(args.root)
+            return write_index(args.root)
+        except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
+            print(f"Index failed: {exc}", file=sys.stderr)
+            return 1
 
+    if args.git_auth:
+        ap.error("--git-auth requires --export-index; it cannot enable historical writes")
     if args.dry_run:
         print("将同步的 issue：")
         for n, u in sorted(UPDATES.items()):

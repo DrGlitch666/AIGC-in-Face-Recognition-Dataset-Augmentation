@@ -1,0 +1,345 @@
+{
+  "schema_version": 1,
+  "repo": "DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation",
+  "captured_at": "2026-10-07T11:44:16+00:00",
+  "request_method": "GET",
+  "pull_requests_excluded": true,
+  "retrieval_source": "GitHub REST issue list",
+  "issue_count": 25,
+  "open_count": 8,
+  "closed_count": 17,
+  "index_path": "docs/issues/00-INDEX.md",
+  "index_sha256": "f1c7c1dc2eed36b9ba90667eba687182c6cd2d5c4373f8f4d4cf014600e8ea3e",
+  "issues": [
+    {
+      "number": 1,
+      "title": "[环境] 跨机器可复现环境 + 硬件档位自检（每台机器各做一次）",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/1",
+      "labels": [
+        "good first issue",
+        "优先级:P0",
+        "类型:环境",
+        "难度:入门"
+      ],
+      "milestone": "M0 脚手架与地基",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 2,
+      "title": "[脚手架] 建立仓库目录结构、配置系统与工程规范",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/2",
+      "labels": [
+        "优先级:P0",
+        "类型:环境",
+        "难度:入门"
+      ],
+      "milestone": "M0 脚手架与地基",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 3,
+      "title": "[数据] 下载评测数据集 + 构建 toy 训练集 + 冻结 manifest 契约",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/3",
+      "labels": [
+        "优先级:P0",
+        "类型:数据",
+        "难度:中等"
+      ],
+      "milestone": "M0 脚手架与地基",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 4,
+      "title": "[文档] 背景知识地图与文献综述 docs/BACKGROUND.md",
+      "state": "open",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/4",
+      "labels": [
+        "good first issue",
+        "优先级:P0",
+        "难度:入门",
+        "类型:文档"
+      ],
+      "milestone": "M0 脚手架与地基",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 5,
+      "title": "[基线] 用预训练模型跑通 1:1 人脸验证评测（E0）",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/5",
+      "labels": [
+        "优先级:P0",
+        "难度:中等",
+        "类型:评测"
+      ],
+      "milestone": "M1 基线与评测",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 6,
+      "title": "[训练] 实现 ArcFace 训练管线（E1：只用真实数据）",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/6",
+      "labels": [
+        "优先级:P0",
+        "类型:训练",
+        "难度:进阶"
+      ],
+      "milestone": "M1 基线与评测",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 7,
+      "title": "[评测] 统一评测器：1:1 / 1:N / 分桶鲁棒性 / 公平性 + 结果 schema",
+      "state": "open",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/7",
+      "labels": [
+        "优先级:P0",
+        "难度:中等",
+        "类型:评测"
+      ],
+      "milestone": "M1 基线与评测",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 8,
+      "title": "[实验] 传统数据增强对照组（E2）：翻转/裁剪/色彩/模糊/降质",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/8",
+      "labels": [
+        "难度:入门",
+        "优先级:P1",
+        "类型:实验"
+      ],
+      "milestone": "M2 生成与筛选",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 9,
+      "title": "[生成] 生成管线 A：无条件生成，打通「生成→入库→训练→评测」闭环（E3）",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/9",
+      "labels": [
+        "难度:中等",
+        "优先级:P1",
+        "类型:生成"
+      ],
+      "milestone": "M2 生成与筛选",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 10,
+      "title": "[生成] 生成管线 B ★核心：身份保持生成（同一个人，不同姿态/光照）",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/10",
+      "labels": [
+        "优先级:P0",
+        "难度:进阶",
+        "类型:生成"
+      ],
+      "milestone": "M2 生成与筛选",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 11,
+      "title": "[筛选] 生成质量与身份一致性门禁（漏斗）★核心",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/11",
+      "labels": [
+        "优先级:P0",
+        "难度:中等",
+        "类型:筛选"
+      ],
+      "milestone": "M2 生成与筛选",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 12,
+      "title": "[合规] 合成人脸可检测性报告：我们的图能被认出来是 AI 生成的吗？",
+      "state": "open",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/12",
+      "labels": [
+        "难度:中等",
+        "优先级:P2",
+        "类型:合规"
+      ],
+      "milestone": "M2 生成与筛选",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 13,
+      "title": "[生成] 生成管线 C（加分）：属性可控与跨域定向生成",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/13",
+      "labels": [
+        "难度:进阶",
+        "类型:生成",
+        "优先级:P2"
+      ],
+      "milestone": "M2 生成与筛选",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 14,
+      "title": "[实验] ★核心：混合比例消融实验矩阵（E5）与批量执行",
+      "state": "open",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/14",
+      "labels": [
+        "优先级:P0",
+        "难度:进阶",
+        "类型:实验"
+      ],
+      "milestone": "M3 实验矩阵与结论",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 15,
+      "title": "[文档] 结果汇总、结论与局限 docs/RESULTS.md",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/15",
+      "labels": [
+        "优先级:P0",
+        "难度:中等",
+        "类型:文档"
+      ],
+      "milestone": "M3 实验矩阵与结论",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 16,
+      "title": "[网站] 静态展示站骨架：Vite + React + ECharts + 数据契约",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/16",
+      "labels": [
+        "难度:中等",
+        "优先级:P1",
+        "类型:网站"
+      ],
+      "milestone": "M4 网站与发布",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 17,
+      "title": "[网站] 展示内容页：方法图、图库对比、指标看板、公平性与失败案例",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/17",
+      "labels": [
+        "难度:中等",
+        "优先级:P1",
+        "类型:网站"
+      ],
+      "milestone": "M4 网站与发布",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 18,
+      "title": "[合规] 伦理与许可文档 + README/LICENSE + v0.1 发布",
+      "state": "open",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/18",
+      "labels": [
+        "难度:入门",
+        "优先级:P1",
+        "类型:合规"
+      ],
+      "milestone": "M4 网站与发布",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 19,
+      "title": "[协作] 双人协作规范：分工认领、PR 评审、数据与产物同步",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/19",
+      "labels": [
+        "good first issue",
+        "优先级:P0",
+        "类型:环境",
+        "难度:入门"
+      ],
+      "milestone": "M0 脚手架与地基",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 20,
+      "title": "[环境] 硬件档位判定、配置分层与自适应降级（A/B/C profile）",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/20",
+      "labels": [
+        "优先级:P0",
+        "类型:环境",
+        "难度:中等"
+      ],
+      "milestone": "M0 脚手架与地基",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 21,
+      "title": "[学习] 按 LEARNING.md 走完六阶段学习线（含自测与每周互讲）",
+      "state": "open",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/21",
+      "labels": [
+        "good first issue",
+        "优先级:P0",
+        "难度:入门",
+        "类型:文档"
+      ],
+      "milestone": "M0 脚手架与地基",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 22,
+      "title": "[环境] 受限网络下的资源获取：连通性预检、镜像路线与离线缓存",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/22",
+      "labels": [
+        "good first issue",
+        "优先级:P0",
+        "类型:环境",
+        "难度:入门"
+      ],
+      "milestone": "M0 脚手架与地基",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 25,
+      "title": "[B-1] 展示网站：静态站 + 内容页（合并原 #16 / #17）",
+      "state": "open",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/25",
+      "labels": [
+        "优先级:P0",
+        "难度:中等",
+        "类型:网站"
+      ],
+      "milestone": "—",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 26,
+      "title": "[B-2] 评测器补强：边界单元测试 + 跨机（CPU）复现验证",
+      "state": "closed",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/26",
+      "labels": [
+        "优先级:P0",
+        "难度:中等",
+        "类型:评测"
+      ],
+      "milestone": "—",
+      "retrieval_source": "GitHub REST issue list"
+    },
+    {
+      "number": 27,
+      "title": "[B-3] 报告排版 + 局限章节核对 + 文献补充",
+      "state": "open",
+      "html_url": "https://github.com/DrGlitch666/AIGC-in-Face-Recognition-Dataset-Augmentation/issues/27",
+      "labels": [
+        "优先级:P0",
+        "难度:入门",
+        "类型:文档"
+      ],
+      "milestone": "—",
+      "retrieval_source": "GitHub REST issue list"
+    }
+  ]
+}

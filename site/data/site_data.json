@@ -643,6 +643,16 @@
         "epochs": null,
         "params_total": null
       },
+      "optim": {
+        "optimizer": null,
+        "lr": null,
+        "momentum": null,
+        "weight_decay": null,
+        "scheduler": null,
+        "batch_size": null,
+        "grad_accum": null,
+        "amp": null
+      },
       "protocols": {
         "heldout": {
           "accuracy": 0.999294,
@@ -681,6 +691,16 @@
         "loss": "arcface (pretrained)",
         "epochs": 0,
         "params_total": null
+      },
+      "optim": {
+        "optimizer": null,
+        "lr": null,
+        "momentum": null,
+        "weight_decay": null,
+        "scheduler": null,
+        "batch_size": null,
+        "grad_accum": null,
+        "amp": null
       },
       "protocols": {
         "official": {
@@ -758,6 +778,16 @@
         "loss": "arcface (self-trained)",
         "epochs": 26,
         "params_total": 62556544
+      },
+      "optim": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.9,
+        "weight_decay": 0.0005,
+        "scheduler": "cosine",
+        "batch_size": 64,
+        "grad_accum": 1,
+        "amp": true
       },
       "protocols": {
         "official": {
@@ -849,6 +879,16 @@
         "epochs": 26,
         "params_total": 62556544
       },
+      "optim": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.9,
+        "weight_decay": 0.0005,
+        "scheduler": "cosine",
+        "batch_size": 64,
+        "grad_accum": 1,
+        "amp": true
+      },
       "protocols": {
         "official": {
           "accuracy": 0.882835,
@@ -938,6 +978,16 @@
         "loss": "arcface (self-trained)",
         "epochs": 25,
         "params_total": 62556544
+      },
+      "optim": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.9,
+        "weight_decay": 0.0005,
+        "scheduler": "cosine",
+        "batch_size": 64,
+        "grad_accum": 1,
+        "amp": true
       },
       "protocols": {
         "official": {
@@ -1029,6 +1079,16 @@
         "epochs": 30,
         "params_total": 62556544
       },
+      "optim": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.9,
+        "weight_decay": 0.0005,
+        "scheduler": "cosine",
+        "batch_size": 64,
+        "grad_accum": 1,
+        "amp": true
+      },
       "protocols": {
         "official": {
           "accuracy": 0.887515,
@@ -1105,6 +1165,16 @@
         "loss": "arcface (self-trained)",
         "epochs": 24,
         "params_total": 62556544
+      },
+      "optim": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.9,
+        "weight_decay": 0.0005,
+        "scheduler": "cosine",
+        "batch_size": 64,
+        "grad_accum": 1,
+        "amp": true
       },
       "protocols": {
         "official": {
@@ -1196,6 +1266,16 @@
         "epochs": 23,
         "params_total": 62556544
       },
+      "optim": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.9,
+        "weight_decay": 0.0005,
+        "scheduler": "cosine",
+        "batch_size": 64,
+        "grad_accum": 1,
+        "amp": true
+      },
       "protocols": {
         "official": {
           "accuracy": 0.888517,
@@ -1285,6 +1365,16 @@
         "loss": "arcface (self-trained)",
         "epochs": 24,
         "params_total": 62556544
+      },
+      "optim": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.9,
+        "weight_decay": 0.0005,
+        "scheduler": "cosine",
+        "batch_size": 64,
+        "grad_accum": 1,
+        "amp": true
       },
       "protocols": {
         "official": {
@@ -1406,6 +1496,18 @@
     {
       "path": "results/runs/e4-real-plus-synth-seed2/metrics.json",
       "sha256": "6599e6ecbb5965e0b0a10b5a37e5d92830f99700d3fdb61240e024230ce14da1"
+    },
+    {
+      "path": "results/reproductions/e0-buffalo_l-lfw-b-cpu/metrics.json",
+      "sha256": "b9a80d36e0dd4fe492d5245d35e995f9c62cff124866dd2d1a5135842460e120"
+    },
+    {
+      "path": "reports/e0_cpu_reproduction.b.md",
+      "sha256": "4285decb10969c5081663f8c98e1b01ac70d7ea25bd3273025f929041161bf8a"
+    },
+    {
+      "path": "reports/e0_cpu_reproduction.b.pytest.txt",
+      "sha256": "b2bdb284e628ebdfb065f29df2a9d64aa626887bb7929eb19397d7c07421eb4e"
     }
   ],
   "warnings": [],
@@ -1415,5 +1517,76 @@
     "uncertainty": "Across-seed standard deviation and confidence interval are different. Do not label SD as CI.",
     "statistics": "Use each Welch test's df; critical_values_n3 is not a universal critical value. Derived p and CI do not overwrite frozen source results.",
     "generation": "The recipe comparison's small sample and the screened training corpus have different populations; their id_sim means must not be conflated."
+  },
+  "cpu_reproduction": {
+    "source": "results/reproductions/e0-buffalo_l-lfw-b-cpu/metrics.json",
+    "evaluated_at": "2026-10-07T16:41:31+08:00",
+    "protocols": {
+      "official": {
+        "accuracy": 0.998496,
+        "tar": 0.996989,
+        "tar_threshold": 0.226113,
+        "actual_far": 0.000668,
+        "accuracy_pairs_used": 5983,
+        "accuracy_pairs_missing": 17,
+        "tar_pairs_used": 5983,
+        "protocol": "official-6000pairs-10fold",
+        "accuracy_note": null,
+        "accuracy_source_key": "benchmarks.lfw.value",
+        "tar_source_key": "benchmarks.lfw.tar_at_far.1e-03.tar"
+      },
+      "filtered": {
+        "accuracy": 0.998375,
+        "tar": 0.99657,
+        "tar_threshold": 0.226113,
+        "actual_far": 0.000686,
+        "accuracy_pairs_used": 5539,
+        "accuracy_pairs_missing": 14,
+        "tar_pairs_used": 5539,
+        "protocol": "official-excluding-train-identities(min_images=15)",
+        "accuracy_note": null,
+        "accuracy_source_key": "benchmarks.lfw_filtered.value",
+        "tar_source_key": "benchmarks.lfw_filtered.tar_at_far.1e-03.tar"
+      }
+    },
+    "model": {
+      "arch": "buffalo_l (w600k_r50, ResNet50 + ArcFace)",
+      "det_size": 640,
+      "face_select": "center",
+      "onnx_providers": [
+        "CPUExecutionProvider"
+      ]
+    },
+    "hardware": {
+      "hardware_profile": "cpu",
+      "python": "3.11.16",
+      "torch_version": "2.14.0+cpu"
+    },
+    "embedding": {
+      "num_used": 7690,
+      "num_failed": 11,
+      "extract_seconds": 6906.79
+    },
+    "tests_passed": 156,
+    "test_seconds": 5.6,
+    "matches_recorded_six_decimals": true,
+    "evidence": [
+      {
+        "path": "results/reproductions/e0-buffalo_l-lfw-b-cpu/metrics.json",
+        "sha256": "b9a80d36e0dd4fe492d5245d35e995f9c62cff124866dd2d1a5135842460e120",
+        "filename": "metrics.json"
+      },
+      {
+        "path": "reports/e0_cpu_reproduction.b.md",
+        "sha256": "4285decb10969c5081663f8c98e1b01ac70d7ea25bd3273025f929041161bf8a",
+        "filename": "e0_cpu_reproduction.b.md"
+      },
+      {
+        "path": "reports/e0_cpu_reproduction.b.pytest.txt",
+        "sha256": "b2bdb284e628ebdfb065f29df2a9d64aa626887bb7929eb19397d7c07421eb4e",
+        "filename": "e0_cpu_reproduction.b.pytest.txt"
+      }
+    ],
+    "command": "python scripts/evaluate.py --exp-id e0-buffalo_l-lfw --cpu --no-cache --out \"results/reproductions/e0-buffalo_l-lfw-b-cpu\""
   }
 }
