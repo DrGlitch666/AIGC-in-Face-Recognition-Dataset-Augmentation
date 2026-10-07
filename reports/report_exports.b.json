@@ -1,0 +1,21 @@
+{
+  "source": "docs/REPORT.md",
+  "source_sha256": "2064e0693ffe6f743369caddd6854f09949154ae4efc765366d9e3bc4e8a4be2",
+  "figures": 5,
+  "references": 12,
+  "pdf_pages": 17,
+  "numeric_tables": "preserved; delivery-status row updated in exports",
+  "experiment_files": "not modified",
+  "inference_training_tests": "not rerun",
+  "qa": "all final pages visually inspected; source table values and source hashes preserved",
+  "exports": {
+    "AIGCFR_report.b.docx": {
+      "sha256": "e5d0b21ee898a814b9a14bab7b4fc0a50bdd9f13ede9ab577caf288e892b5237",
+      "bytes": 1159253
+    },
+    "AIGCFR_report.b.pdf": {
+      "sha256": "8269fa966297834cc89b835c10be46ae5e5d565336f5d55319ede36613b13744",
+      "bytes": 1403610
+    }
+  }
+}

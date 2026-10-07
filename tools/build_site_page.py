@@ -7,6 +7,7 @@ Uses Python's standard library. Does not train models or modify experiment resul
 from __future__ import annotations
 
 import argparse
+import hashlib
 from html import escape
 import json
 import math
@@ -23,7 +24,7 @@ CHARTS = {
     "accuracy_delta_ci95.svg": "Accuracy 增益的 Welch 95% 置信区间",
 }
 PROTOCOLS = ("official", "filtered", "heldout")
-PROTOCOL_LABELS = {"official": "Official · 官方对子", "filtered": "Filtered · 剔除训练身份", "heldout": "Held-out · 自定义无身份泄漏协议"}
+PROTOCOL_LABELS = {"official": "Official · 官方对子", "filtered": "Filtered · 剔除训练身份", "heldout": "Held-out · 自定义训练身份不重叠协议"}
 
 
 def n(value, label="value"):
@@ -70,6 +71,12 @@ def render(data):
     e4_off = arms["E4a"]["protocols"]["official"]
     seeds = int(n(recognition["n_seeds"]))
     far = n(recognition["far"])
+    reproduction = data.get("cpu_reproduction")
+    if reproduction:
+        cpu = reproduction["protocols"]["official"]
+        reproduction_html = f'''<h3>CPU E0 复现 · 已完成</h3><p>重新提取特征后，官方配对 Accuracy@best 为 <strong>{n(cpu['accuracy']):.6f}</strong>，TAR@FAR={far:g} 为 <strong>{n(cpu['tar']):.6f}</strong>。与冻结基线在记录的六位小数精度下一致；这不表示阈值或逐对分数完全相同。</p><p>记录的测试验证：<strong>{int(n(reproduction['tests_passed']))} 项通过</strong>。识别执行器：{h(', '.join(reproduction['model']['onnx_providers']))}；评测时间：{h(reproduction['evaluated_at'])}。</p><pre>{h(reproduction['command'])}</pre><p>结果保存在独立目录；此命令会重新执行 CPU 推理，查看已有证据无需重跑。</p><p><a href="data/reproduction/metrics.json" target="_blank" rel="noopener">复现指标 JSON</a> · <a href="data/reproduction/e0_cpu_reproduction.b.md" target="_blank" rel="noopener">复现报告</a> · <a href="data/reproduction/e0_cpu_reproduction.b.pytest.txt" target="_blank" rel="noopener">测试日志</a></p>'''
+    else:
+        reproduction_html = '''<h3>CPU E0 复现 · 尚未导入记录</h3><p>需准备项目配置、数据及预训练权重；以下命令把结果写入独立目录：</p><pre>python scripts/evaluate.py --exp-id e0-buffalo_l-lfw --cpu --no-cache --out "results/reproductions/e0-buffalo_l-lfw-b-cpu"</pre><p>运行后保存测试证据，再重新导出网页数据。完整生成与训练流程见 docs/W3-GENERATION.md。</p>'''
     gen = data["generation"]
     recipe = gen["final_recipe"]
     winner_key = gen["tuning_round"]["winner"]
@@ -134,15 +141,15 @@ def render(data):
     body = f'''<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="身份保持的合成人脸能否改善识别？以真实实验、两个评测口径和统计不确定性回答。"><title>AIGC Face Lab · 合成人脸数据扩充</title><style>{CSS}</style></head><body>
 <header><div class="nav"><a class="brand" href="#top">AIGC <span>FACE LAB</span></a><nav aria-label="主导航"><a href="#method">方法</a><a href="#generation">生成质量</a><a href="#gallery">视觉对照</a><a href="#results">实验结果</a><a href="#lessons">踩坑与局限</a><a href="#reproduce">复现</a></nav></div></header>
-<main><section class="hero" id="top"><p class="eyebrow">身份保持生成 · 数据扩充 · 人脸验证</p><div class="hero-grid"><div><h1>合成更多照片，<br>能让模型<em>认得更准吗？</em></h1><p class="lead">为已有身份生成新的人脸照片，筛选后加入训练集，与只使用真实照片的模型对照。我们关心的不只是照片“像不像”，还有识别增益能否经得起不同协议和训练种子的检验。</p><p class="hero-note"><strong>读到最后，只需记住：</strong>accuracy 的跨种子均值上升；{h(tar_conclusion)}Held-out 是自定义无身份泄漏协议，不是官方 LFW 数字。</p><a href="#results">直接查看证据 ↓</a></div><aside class="summary"><span class="small">实验速览 / E1 对照 E4a</span><h2>均值改善，<br>证据强度因指标而异。</h2><div class="metric-line"><strong>{n(e1_off['accuracy_mean']):.4f} → {n(e4_off['accuracy_mean']):.4f}</strong><span>官方对子<br>Accuracy@best 均值</span></div><div class="metric-line"><strong>{n(official['accuracy']['delta']):+.4f}</strong><span>官方 accuracy 均值差<br>p≈{n(official['accuracy']['p_two_sided']):.4f}</span></div><div class="metric-line"><strong>{n(official['tar']['delta']):+.4f}</strong><span>官方 TAR 均值差<br>p≈{n(official['tar']['p_two_sided']):.4f}</span></div></aside></div><div class="stats"><div class="stat"><strong>{ids:g} 个身份</strong><span>训练身份 · 已有身份的数据扩充</span></div><div class="stat"><strong>{real:,.0f} ＋ {synth:,.0f}</strong><span>真实训练图 ＋ 筛选后的合成训练图</span></div><div class="stat"><strong>{ratio:.1f}% · {seeds} 个种子</strong><span>合成图占合并训练集的比例 · 重复实验</span></div></div></section>
+<main><section class="hero" id="top"><p class="eyebrow">身份保持生成 · 数据扩充 · 人脸验证</p><div class="hero-grid"><div><h1>合成更多照片，<br>能让模型<em>认得更准吗？</em></h1><p class="lead">为已有身份生成新的人脸照片，筛选后加入训练集，与只使用真实照片的模型对照。我们关心的不只是照片“像不像”，还有识别增益能否经得起不同协议和训练种子的检验。</p><p class="hero-note"><strong>读到最后，只需记住：</strong>accuracy 的跨种子均值上升；{h(tar_conclusion)}Held-out 是自定义训练身份不重叠协议，不是官方 LFW 数字。</p><a href="#results">直接查看证据 ↓</a></div><aside class="summary"><span class="small">实验速览 / E1 对照 E4a</span><h2>均值改善，<br>证据强度因指标而异。</h2><div class="metric-line"><strong>{n(e1_off['accuracy_mean']):.4f} → {n(e4_off['accuracy_mean']):.4f}</strong><span>官方对子<br>Accuracy@best 均值</span></div><div class="metric-line"><strong>{n(official['accuracy']['delta']):+.4f}</strong><span>官方 accuracy 均值差<br>p≈{n(official['accuracy']['p_two_sided']):.4f}</span></div><div class="metric-line"><strong>{n(official['tar']['delta']):+.4f}</strong><span>官方 TAR 均值差<br>p≈{n(official['tar']['p_two_sided']):.4f}</span></div></aside></div><div class="stats"><div class="stat"><strong>{ids:g} 个身份</strong><span>训练身份 · 已有身份的数据扩充</span></div><div class="stat"><strong>{real:,.0f} ＋ {synth:,.0f}</strong><span>真实训练图 ＋ 筛选后的合成训练图</span></div><div class="stat"><strong>{ratio:.1f}% · {seeds} 个种子</strong><span>合成图占合并训练集的比例 · 重复实验</span></div></div></section>
 <section id="method"><div class="section-heading"><h2>方法：从真实参考到性能验证</h2><p>身份保持不是终点；只有加入训练后的可复核增益，才能回答数据扩充是否有价值。</p></div><div class="method-grid"><article class="card"><span class="step">数据准备</span><h3>真实照片 → 检测与对齐</h3><p>选择已有身份的真实照片，按识别模型的输入方式对齐；E1 使用真实数据作为基线。</p><p>训练模型：{h(baseline['model']['arch'])}；损失：{h(baseline['model']['loss'])}。</p></article><article class="card"><span class="step">身份保持生成</span><h3>多参考嵌入 → plusv2</h3><p>对同一身份的多张参考照片提取、平均并归一化身份嵌入；结合 CLIP 结构分支生成该身份的新照片。</p><p>采用 {h(recipe['adapter'])}；底模 {h(recipe['base'])}；{n(recipe['steps']):g} 步，guidance={n(recipe['guidance']):g}。</p></article><article class="card"><span class="step">样本筛选</span><h3>质量地板 → 冗余剪枝</h3><p>筛去身份相似度不足或无法评分的图，再减少同身份内冗余。单纯保留最相似的图，可能损失为多样性引入的结构变化。</p><p>E4a 最终加入 {synth:,.0f} 张合成图。配方小样本的相似度不能当作全部训练合成图的均值。</p></article><article class="card"><span class="step">训练与验证</span><h3>E1 对照 E4a → 多协议、多种子</h3><p>同一骨干对照纯真实数据与真实＋合成数据。分别报告 Accuracy@best 和 FAR={far:g} 下的 TAR。</p><p>每个方案重复 {seeds} 个种子；展示均值、种子间波动，以及均值差的置信区间。</p></article></div></section>
 <section id="generation"><div class="section-heading"><h2>生成质量：像本人，也要有下限</h2><p>id_sim 是与本人真实参考中心的余弦相似度，是本实验中的身份保持代理指标。</p></div><div class="inline-result"><p>采用方案：<strong>{h(winner['description'].replace('**',''))}</strong>。可评分 {n(winner['n_scored']):g} 张，均值 <strong>{n(winner['id_sim_mean']):.4f}</strong>，最小值 <strong>{n(winner['id_sim_min']):.4f}</strong>。</p></div>{figure('generator_quality.svg','小样本配方对照；误差线为样本标准差，方块为最小值')}<div class="table-wrap"><table><thead><tr><th>方案</th><th>可评分／生成</th><th>id_sim 均值</th><th>最小值</th></tr></thead><tbody>{''.join(arms_table)}</tbody></table></div><p class="small">参照：同人真实照片 {n(gen['reference_points']['same_person_real_photos']):.3f}；不同人参考低于 {n(gen['reference_points']['different_people_below']):.3f}。这些是本项目参照，不是普遍适用的身份识别阈值。检测失败样本不记作零分，也不应从失败率讨论中消失。</p></section>
 <section id="gallery"><div class="section-heading"><h2>视觉对照：真实参考与合成照片</h2><p>先看身份是否保持，再读分数。外观更逼真不自动意味着识别训练更有用。</p></div><div class="gallery-meta"><span class="tag">左：真实参考</span><span class="tag">中：base FaceID</span><span class="tag">右：plusv2 多参考平均</span></div><figure class="gallery"><a href="assets/contact_sheet.png" target="_blank" rel="noopener" aria-label="打开完整视觉对照图"><img src="assets/contact_sheet.png" alt="按身份分行排列的真实参考、base FaceID 与最终 plusv2 配方对照；合成图下方标注可用的 id_sim 分数。" loading="lazy"></a><figcaption>来源：仓库已有的 contact_sheet.png，原图与原始分数保持不变。真实参考图没有合成图的 id_sim；未标分数的生成样本为未评分，不能理解成零分。右侧是最终多参考平均配方，不能与上表“plusv2 官方配方”的统计混用。点击可查看原图。</figcaption></figure></section>
-<section id="results"><div class="section-heading"><h2>识别结果：把两个指标一起看</h2><p>每个格子为跨种子均值 ± 样本标准差；显著性使用双侧 Welch 检验，p 值由冻结统计量推导。</p></div><div class="tabs" role="group" aria-label="筛选评测协议"><button type="button" data-filter="all" aria-pressed="true">全部协议</button><button type="button" data-filter="official" aria-pressed="false">Official</button><button type="button" data-filter="filtered" aria-pressed="false">Filtered</button><button type="button" data-filter="heldout" aria-pressed="false">Held-out</button></div>{''.join(protocol_sections)}<div class="note"><strong>统计核对：不能共用一个 t 临界值</strong><p>Held-out accuracy：t={n(heldout['accuracy']['t']):.4f}、df={n(heldout['accuracy']['df']):.3f}、双侧 p≈{n(heldout['accuracy']['p_two_sided']):.6f}，{heldout_verdict}。本页按各检验自身的自由度判断，不沿用报告初稿的统一临界值；原始实验结果文件保持不变。{h(tar_conclusion)}</p></div>{figure('accuracy_mean_sd.svg')}{figure('tar_mean_sd.svg')}{figure('accuracy_delta_ci95.svg','均值差的 95% Welch 区间；与上方标准差图是不同统计量')}{figure('tar_delta_ci95.svg','均值差的 95% Welch 区间；不要误作单次运行的配对 bootstrap 区间')}{reference_html}<details><summary>评测口径与实际样本规模</summary><p>{h(fold_note)}最佳阈值是在测试分数上选取，属于偏乐观的描述性指标，不能当作独立验证阈值后的部署结果。</p><ul class="small">{''.join(sample_info)}</ul><p>训练身份交集为零，解决的是身份层面的泄漏。Held-out 仍来自同一数据源，并不是跨数据集、跨人口分布的泛化验证。SD 描述种子间波动；Welch 区间描述跨种子均值差，两者不能混称。</p></details></section>
+<section id="results"><div class="section-heading"><h2>识别结果：把两个指标一起看</h2><p>每个格子为跨种子均值 ± 样本标准差；显著性使用双侧 Welch 检验，p 值由冻结统计量推导。</p></div><div class="tabs" role="group" aria-label="筛选评测协议"><button type="button" data-filter="all" aria-pressed="true">全部协议</button><button type="button" data-filter="official" aria-pressed="false">Official</button><button type="button" data-filter="filtered" aria-pressed="false">Filtered</button><button type="button" data-filter="heldout" aria-pressed="false">Held-out</button></div>{''.join(protocol_sections)}<div class="note"><strong>统计核对：不能共用一个 t 临界值</strong><p>Held-out accuracy：t={n(heldout['accuracy']['t']):.4f}、df={n(heldout['accuracy']['df']):.3f}、双侧 p≈{n(heldout['accuracy']['p_two_sided']):.6f}，{heldout_verdict}。本页按各检验自身的自由度判断，不沿用报告初稿的统一临界值；原始实验结果文件保持不变。{h(tar_conclusion)}</p></div>{figure('accuracy_mean_sd.svg')}{figure('tar_mean_sd.svg')}{figure('accuracy_delta_ci95.svg','均值差的 95% Welch 区间；与上方标准差图是不同统计量')}{figure('tar_delta_ci95.svg','均值差的 95% Welch 区间；不要误作单次运行的配对 bootstrap 区间')}{reference_html}<details><summary>评测口径与实际样本规模</summary><p>{h(fold_note)}最佳阈值是在测试分数上选取，属于偏乐观的描述性指标，不能当作独立验证阈值后的部署结果。</p><ul class="small">{''.join(sample_info)}</ul><p>这里的训练身份交集为零，指本项目的自训练身份；外部预训练模型的数据重叠尚未完整审计。Held-out 仍来自同一数据源，并不是跨数据集、跨人口分布的泛化验证。SD 描述种子间波动；Welch 区间描述跨种子均值差，两者不能混称。</p></details></section>
 <section id="lessons"><div class="section-heading"><h2>踩坑记录：测量方式会改变结论</h2><p>这些经验来自本项目排查记录；实现细节应结合当前源码与依赖版本核查。</p></div><div class="cards"><article class="card"><h3>参数顺序写反，结果可能静默失效</h3><p><code>tar_at_far(labels, scores, far)</code> 的标签和分数不能交换。用边界测试防住静默返回无效结果，而不是只看程序是否报错。</p></article><article class="card"><h3>检测尺寸引入幸存者偏差</h3><p>错误检测配置会漏掉生成样本，使可评分子集发生偏移。评分口径改变时，要重新比较全部方案，并同时报告检测失败。</p></article><article class="card"><h3>高相似度筛选也可能丢掉多样性</h3><p>只按身份相似度排名保留样本，容易保留结构相近的照片。质量地板与冗余剪枝需要一起考虑。</p></article></div><details open><summary>项目结论的适用边界</summary><p>官方配对清单含训练身份；accuracy 在测试集上选择最佳阈值。自定义 held-out 提供补充证据，却不等同于官方成绩或独立采集的测试集。</p><p>种子数量有限，TAR 增益仍不确定；当前还不能确定更多合成数据是否一定更好。这里只研究有限的训练身份、生成样本及一个识别骨干，也未覆盖完整合成占比扫描和跨数据集验证。</p><p>身份相似度代理指标不能代替对生成质量、偏差及下游性能的完整评估。预训练模型若同时参与身份条件、筛选或评测，应明确度量空间依赖。</p></details></section>
 <section id="reproduce"><div class="section-heading"><h2>复现：先重建展示，再核对实验</h2><p>浏览本页无需联网、构建或后端。数据和图表由仓库脚本生成，结果可追溯。</p></div><div class="method-grid"><article class="card"><h3>重建展示 · CPU 即可</h3><p>将三个脚本放入仓库的 <code>tools</code> 目录，在激活的项目环境中运行：</p><pre>python tools/export_site_data.py
 python tools/build_site_charts.py
-python tools/build_site_page.py</pre><p>随后双击 <code>site/index.html</code>。这是展示构建，不会重新训练或生成模型样本。</p></article><article class="card"><h3>核对 E0 · B 的下一项工作</h3><p>评测器边界测试和本机 CPU 复现属于后续任务。需准备项目配置、数据及预训练权重，再运行：</p><pre>python scripts/evaluate.py --exp-id e0-buffalo_l-lfw --cpu</pre><p>完整生成与训练流程见仓库 <code>docs/REPORT.md</code> 和 <code>docs/W3-GENERATION.md</code>；这些 GPU 实验由 A 已完成，本页展示冻结结果。</p></article></div>{warning_html}<details><summary>数据来源与自动导出记录</summary><p>{h(proto_source)}</p><p><a href="data/site_data.json" target="_blank" rel="noopener">打开完整导出数据 JSON</a> · <a href="data/site_data.js" target="_blank" rel="noopener">打开离线 JavaScript 数据文件</a></p><ol class="sources">{source_list}</ol><p>均值、标准差、点估计和检验统计量来自结果文件。页面中的比例、p 值和置信区间按记录字段计算；p 和区间使用舍入后的冻结统计量，属于近似值。</p></details></section></main>
+python tools/build_site_page.py</pre><p>随后双击 <code>site/index.html</code>。这是展示构建，不会重新训练或生成模型样本。</p></article><article class="card">{reproduction_html}</article></div>{warning_html}<details><summary>数据来源与自动导出记录</summary><p>{h(proto_source)}</p><p><a href="data/site_data.json" target="_blank" rel="noopener">打开完整导出数据 JSON</a> · <a href="data/site_data.js" target="_blank" rel="noopener">打开离线 JavaScript 数据文件</a></p><ol class="sources">{source_list}</ol><p>均值、标准差、点估计和检验统计量来自结果文件。页面中的比例、p 值和置信区间按记录字段计算；p 和区间使用舍入后的冻结统计量，属于近似值。</p></details></section></main>
 <footer><span>AIGC Face Lab · 用可复核的实验回答数据扩充问题</span><div class="footer-links"><a href="#top">返回顶部 ↑</a><a href="data/site_data.json">查看导出数据</a></div></footer><noscript>当前浏览器关闭了 JavaScript，所有协议结果仍完整展示；仅协议筛选按钮不可用。</noscript>
 <script>document.querySelectorAll('[data-filter]').forEach(function(button){{button.addEventListener('click',function(){{var filter=button.dataset.filter;document.querySelectorAll('[data-filter]').forEach(function(item){{item.setAttribute('aria-pressed',String(item===button));}});document.querySelectorAll('[data-protocol]').forEach(function(card){{card.hidden=filter!=='all'&&card.dataset.protocol!==filter;}});}});}});</script></body></html>'''
     return body
@@ -158,6 +165,17 @@ def main():
         data_path = site / "data/site_data.json"
         data = json.loads(data_path.read_text(encoding="utf-8-sig"))
         page = render(data)
+        proof_copies = []
+        for proof in data.get("cpu_reproduction", {}).get("evidence", []):
+            source_path = (root / proof["path"]).resolve()
+            source_path.relative_to(root)
+            raw = source_path.read_bytes()
+            if hashlib.sha256(raw).hexdigest() != proof["sha256"]:
+                raise ValueError(f"Evidence changed: {proof['path']}; rerun export_site_data.py")
+            filename = Path(proof["filename"]).name
+            if filename != proof["filename"]:
+                raise ValueError("Invalid evidence filename")
+            proof_copies.append((site / "data/reproduction" / filename, raw))
         required = [site / "assets/figures" / name for name in CHARTS]
         required.append(site / "data/site_data.js")
         for path in required:
@@ -169,11 +187,15 @@ def main():
         image = site / "assets/contact_sheet.png"
         index = site / "index.html"
         page_bytes = len(page.encode("utf-8"))
-        current_bytes = sum(p.stat().st_size for p in site.rglob("*") if p.is_file() and p not in (image, index))
-        prospective_bytes = current_bytes + source.stat().st_size + page_bytes
+        replaced = {image, index, *(p for p, _ in proof_copies)}
+        current_bytes = sum(p.stat().st_size for p in site.rglob("*") if p.is_file() and p not in replaced)
+        prospective_bytes = current_bytes + source.stat().st_size + page_bytes + sum(len(raw) for _, raw in proof_copies)
         if prospective_bytes >= 5_000_000:
             raise ValueError(f"Site would use {prospective_bytes:,} bytes, exceeding the <5 MB requirement")
         image.parent.mkdir(parents=True, exist_ok=True)
+        for target, raw in proof_copies:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(raw)
         shutil.copyfile(source, image)
         index.write_text(page, encoding="utf-8")
     except (OSError, KeyError, TypeError, ValueError, StopIteration) as exc:
