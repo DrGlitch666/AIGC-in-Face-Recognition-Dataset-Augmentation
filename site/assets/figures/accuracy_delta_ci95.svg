@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="570" viewBox="0 0 1080 570" role="img" aria-labelledby="title desc">
+<title id="title">ΔAccuracy：提升是否跨过零？</title><desc id="desc">圆点：E4a − E1；横线：跨种子 Welch 95% 置信区间；虚线：零效应。</desc>
+<style>text{font-family:"Microsoft YaHei","PingFang SC","Noto Sans CJK SC",Arial,sans-serif;fill:#172c40} .muted{fill:#637588}</style>
+<rect width="100%" height="100%" fill="#ffffff" rx="14"/>
+<metadata>{&quot;generator&quot;: &quot;tools/build_site_charts.py&quot;, &quot;chart&quot;: &quot;delta_accuracy_ci95&quot;, &quot;input_sha256&quot;: &quot;395f67ca9e3c8433237ea323c28fd2835ddfb6545f0cb461a2235f12b10ca8bb&quot;, &quot;sources&quot;: [{&quot;path&quot;: &quot;results/runs/w3-generator-comparison/comparison.json&quot;, &quot;sha256&quot;: &quot;5fc8dab10bb68a0c73d550ea6ea27bb5d5843578d66987492ee05f0735eb5695&quot;}, {&quot;path&quot;: &quot;results/runs/w4-e4-comparison/comparison.json&quot;, &quot;sha256&quot;: &quot;566a4c634cf1d9a2719490eeade0039f3ff735e7489bfb11b8222608536c7838&quot;}, {&quot;path&quot;: &quot;results/runs/e0-buffalo_l-heldout/metrics.json&quot;, &quot;sha256&quot;: &quot;a7fb2bef44c37f1ecee740e1ddeb5d1b02434a0717058477f497cd7b9d08e12b&quot;}, {&quot;path&quot;: &quot;results/runs/e0-buffalo_l-lfw/metrics.json&quot;, &quot;sha256&quot;: &quot;7d1fc48c9eff6ba9e76366c000a72edef3a273a9a4a451cf3219a3abab27f60b&quot;}, {&quot;path&quot;: &quot;results/runs/e1-real-only-seed0/metrics.json&quot;, &quot;sha256&quot;: &quot;e182fac66f46822ad224654c6b6da77effd78a554fbd9298b758b738a7984a13&quot;}, {&quot;path&quot;: &quot;results/runs/e1-real-only-seed1/metrics.json&quot;, &quot;sha256&quot;: &quot;7a6347e43184ed087d793a563592ffc825502985d503a348368e3bbf2e55945b&quot;}, {&quot;path&quot;: &quot;results/runs/e1-real-only-seed2/metrics.json&quot;, &quot;sha256&quot;: &quot;41db6118201848acc22f11efb0d50e953970547cefc9a51cb73f7dca4adfca41&quot;}, {&quot;path&quot;: &quot;results/runs/e4-highquality-synth-seed0/metrics.json&quot;, &quot;sha256&quot;: &quot;f652eef443bb414b1151af3eee52f1c35b7dd74c8e3745f812fb014ea4120fbd&quot;}, {&quot;path&quot;: &quot;results/runs/e4-real-plus-synth-seed0/metrics.json&quot;, &quot;sha256&quot;: &quot;d22740ee0337a6f9c3d5fb49d48858249419fdfcfe53c43519fd95f2c0434bfe&quot;}, {&quot;path&quot;: &quot;results/runs/e4-real-plus-synth-seed1/metrics.json&quot;, &quot;sha256&quot;: &quot;467e11fac7ada0f8a70712d00853ea49bfda072d1110fa2bf9c4b94493343e12&quot;}, {&quot;path&quot;: &quot;results/runs/e4-real-plus-synth-seed2/metrics.json&quot;, &quot;sha256&quot;: &quot;6599e6ecbb5965e0b0a10b5a37e5d92830f99700d3fdb61240e024230ce14da1&quot;}], &quot;rows&quot;: [{&quot;protocol&quot;: &quot;official&quot;, &quot;delta&quot;: 0.008635, &quot;ci95_low&quot;: 0.001838991161098852, &quot;ci95_high&quot;: 0.01543100883890115, &quot;p_two_sided&quot;: 0.02469185179259446, &quot;significant_at_0_05&quot;: true, &quot;critical_t_two_sided_0_05&quot;: 2.826958751622774, &quot;t&quot;: 3.5927, &quot;df&quot;: 3.826, &quot;method&quot;: &quot;Welch; p=2*t.sf(abs(t),df); CI=delta +/- t.ppf(0.975,df)*se&quot;, &quot;source&quot;: &quot;results/runs/w4-e4-comparison/comparison.json#/tests/official/welch_accuracy&quot;, &quot;rounding_note&quot;: &quot;Derived from the rounded frozen t, df, se and delta; p and CI are approximate.&quot;}, {&quot;protocol&quot;: &quot;filtered&quot;, &quot;delta&quot;: 0.009268, &quot;ci95_low&quot;: 0.001293845905579986, &quot;ci95_high&quot;: 0.017242154094420016, &quot;p_two_sided&quot;: 0.03275341138868549, &quot;significant_at_0_05&quot;: true, &quot;critical_t_two_sided_0_05&quot;: 2.882919050766455, &quot;t&quot;: 3.3503, &quot;df&quot;: 3.655, &quot;method&quot;: &quot;Welch; p=2*t.sf(abs(t),df); CI=delta +/- t.ppf(0.975,df)*se&quot;, &quot;source&quot;: &quot;results/runs/w4-e4-comparison/comparison.json#/tests/filtered/welch_accuracy&quot;, &quot;rounding_note&quot;: &quot;Derived from the rounded frozen t, df, se and delta; p and CI are approximate.&quot;}, {&quot;protocol&quot;: &quot;heldout&quot;, &quot;delta&quot;: 0.008235, &quot;ci95_low&quot;: -0.00030560462285500294, &quot;ci95_high&quot;: 0.016775604622855003, &quot;p_two_sided&quot;: 0.05360959600974628, &quot;significant_at_0_05&quot;: false, &quot;critical_t_two_sided_0_05&quot;: 4.129886181264508, &quot;t&quot;: 3.9819, &quot;df&quot;: 2.09, &quot;method&quot;: &quot;Welch; p=2*t.sf(abs(t),df); CI=delta +/- t.ppf(0.975,df)*se&quot;, &quot;source&quot;: &quot;results/runs/w4-e4-comparison/comparison.json#/tests/heldout/welch_accuracy&quot;, &quot;rounding_note&quot;: &quot;Derived from the rounded frozen t, df, se and delta; p and CI are approximate.&quot;}], &quot;uncertainty&quot;: &quot;95% Welch CI using each test&#x27;s df; rounded source statistics&quot;}</metadata>
+<text x="30.00" y="42.00" font-size="25" text-anchor="start" font-weight="700" style="fill:#172c40">ΔAccuracy：提升是否跨过零？</text>
+<text x="30.00" y="73.00" font-size="15" text-anchor="start" font-weight="400" style="fill:#637588">圆点：E4a − E1；横线：跨种子 Welch 95% 置信区间；虚线：零效应。</text>
+<line x1="265.00" y1="122.00" x2="265.00" y2="388.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="265.00" y="413.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">-0.002</text>
+<line x1="362.00" y1="122.00" x2="362.00" y2="388.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="362.00" y="413.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">+0.002</text>
+<line x1="459.00" y1="122.00" x2="459.00" y2="388.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="459.00" y="413.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">+0.006</text>
+<line x1="556.00" y1="122.00" x2="556.00" y2="388.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="556.00" y="413.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">+0.011</text>
+<line x1="653.00" y1="122.00" x2="653.00" y2="388.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="653.00" y="413.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">+0.015</text>
+<line x1="750.00" y1="122.00" x2="750.00" y2="388.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="750.00" y="413.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">+0.019</text>
+<line x1="265.00" y1="388.00" x2="750.00" y2="388.00" stroke="#172c40" stroke-width="1"/>
+<line x1="318.75" y1="122.00" x2="318.75" y2="388.00" stroke="#172c40" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="30.00" y="169.00" font-size="14" text-anchor="start" font-weight="600" style="fill:#172c40">Official 官方对子</text>
+<line x1="359.74" y1="164.00" x2="662.70" y2="164.00" stroke="#bd5126" stroke-width="3"/>
+<line x1="359.74" y1="158.00" x2="359.74" y2="170.00" stroke="#bd5126" stroke-width="2"/>
+<line x1="662.70" y1="158.00" x2="662.70" y2="170.00" stroke="#bd5126" stroke-width="2"/>
+<circle cx="511.22" cy="164.00" r="6" fill="#bd5126"/>
+<text x="1025.00" y="153.00" font-size="14" text-anchor="end" font-weight="400" style="fill:#172c40">Δ +0.0086   p=0.024692</text>
+<text x="1025.00" y="176.00" font-size="14" text-anchor="end" font-weight="400" style="fill:#637588">[+0.0018, +0.0154]</text>
+<text x="1025.00" y="197.00" font-size="12" text-anchor="end" font-weight="400" style="fill:#bd5126">双侧 p &lt; 0.05 · df=3.826</text>
+<text x="30.00" y="256.00" font-size="14" text-anchor="start" font-weight="600" style="fill:#172c40">Filtered 剔除训练身份</text>
+<line x1="347.59" y1="251.00" x2="703.06" y2="251.00" stroke="#bd5126" stroke-width="3"/>
+<line x1="347.59" y1="245.00" x2="347.59" y2="257.00" stroke="#bd5126" stroke-width="2"/>
+<line x1="703.06" y1="245.00" x2="703.06" y2="257.00" stroke="#bd5126" stroke-width="2"/>
+<circle cx="525.33" cy="251.00" r="6" fill="#bd5126"/>
+<text x="1025.00" y="240.00" font-size="14" text-anchor="end" font-weight="400" style="fill:#172c40">Δ +0.0093   p=0.032753</text>
+<text x="1025.00" y="263.00" font-size="14" text-anchor="end" font-weight="400" style="fill:#637588">[+0.0013, +0.0172]</text>
+<text x="1025.00" y="284.00" font-size="12" text-anchor="end" font-weight="400" style="fill:#bd5126">双侧 p &lt; 0.05 · df=3.655</text>
+<text x="30.00" y="343.00" font-size="14" text-anchor="start" font-weight="600" style="fill:#172c40">Held-out 自定义协议</text>
+<line x1="311.94" y1="338.00" x2="692.67" y2="338.00" stroke="#326da8" stroke-width="3"/>
+<line x1="311.94" y1="332.00" x2="311.94" y2="344.00" stroke="#326da8" stroke-width="2"/>
+<line x1="692.67" y1="332.00" x2="692.67" y2="344.00" stroke="#326da8" stroke-width="2"/>
+<circle cx="502.30" cy="338.00" r="6" fill="#326da8"/>
+<text x="1025.00" y="327.00" font-size="14" text-anchor="end" font-weight="400" style="fill:#172c40">Δ +0.0082   p=0.053610</text>
+<text x="1025.00" y="350.00" font-size="14" text-anchor="end" font-weight="400" style="fill:#637588">[-0.0003, +0.0168]</text>
+<text x="1025.00" y="371.00" font-size="12" text-anchor="end" font-weight="400" style="fill:#326da8">双侧未达显著 · df=2.090</text>
+<text x="30.00" y="449.00" font-size="14" text-anchor="start" font-weight="400" style="fill:#637588">此区间描述跨训练种子的均值差，不是单个种子内部的配对 bootstrap 区间。</text>
+<text x="30.00" y="480.00" font-size="14" text-anchor="start" font-weight="400" style="fill:#637588">按每个检验自身的自由度计算；p 值与区间使用冻结文件中已舍入的统计量，因而为近似值。</text>
+<text x="30.00" y="511.00" font-size="14" text-anchor="start" font-weight="400" style="fill:#637588">未达显著表示现有证据不足以排除零效应；不能据此断言合成数据完全没有作用。</text>
+</svg>

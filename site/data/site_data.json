@@ -1,0 +1,1419 @@
+{
+  "schema_version": 1,
+  "generation": {
+    "experiment": "W3 生成器质量对照",
+    "scorer": "filter_synth.py (buffalo_l, det 320)",
+    "protocol": "4 个身份 × 3 个 seed，三组使用相同身份与相同种子（配对比较）",
+    "reference_points": {
+      "same_person_real_photos": 0.745,
+      "different_people_below": 0.25,
+      "same_person_threshold": 0.4
+    },
+    "arms": [
+      {
+        "key": "base-faceid",
+        "description": "IP-Adapter-FaceID (base, ID 一路)",
+        "n_generated": 12,
+        "n_scored": 11,
+        "id_sim_mean": 0.3891,
+        "id_sim_median": 0.3685,
+        "id_sim_min": 0.2035,
+        "id_sim_max": 0.5653,
+        "id_sim_stdev": 0.1121,
+        "n_above_0.4": 5,
+        "n_scored_list": 11,
+        "per_identity": {
+          "Abdullah_Gul": {
+            "n": 3,
+            "mean": 0.3458,
+            "min": 0.2035,
+            "max": 0.4329
+          },
+          "Alejandro_Toledo": {
+            "n": 3,
+            "mean": 0.3245,
+            "min": 0.2952,
+            "max": 0.3685
+          },
+          "Alvaro_Uribe": {
+            "n": 3,
+            "mean": 0.3811,
+            "min": 0.2745,
+            "max": 0.5005
+          },
+          "Amelie_Mauresmo": {
+            "n": 2,
+            "mean": 0.5628,
+            "min": 0.5603,
+            "max": 0.5653
+          }
+        }
+      },
+      {
+        "key": "plusv2",
+        "description": "IP-Adapter-FaceID-plusv2 (ID + CLIP 两路, shortcut=True)",
+        "n_generated": 12,
+        "n_scored": 12,
+        "id_sim_mean": 0.5138,
+        "id_sim_median": 0.5245,
+        "id_sim_min": 0.432,
+        "id_sim_max": 0.5817,
+        "id_sim_stdev": 0.0496,
+        "n_above_0.4": 12,
+        "n_scored_list": 12,
+        "per_identity": {
+          "Abdullah_Gul": {
+            "n": 3,
+            "mean": 0.5479,
+            "min": 0.5405,
+            "max": 0.5583
+          },
+          "Alejandro_Toledo": {
+            "n": 3,
+            "mean": 0.4753,
+            "min": 0.432,
+            "max": 0.5084
+          },
+          "Alvaro_Uribe": {
+            "n": 3,
+            "mean": 0.4618,
+            "min": 0.4512,
+            "max": 0.4709
+          },
+          "Amelie_Mauresmo": {
+            "n": 3,
+            "mean": 0.5703,
+            "min": 0.5518,
+            "max": 0.5817
+          }
+        }
+      },
+      {
+        "key": "plusv2-realvis",
+        "description": "plusv2 + Realistic Vision V6 底模",
+        "n_generated": 12,
+        "n_scored": 12,
+        "id_sim_mean": 0.3999,
+        "id_sim_median": 0.3987,
+        "id_sim_min": 0.2836,
+        "id_sim_max": 0.526,
+        "id_sim_stdev": 0.0841,
+        "n_above_0.4": 5,
+        "n_scored_list": 12,
+        "per_identity": {
+          "Abdullah_Gul": {
+            "n": 3,
+            "mean": 0.3765,
+            "min": 0.2836,
+            "max": 0.4416
+          },
+          "Alejandro_Toledo": {
+            "n": 3,
+            "mean": 0.3323,
+            "min": 0.2908,
+            "max": 0.3997
+          },
+          "Alvaro_Uribe": {
+            "n": 3,
+            "mean": 0.3695,
+            "min": 0.3358,
+            "max": 0.3977
+          },
+          "Amelie_Mauresmo": {
+            "n": 3,
+            "mean": 0.5213,
+            "min": 0.513,
+            "max": 0.526
+          }
+        }
+      }
+    ],
+    "conclusion": "plusv2 均值 +0.5138、最小值 +0.4320，12/12 张越过 0.4；base FaceID 均值 +0.3891、最小值 +0.2035，仅 5/11 越过。plusv2 在均值与一致性两方面都更好，对训练数据而言“最差样本的质量”尤其关键。Realistic Vision 底模在两种适配器下都更差，确认不兼容。",
+    "tuning_round": {
+      "protocol": "在 plusv2 官方配方基础上，同一批 4 身份 × 3 seed 逐项微调（配对比较）",
+      "baseline_plusv2_official": {
+        "id_sim_mean": 0.5138,
+        "id_sim_min": 0.432,
+        "stdev": 0.0496
+      },
+      "arms": [
+        {
+          "key": "plusv2-meanref",
+          "description": "plusv2 + 多参考平均嵌入（**最终采用**）",
+          "n_scored": 12,
+          "id_sim_mean": 0.6084,
+          "id_sim_median": 0.6057,
+          "id_sim_min": 0.5273,
+          "id_sim_max": 0.7045,
+          "id_sim_stdev": 0.053,
+          "n_above_0.4": 12,
+          "n_scored_list": 12
+        },
+        {
+          "key": "plusv2-scale1.2",
+          "description": "plusv2 + IP scale 1.2",
+          "n_scored": 12,
+          "id_sim_mean": 0.5223,
+          "id_sim_median": 0.5239,
+          "id_sim_min": 0.4248,
+          "id_sim_max": 0.5988,
+          "id_sim_stdev": 0.0514,
+          "n_above_0.4": 12,
+          "n_scored_list": 12
+        },
+        {
+          "key": "plusv2-guidance5",
+          "description": "plusv2 + guidance 5.0",
+          "n_scored": 12,
+          "id_sim_mean": 0.5095,
+          "id_sim_median": 0.5178,
+          "id_sim_min": 0.3947,
+          "id_sim_max": 0.6036,
+          "id_sim_stdev": 0.0719,
+          "n_above_0.4": 10,
+          "n_scored_list": 12
+        }
+      ],
+      "winner": "plusv2-meanref",
+      "conclusion": "多参考平均嵌入把均值从 0.5138 提到 0.6084、最差样本从 0.4320 提到 0.5273，且 12/12 张全部远超 0.4 门槛，故定为最终配方（已设为 generate_plusv2.py 默认）。提高 IP scale 到 1.2 或降低 guidance 到 5.0 都没有帮助。"
+    },
+    "final_recipe": {
+      "adapter": "IP-Adapter-FaceID-plusv2 (ip-adapter-faceid-plusv2_sd15.bin)",
+      "shortcut": true,
+      "s_scale": 1.0,
+      "clip_layer": -2,
+      "negative_clip": "encoder output for a zero image (official), not a zero tensor",
+      "clip_input": "face_align.norm_crop(image, kps, image_size=224)",
+      "id_model": "buffalo_l (normed_embedding)",
+      "ref_mode": "mean (multi-reference)",
+      "base": "sd15 (original)",
+      "vae": "sd-vae-ft-mse",
+      "scheduler": "DDIM (official params)",
+      "steps": 30,
+      "guidance": 7.5,
+      "ip_scale": 1.0,
+      "id_sim_mean": 0.6084,
+      "id_sim_min": 0.5273,
+      "reference": {
+        "same_person_real_photos": 0.745,
+        "base_faceid": 0.3891
+      }
+    }
+  },
+  "recognition": {
+    "far": 0.001,
+    "protocol": "LFW 10-fold",
+    "n_seeds": 3,
+    "arms": [
+      {
+        "name": "E1",
+        "label": "E1 纯真实",
+        "train_set": "real 3590",
+        "seeds": [
+          {
+            "exp_id": "e1-real-only-seed0",
+            "best_train_acc": 1.0,
+            "weight_ratio": 1.409,
+            "official": {
+              "accuracy": 0.883336,
+              "tar": 0.423888
+            },
+            "filtered": {
+              "accuracy": 0.875248,
+              "tar": 0.34375
+            },
+            "heldout": {
+              "accuracy": 0.871487,
+              "tar": 0.330777
+            }
+          },
+          {
+            "exp_id": "e1-real-only-seed1",
+            "best_train_acc": 1.0,
+            "weight_ratio": 1.448,
+            "official": {
+              "accuracy": 0.882835,
+              "tar": 0.422215
+            },
+            "filtered": {
+              "accuracy": 0.874526,
+              "tar": 0.341845
+            },
+            "heldout": {
+              "accuracy": 0.871222,
+              "tar": 0.30698
+            }
+          },
+          {
+            "exp_id": "e1-real-only-seed2",
+            "best_train_acc": 0.9997214484679666,
+            "weight_ratio": 1.406,
+            "official": {
+              "accuracy": 0.877486,
+              "tar": 0.416193
+            },
+            "filtered": {
+              "accuracy": 0.868207,
+              "tar": 0.334985
+            },
+            "heldout": {
+              "accuracy": 0.865223,
+              "tar": 0.294641
+            }
+          }
+        ],
+        "protocols": {
+          "official": {
+            "per_seed_accuracy": [
+              0.883336,
+              0.882835,
+              0.877486
+            ],
+            "per_seed_tar": [
+              0.423888,
+              0.422215,
+              0.416193
+            ],
+            "accuracy_mean": 0.881219,
+            "accuracy_std": 0.003243,
+            "tar_mean": 0.420765,
+            "tar_std": 0.004047
+          },
+          "filtered": {
+            "per_seed_accuracy": [
+              0.875248,
+              0.874526,
+              0.868207
+            ],
+            "per_seed_tar": [
+              0.34375,
+              0.341845,
+              0.334985
+            ],
+            "accuracy_mean": 0.87266,
+            "accuracy_std": 0.003874,
+            "tar_mean": 0.340193,
+            "tar_std": 0.00461
+          },
+          "heldout": {
+            "per_seed_accuracy": [
+              0.871487,
+              0.871222,
+              0.865223
+            ],
+            "per_seed_tar": [
+              0.330777,
+              0.30698,
+              0.294641
+            ],
+            "accuracy_mean": 0.869311,
+            "accuracy_std": 0.003543,
+            "tar_mean": 0.310799,
+            "tar_std": 0.018368
+          }
+        }
+      },
+      {
+        "name": "E4a",
+        "label": "E4a 真实+合成(17.4%)",
+        "train_set": "real 3590 + synth 755",
+        "seeds": [
+          {
+            "exp_id": "e4-real-plus-synth-seed0",
+            "best_train_acc": 1.0,
+            "weight_ratio": 1.375,
+            "official": {
+              "accuracy": 0.892863,
+              "tar": 0.420877
+            },
+            "filtered": {
+              "accuracy": 0.885178,
+              "tar": 0.34032
+            },
+            "heldout": {
+              "accuracy": 0.877046,
+              "tar": 0.318879
+            }
+          },
+          {
+            "exp_id": "e4-real-plus-synth-seed1",
+            "best_train_acc": 1.0,
+            "weight_ratio": 1.371,
+            "official": {
+              "accuracy": 0.888517,
+              "tar": 0.458682
+            },
+            "filtered": {
+              "accuracy": 0.880484,
+              "tar": 0.383384
+            },
+            "heldout": {
+              "accuracy": 0.877487,
+              "tar": 0.337652
+            }
+          },
+          {
+            "exp_id": "e4-real-plus-synth-seed2",
+            "best_train_acc": 1.0,
+            "weight_ratio": 1.378,
+            "official": {
+              "accuracy": 0.888183,
+              "tar": 0.484778
+            },
+            "filtered": {
+              "accuracy": 0.880123,
+              "tar": 0.41311
+            },
+            "heldout": {
+              "accuracy": 0.878105,
+              "tar": 0.33016
+            }
+          }
+        ],
+        "protocols": {
+          "official": {
+            "per_seed_accuracy": [
+              0.892863,
+              0.888517,
+              0.888183
+            ],
+            "per_seed_tar": [
+              0.420877,
+              0.458682,
+              0.484778
+            ],
+            "accuracy_mean": 0.889854,
+            "accuracy_std": 0.002611,
+            "tar_mean": 0.454779,
+            "tar_std": 0.032129
+          },
+          "filtered": {
+            "per_seed_accuracy": [
+              0.885178,
+              0.880484,
+              0.880123
+            ],
+            "per_seed_tar": [
+              0.34032,
+              0.383384,
+              0.41311
+            ],
+            "accuracy_mean": 0.881928,
+            "accuracy_std": 0.00282,
+            "tar_mean": 0.378938,
+            "tar_std": 0.036598
+          },
+          "heldout": {
+            "per_seed_accuracy": [
+              0.877046,
+              0.877487,
+              0.878105
+            ],
+            "per_seed_tar": [
+              0.318879,
+              0.337652,
+              0.33016
+            ],
+            "accuracy_mean": 0.877546,
+            "accuracy_std": 0.000532,
+            "tar_mean": 0.328897,
+            "tar_std": 0.00945
+          }
+        }
+      }
+    ],
+    "tests": {
+      "official": {
+        "welch_accuracy": {
+          "n_a": 3,
+          "n_b": 3,
+          "mean_a": 0.881219,
+          "mean_b": 0.889854,
+          "delta": 0.008635,
+          "se": 0.002404,
+          "t": 3.5927,
+          "df": 3.826
+        },
+        "welch_tar": {
+          "n_a": 3,
+          "n_b": 3,
+          "mean_a": 0.420765,
+          "mean_b": 0.454779,
+          "delta": 0.034014,
+          "se": 0.018696,
+          "t": 1.8193,
+          "df": 2.063
+        },
+        "paired_bootstrap_seed0": {
+          "n_boot": 2000,
+          "delta_mean": -0.018151,
+          "delta_std": 0.053153,
+          "delta_p05": -0.1118,
+          "delta_p95": 0.071748,
+          "frac_positive": 0.3305
+        },
+        "paired_ttest_folds_seed0": {
+          "n_folds": 10,
+          "mean_delta": 0.009515,
+          "std_delta": 0.011448,
+          "t": 2.6284,
+          "folds_won": 7
+        }
+      },
+      "filtered": {
+        "welch_accuracy": {
+          "n_a": 3,
+          "n_b": 3,
+          "mean_a": 0.87266,
+          "mean_b": 0.881928,
+          "delta": 0.009268,
+          "se": 0.002766,
+          "t": 3.3503,
+          "df": 3.655
+        },
+        "welch_tar": {
+          "n_a": 3,
+          "n_b": 3,
+          "mean_a": 0.340193,
+          "mean_b": 0.378938,
+          "delta": 0.038745,
+          "se": 0.021297,
+          "t": 1.8193,
+          "df": 2.063
+        },
+        "paired_bootstrap_seed0": {
+          "n_boot": 2000,
+          "delta_mean": -0.024615,
+          "delta_std": 0.063312,
+          "delta_p05": -0.134112,
+          "delta_p95": 0.087908,
+          "frac_positive": 0.3
+        },
+        "paired_ttest_folds_seed0": {
+          "n_folds": 10,
+          "mean_delta": 0.00992,
+          "std_delta": 0.012169,
+          "t": 2.5781,
+          "folds_won": 8
+        }
+      },
+      "heldout": {
+        "welch_accuracy": {
+          "n_a": 3,
+          "n_b": 3,
+          "mean_a": 0.869311,
+          "mean_b": 0.877546,
+          "delta": 0.008235,
+          "se": 0.002068,
+          "t": 3.9819,
+          "df": 2.09
+        },
+        "welch_tar": {
+          "n_a": 3,
+          "n_b": 3,
+          "mean_a": 0.310799,
+          "mean_b": 0.328897,
+          "delta": 0.018098,
+          "se": 0.011926,
+          "t": 1.5175,
+          "df": 2.989
+        },
+        "paired_bootstrap_seed0": {
+          "n_boot": 2000,
+          "delta_mean": -0.012024,
+          "delta_std": 0.009167,
+          "delta_p05": -0.0277,
+          "delta_p95": 0.002481,
+          "frac_positive": 0.086
+        }
+      }
+    },
+    "critical_values_n3": {
+      "one_sided_p05": 2.353,
+      "two_sided_p05": 3.182
+    },
+    "conclusion": "三个种子、两种协议方向完全一致，但**两个指标的统计强度差别很大**：accuracy 从 0.8812 提升到 0.8899（official，filtered 0.8727->0.8819），种子间标准差只有 0.002~0.004，Welch t=+3.35~+3.59（df≈3.8），超过 n=3 时双侧 p<0.05 的临界值 3.18 —— **显著**。TAR@FAR=1e-3 的点估计提升 +0.034~+0.039（约 +8~11%），但 t 只有 1.82，**未达显著**：E4a 三个种子分别给出 0.4209/0.4587/0.4848，其中 seed0 与基线持平，种子间标准差 0.032 是 E1（0.004）的 8 倍。因此**单次运行报出的 TAR 提升会严重误导** —— 本项目最初基于单次运行得到过 '+35%'，而多种子下真实效应约为 +8%，且不显著。结论：合成数据能稳定提升 LFW accuracy（显著），对 TAR@FAR=1e-3 有正向趋势但需要更多种子或更大的评测集才能判定。"
+  },
+  "derived_tests": {
+    "official": {
+      "accuracy": {
+        "delta": 0.008635,
+        "ci95_low": 0.001838991161098852,
+        "ci95_high": 0.01543100883890115,
+        "p_two_sided": 0.02469185179259446,
+        "significant_at_0_05": true,
+        "critical_t_two_sided_0_05": 2.826958751622774,
+        "t": 3.5927,
+        "df": 3.826,
+        "method": "Welch; p=2*t.sf(abs(t),df); CI=delta +/- t.ppf(0.975,df)*se",
+        "source": "results/runs/w4-e4-comparison/comparison.json#/tests/official/welch_accuracy",
+        "rounding_note": "Derived from the rounded frozen t, df, se and delta; p and CI are approximate."
+      },
+      "tar": {
+        "delta": 0.034014,
+        "ci95_low": -0.044119556361163506,
+        "ci95_high": 0.11214755636116351,
+        "p_two_sided": 0.20660910700647833,
+        "significant_at_0_05": false,
+        "critical_t_two_sided_0_05": 4.17915898380207,
+        "t": 1.8193,
+        "df": 2.063,
+        "method": "Welch; p=2*t.sf(abs(t),df); CI=delta +/- t.ppf(0.975,df)*se",
+        "source": "results/runs/w4-e4-comparison/comparison.json#/tests/official/welch_tar",
+        "rounding_note": "Derived from the rounded frozen t, df, se and delta; p and CI are approximate."
+      }
+    },
+    "filtered": {
+      "accuracy": {
+        "delta": 0.009268,
+        "ci95_low": 0.001293845905579986,
+        "ci95_high": 0.017242154094420016,
+        "p_two_sided": 0.03275341138868549,
+        "significant_at_0_05": true,
+        "critical_t_two_sided_0_05": 2.882919050766455,
+        "t": 3.3503,
+        "df": 3.655,
+        "method": "Welch; p=2*t.sf(abs(t),df); CI=delta +/- t.ppf(0.975,df)*se",
+        "source": "results/runs/w4-e4-comparison/comparison.json#/tests/filtered/welch_accuracy",
+        "rounding_note": "Derived from the rounded frozen t, df, se and delta; p and CI are approximate."
+      },
+      "tar": {
+        "delta": 0.038745,
+        "ci95_low": -0.05025854887803269,
+        "ci95_high": 0.1277485488780327,
+        "p_two_sided": 0.20660910700647833,
+        "significant_at_0_05": false,
+        "critical_t_two_sided_0_05": 4.17915898380207,
+        "t": 1.8193,
+        "df": 2.063,
+        "method": "Welch; p=2*t.sf(abs(t),df); CI=delta +/- t.ppf(0.975,df)*se",
+        "source": "results/runs/w4-e4-comparison/comparison.json#/tests/filtered/welch_tar",
+        "rounding_note": "Derived from the rounded frozen t, df, se and delta; p and CI are approximate."
+      }
+    },
+    "heldout": {
+      "accuracy": {
+        "delta": 0.008235,
+        "ci95_low": -0.00030560462285500294,
+        "ci95_high": 0.016775604622855003,
+        "p_two_sided": 0.05360959600974628,
+        "significant_at_0_05": false,
+        "critical_t_two_sided_0_05": 4.129886181264508,
+        "t": 3.9819,
+        "df": 2.09,
+        "method": "Welch; p=2*t.sf(abs(t),df); CI=delta +/- t.ppf(0.975,df)*se",
+        "source": "results/runs/w4-e4-comparison/comparison.json#/tests/heldout/welch_accuracy",
+        "rounding_note": "Derived from the rounded frozen t, df, se and delta; p and CI are approximate."
+      },
+      "tar": {
+        "delta": 0.018098,
+        "ci95_low": -0.019934994943644865,
+        "ci95_high": 0.05613099494364486,
+        "p_two_sided": 0.22675043618891766,
+        "significant_at_0_05": false,
+        "critical_t_two_sided_0_05": 3.189082252527659,
+        "t": 1.5175,
+        "df": 2.989,
+        "method": "Welch; p=2*t.sf(abs(t),df); CI=delta +/- t.ppf(0.975,df)*se",
+        "source": "results/runs/w4-e4-comparison/comparison.json#/tests/heldout/welch_tar",
+        "rounding_note": "Derived from the rounded frozen t, df, se and delta; p and CI are approximate."
+      }
+    }
+  },
+  "training_counts": {
+    "real": 3590,
+    "synth": 755,
+    "total": 4345,
+    "synth_fraction": 0.17376294591484465,
+    "source": "recognition.arms[E4a].train_set (parsed)"
+  },
+  "runs": {
+    "e0-buffalo_l-heldout": {
+      "source": "results/runs/e0-buffalo_l-heldout/metrics.json",
+      "train_set": {
+        "real_identities": null,
+        "real_images": null,
+        "synth_images": null,
+        "total_images": null,
+        "synth_ratio": null
+      },
+      "model": {
+        "arch": null,
+        "loss": null,
+        "epochs": null,
+        "params_total": null
+      },
+      "protocols": {
+        "heldout": {
+          "accuracy": 0.999294,
+          "tar": 0.998942,
+          "tar_threshold": 0.207045,
+          "actual_far": 0.000997,
+          "accuracy_pairs_used": 22667,
+          "accuracy_pairs_missing": 96,
+          "tar_pairs_used": 124635,
+          "protocol": "heldout-large-sample (identities disjoint from training)",
+          "accuracy_note": "accuracy 在平衡子集上算（same 全用 + 等量 diff）；TAR@FAR 在全量集上算（只依赖 impostor 分布）",
+          "accuracy_source_key": "benchmarks.lfw_heldout.value",
+          "tar_source_key": "benchmarks.lfw_heldout.tar_at_far_full.1e-03.tar"
+        }
+      },
+      "protocol_detail": {},
+      "heldout_manifest": {
+        "n_pairs": 125191,
+        "n_same": 11381,
+        "n_diff": 113810,
+        "n_images_needed": 5569,
+        "n_aligned": 5558
+      }
+    },
+    "e0-buffalo_l-lfw": {
+      "source": "results/runs/e0-buffalo_l-lfw/metrics.json",
+      "train_set": {
+        "real_identities": null,
+        "real_images": null,
+        "synth_images": null,
+        "total_images": null,
+        "synth_ratio": null
+      },
+      "model": {
+        "arch": "buffalo_l (w600k_r50, ResNet50 + ArcFace)",
+        "loss": "arcface (pretrained)",
+        "epochs": 0,
+        "params_total": null
+      },
+      "protocols": {
+        "official": {
+          "accuracy": 0.998496,
+          "tar": 0.996989,
+          "tar_threshold": 0.22595,
+          "actual_far": 0.000668,
+          "accuracy_pairs_used": 5983,
+          "accuracy_pairs_missing": 17,
+          "tar_pairs_used": 5983,
+          "protocol": "official-6000pairs-10fold",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw.value",
+          "tar_source_key": "benchmarks.lfw.tar_at_far.1e-03.tar"
+        },
+        "filtered": {
+          "accuracy": 0.998375,
+          "tar": 0.99657,
+          "tar_threshold": 0.22595,
+          "actual_far": 0.000686,
+          "accuracy_pairs_used": 5539,
+          "accuracy_pairs_missing": 14,
+          "tar_pairs_used": 5539,
+          "protocol": "official-excluding-train-identities(min_images=15)",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw_filtered.value",
+          "tar_source_key": "benchmarks.lfw_filtered.tar_at_far.1e-03.tar"
+        }
+      },
+      "protocol_detail": {
+        "official": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281
+        },
+        "filtered": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281,
+          "filtered": true,
+          "num_pairs_kept": 5553,
+          "num_same_kept": 2633,
+          "num_diff_kept": 2920,
+          "num_pairs_removed": 447,
+          "num_identities_kept": 4161
+        }
+      },
+      "heldout_manifest": {
+        "n_pairs": null,
+        "n_same": null,
+        "n_diff": null,
+        "n_images_needed": null,
+        "n_aligned": null
+      }
+    },
+    "e1-real-only-seed0": {
+      "source": "results/runs/e1-real-only-seed0/metrics.json",
+      "train_set": {
+        "real_identities": 96,
+        "real_images": 3590,
+        "synth_images": 0,
+        "total_images": 3590,
+        "synth_ratio": 0.0
+      },
+      "model": {
+        "arch": "iresnet18",
+        "loss": "arcface (self-trained)",
+        "epochs": 26,
+        "params_total": 62556544
+      },
+      "protocols": {
+        "official": {
+          "accuracy": 0.883336,
+          "tar": 0.423888,
+          "tar_threshold": 0.495281,
+          "actual_far": 0.000668,
+          "accuracy_pairs_used": 5983,
+          "accuracy_pairs_missing": 17,
+          "tar_pairs_used": 5983,
+          "protocol": "official-6000pairs-10fold",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw.value",
+          "tar_source_key": "benchmarks.lfw.tar_at_far.1e-03.tar"
+        },
+        "filtered": {
+          "accuracy": 0.875248,
+          "tar": 0.34375,
+          "tar_threshold": 0.495281,
+          "actual_far": 0.000686,
+          "accuracy_pairs_used": 5539,
+          "accuracy_pairs_missing": 14,
+          "tar_pairs_used": 5539,
+          "protocol": "official-excluding-train-identities(min_images=15)",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw_filtered.value",
+          "tar_source_key": "benchmarks.lfw_filtered.tar_at_far.1e-03.tar"
+        },
+        "heldout": {
+          "accuracy": 0.871487,
+          "tar": 0.330777,
+          "tar_threshold": 0.496267,
+          "actual_far": 0.000997,
+          "accuracy_pairs_used": 22667,
+          "accuracy_pairs_missing": 96,
+          "tar_pairs_used": 124635,
+          "protocol": "heldout-large-sample (identities disjoint from training)",
+          "accuracy_note": "accuracy 在平衡子集上算（same 全用 + 等量 diff）；TAR@FAR 在全量集上算（只依赖 impostor 分布）",
+          "accuracy_source_key": "benchmarks.lfw_heldout.value",
+          "tar_source_key": "benchmarks.lfw_heldout.tar_at_far_full.1e-03.tar"
+        }
+      },
+      "protocol_detail": {
+        "official": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281
+        },
+        "filtered": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281,
+          "filtered": true,
+          "num_pairs_kept": 5553,
+          "num_same_kept": 2633,
+          "num_diff_kept": 2920,
+          "num_pairs_removed": 447,
+          "num_identities_kept": 4161
+        }
+      },
+      "heldout_manifest": {
+        "n_pairs": 125191,
+        "n_same": 11381,
+        "n_diff": 113810,
+        "n_images_needed": 5569,
+        "n_aligned": 5558
+      }
+    },
+    "e1-real-only-seed1": {
+      "source": "results/runs/e1-real-only-seed1/metrics.json",
+      "train_set": {
+        "real_identities": 96,
+        "real_images": 3590,
+        "synth_images": 0,
+        "total_images": 3590,
+        "synth_ratio": 0.0
+      },
+      "model": {
+        "arch": "iresnet18",
+        "loss": "arcface (self-trained)",
+        "epochs": 26,
+        "params_total": 62556544
+      },
+      "protocols": {
+        "official": {
+          "accuracy": 0.882835,
+          "tar": 0.422215,
+          "tar_threshold": 0.492447,
+          "actual_far": 0.000668,
+          "accuracy_pairs_used": 5983,
+          "accuracy_pairs_missing": 17,
+          "tar_pairs_used": 5983,
+          "protocol": "official-6000pairs-10fold",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw.value",
+          "tar_source_key": "benchmarks.lfw.tar_at_far.1e-03.tar"
+        },
+        "filtered": {
+          "accuracy": 0.874526,
+          "tar": 0.341845,
+          "tar_threshold": 0.492447,
+          "actual_far": 0.000686,
+          "accuracy_pairs_used": 5539,
+          "accuracy_pairs_missing": 14,
+          "tar_pairs_used": 5539,
+          "protocol": "official-excluding-train-identities(min_images=15)",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw_filtered.value",
+          "tar_source_key": "benchmarks.lfw_filtered.tar_at_far.1e-03.tar"
+        },
+        "heldout": {
+          "accuracy": 0.871222,
+          "tar": 0.30698,
+          "tar_threshold": 0.504417,
+          "actual_far": 0.000997,
+          "accuracy_pairs_used": 22667,
+          "accuracy_pairs_missing": 96,
+          "tar_pairs_used": 124635,
+          "protocol": "heldout-large-sample (identities disjoint from training)",
+          "accuracy_note": "accuracy 在平衡子集上算（same 全用 + 等量 diff）；TAR@FAR 在全量集上算（只依赖 impostor 分布）",
+          "accuracy_source_key": "benchmarks.lfw_heldout.value",
+          "tar_source_key": "benchmarks.lfw_heldout.tar_at_far_full.1e-03.tar"
+        }
+      },
+      "protocol_detail": {
+        "official": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281
+        },
+        "filtered": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281,
+          "filtered": true,
+          "num_pairs_kept": 5553,
+          "num_same_kept": 2633,
+          "num_diff_kept": 2920,
+          "num_pairs_removed": 447,
+          "num_identities_kept": 4161
+        }
+      },
+      "heldout_manifest": {
+        "n_pairs": 125191,
+        "n_same": 11381,
+        "n_diff": 113810,
+        "n_images_needed": 5569,
+        "n_aligned": 5558
+      }
+    },
+    "e1-real-only-seed2": {
+      "source": "results/runs/e1-real-only-seed2/metrics.json",
+      "train_set": {
+        "real_identities": 96,
+        "real_images": 3590,
+        "synth_images": 0,
+        "total_images": 3590,
+        "synth_ratio": 0.0
+      },
+      "model": {
+        "arch": "iresnet18",
+        "loss": "arcface (self-trained)",
+        "epochs": 25,
+        "params_total": 62556544
+      },
+      "protocols": {
+        "official": {
+          "accuracy": 0.877486,
+          "tar": 0.416193,
+          "tar_threshold": 0.482291,
+          "actual_far": 0.000668,
+          "accuracy_pairs_used": 5983,
+          "accuracy_pairs_missing": 17,
+          "tar_pairs_used": 5983,
+          "protocol": "official-6000pairs-10fold",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw.value",
+          "tar_source_key": "benchmarks.lfw.tar_at_far.1e-03.tar"
+        },
+        "filtered": {
+          "accuracy": 0.868207,
+          "tar": 0.334985,
+          "tar_threshold": 0.482291,
+          "actual_far": 0.000686,
+          "accuracy_pairs_used": 5539,
+          "accuracy_pairs_missing": 14,
+          "tar_pairs_used": 5539,
+          "protocol": "official-excluding-train-identities(min_images=15)",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw_filtered.value",
+          "tar_source_key": "benchmarks.lfw_filtered.tar_at_far.1e-03.tar"
+        },
+        "heldout": {
+          "accuracy": 0.865223,
+          "tar": 0.294641,
+          "tar_threshold": 0.500264,
+          "actual_far": 0.000997,
+          "accuracy_pairs_used": 22667,
+          "accuracy_pairs_missing": 96,
+          "tar_pairs_used": 124635,
+          "protocol": "heldout-large-sample (identities disjoint from training)",
+          "accuracy_note": "accuracy 在平衡子集上算（same 全用 + 等量 diff）；TAR@FAR 在全量集上算（只依赖 impostor 分布）",
+          "accuracy_source_key": "benchmarks.lfw_heldout.value",
+          "tar_source_key": "benchmarks.lfw_heldout.tar_at_far_full.1e-03.tar"
+        }
+      },
+      "protocol_detail": {
+        "official": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281
+        },
+        "filtered": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281,
+          "filtered": true,
+          "num_pairs_kept": 5553,
+          "num_same_kept": 2633,
+          "num_diff_kept": 2920,
+          "num_pairs_removed": 447,
+          "num_identities_kept": 4161
+        }
+      },
+      "heldout_manifest": {
+        "n_pairs": 125191,
+        "n_same": 11381,
+        "n_diff": 113810,
+        "n_images_needed": 5569,
+        "n_aligned": 5558
+      }
+    },
+    "e4-highquality-synth-seed0": {
+      "source": "results/runs/e4-highquality-synth-seed0/metrics.json",
+      "train_set": {
+        "real_identities": 96,
+        "real_images": 3590,
+        "synth_images": 448,
+        "total_images": 4038,
+        "synth_ratio": 0.1109
+      },
+      "model": {
+        "arch": "iresnet18",
+        "loss": "arcface (self-trained)",
+        "epochs": 30,
+        "params_total": 62556544
+      },
+      "protocols": {
+        "official": {
+          "accuracy": 0.887515,
+          "tar": 0.459686,
+          "tar_threshold": 0.507262,
+          "actual_far": 0.000668,
+          "accuracy_pairs_used": 5983,
+          "accuracy_pairs_missing": 17,
+          "tar_pairs_used": 5983,
+          "protocol": "official-6000pairs-10fold",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw.value",
+          "tar_source_key": "benchmarks.lfw.tar_at_far.1e-03.tar"
+        },
+        "filtered": {
+          "accuracy": 0.878859,
+          "tar": 0.384527,
+          "tar_threshold": 0.507262,
+          "actual_far": 0.000686,
+          "accuracy_pairs_used": 5539,
+          "accuracy_pairs_missing": 14,
+          "tar_pairs_used": 5539,
+          "protocol": "official-excluding-train-identities(min_images=15)",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw_filtered.value",
+          "tar_source_key": "benchmarks.lfw_filtered.tar_at_far.1e-03.tar"
+        }
+      },
+      "protocol_detail": {
+        "official": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281
+        },
+        "filtered": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281,
+          "filtered": true,
+          "num_pairs_kept": 5553,
+          "num_same_kept": 2633,
+          "num_diff_kept": 2920,
+          "num_pairs_removed": 447,
+          "num_identities_kept": 4161
+        }
+      },
+      "heldout_manifest": {
+        "n_pairs": null,
+        "n_same": null,
+        "n_diff": null,
+        "n_images_needed": null,
+        "n_aligned": null
+      }
+    },
+    "e4-real-plus-synth-seed0": {
+      "source": "results/runs/e4-real-plus-synth-seed0/metrics.json",
+      "train_set": {
+        "real_identities": 96,
+        "real_images": 3590,
+        "synth_images": 755,
+        "total_images": 4345,
+        "synth_ratio": 0.1738
+      },
+      "model": {
+        "arch": "iresnet18",
+        "loss": "arcface (self-trained)",
+        "epochs": 24,
+        "params_total": 62556544
+      },
+      "protocols": {
+        "official": {
+          "accuracy": 0.892863,
+          "tar": 0.420877,
+          "tar_threshold": 0.505656,
+          "actual_far": 0.000668,
+          "accuracy_pairs_used": 5983,
+          "accuracy_pairs_missing": 17,
+          "tar_pairs_used": 5983,
+          "protocol": "official-6000pairs-10fold",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw.value",
+          "tar_source_key": "benchmarks.lfw.tar_at_far.1e-03.tar"
+        },
+        "filtered": {
+          "accuracy": 0.885178,
+          "tar": 0.34032,
+          "tar_threshold": 0.505656,
+          "actual_far": 0.000686,
+          "accuracy_pairs_used": 5539,
+          "accuracy_pairs_missing": 14,
+          "tar_pairs_used": 5539,
+          "protocol": "official-excluding-train-identities(min_images=15)",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw_filtered.value",
+          "tar_source_key": "benchmarks.lfw_filtered.tar_at_far.1e-03.tar"
+        },
+        "heldout": {
+          "accuracy": 0.877046,
+          "tar": 0.318879,
+          "tar_threshold": 0.510783,
+          "actual_far": 0.000997,
+          "accuracy_pairs_used": 22667,
+          "accuracy_pairs_missing": 96,
+          "tar_pairs_used": 124635,
+          "protocol": "heldout-large-sample (identities disjoint from training)",
+          "accuracy_note": "accuracy 在平衡子集上算（same 全用 + 等量 diff）；TAR@FAR 在全量集上算（只依赖 impostor 分布）",
+          "accuracy_source_key": "benchmarks.lfw_heldout.value",
+          "tar_source_key": "benchmarks.lfw_heldout.tar_at_far_full.1e-03.tar"
+        }
+      },
+      "protocol_detail": {
+        "official": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281
+        },
+        "filtered": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281,
+          "filtered": true,
+          "num_pairs_kept": 5553,
+          "num_same_kept": 2633,
+          "num_diff_kept": 2920,
+          "num_pairs_removed": 447,
+          "num_identities_kept": 4161
+        }
+      },
+      "heldout_manifest": {
+        "n_pairs": 125191,
+        "n_same": 11381,
+        "n_diff": 113810,
+        "n_images_needed": 5569,
+        "n_aligned": 5558
+      }
+    },
+    "e4-real-plus-synth-seed1": {
+      "source": "results/runs/e4-real-plus-synth-seed1/metrics.json",
+      "train_set": {
+        "real_identities": 96,
+        "real_images": 3590,
+        "synth_images": 755,
+        "total_images": 4345,
+        "synth_ratio": 0.1738
+      },
+      "model": {
+        "arch": "iresnet18",
+        "loss": "arcface (self-trained)",
+        "epochs": 23,
+        "params_total": 62556544
+      },
+      "protocols": {
+        "official": {
+          "accuracy": 0.888517,
+          "tar": 0.458682,
+          "tar_threshold": 0.479793,
+          "actual_far": 0.000668,
+          "accuracy_pairs_used": 5983,
+          "accuracy_pairs_missing": 17,
+          "tar_pairs_used": 5983,
+          "protocol": "official-6000pairs-10fold",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw.value",
+          "tar_source_key": "benchmarks.lfw.tar_at_far.1e-03.tar"
+        },
+        "filtered": {
+          "accuracy": 0.880484,
+          "tar": 0.383384,
+          "tar_threshold": 0.479793,
+          "actual_far": 0.000686,
+          "accuracy_pairs_used": 5539,
+          "accuracy_pairs_missing": 14,
+          "tar_pairs_used": 5539,
+          "protocol": "official-excluding-train-identities(min_images=15)",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw_filtered.value",
+          "tar_source_key": "benchmarks.lfw_filtered.tar_at_far.1e-03.tar"
+        },
+        "heldout": {
+          "accuracy": 0.877487,
+          "tar": 0.337652,
+          "tar_threshold": 0.492916,
+          "actual_far": 0.000997,
+          "accuracy_pairs_used": 22667,
+          "accuracy_pairs_missing": 96,
+          "tar_pairs_used": 124635,
+          "protocol": "heldout-large-sample (identities disjoint from training)",
+          "accuracy_note": "accuracy 在平衡子集上算（same 全用 + 等量 diff）；TAR@FAR 在全量集上算（只依赖 impostor 分布）",
+          "accuracy_source_key": "benchmarks.lfw_heldout.value",
+          "tar_source_key": "benchmarks.lfw_heldout.tar_at_far_full.1e-03.tar"
+        }
+      },
+      "protocol_detail": {
+        "official": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281
+        },
+        "filtered": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281,
+          "filtered": true,
+          "num_pairs_kept": 5553,
+          "num_same_kept": 2633,
+          "num_diff_kept": 2920,
+          "num_pairs_removed": 447,
+          "num_identities_kept": 4161
+        }
+      },
+      "heldout_manifest": {
+        "n_pairs": 125191,
+        "n_same": 11381,
+        "n_diff": 113810,
+        "n_images_needed": 5569,
+        "n_aligned": 5558
+      }
+    },
+    "e4-real-plus-synth-seed2": {
+      "source": "results/runs/e4-real-plus-synth-seed2/metrics.json",
+      "train_set": {
+        "real_identities": 96,
+        "real_images": 3590,
+        "synth_images": 755,
+        "total_images": 4345,
+        "synth_ratio": 0.1738
+      },
+      "model": {
+        "arch": "iresnet18",
+        "loss": "arcface (self-trained)",
+        "epochs": 24,
+        "params_total": 62556544
+      },
+      "protocols": {
+        "official": {
+          "accuracy": 0.888183,
+          "tar": 0.484778,
+          "tar_threshold": 0.465214,
+          "actual_far": 0.000668,
+          "accuracy_pairs_used": 5983,
+          "accuracy_pairs_missing": 17,
+          "tar_pairs_used": 5983,
+          "protocol": "official-6000pairs-10fold",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw.value",
+          "tar_source_key": "benchmarks.lfw.tar_at_far.1e-03.tar"
+        },
+        "filtered": {
+          "accuracy": 0.880123,
+          "tar": 0.41311,
+          "tar_threshold": 0.465214,
+          "actual_far": 0.000686,
+          "accuracy_pairs_used": 5539,
+          "accuracy_pairs_missing": 14,
+          "tar_pairs_used": 5539,
+          "protocol": "official-excluding-train-identities(min_images=15)",
+          "accuracy_note": null,
+          "accuracy_source_key": "benchmarks.lfw_filtered.value",
+          "tar_source_key": "benchmarks.lfw_filtered.tar_at_far.1e-03.tar"
+        },
+        "heldout": {
+          "accuracy": 0.878105,
+          "tar": 0.33016,
+          "tar_threshold": 0.500628,
+          "actual_far": 0.000997,
+          "accuracy_pairs_used": 22667,
+          "accuracy_pairs_missing": 96,
+          "tar_pairs_used": 124635,
+          "protocol": "heldout-large-sample (identities disjoint from training)",
+          "accuracy_note": "accuracy 在平衡子集上算（same 全用 + 等量 diff）；TAR@FAR 在全量集上算（只依赖 impostor 分布）",
+          "accuracy_source_key": "benchmarks.lfw_heldout.value",
+          "tar_source_key": "benchmarks.lfw_heldout.tar_at_far_full.1e-03.tar"
+        }
+      },
+      "protocol_detail": {
+        "official": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281
+        },
+        "filtered": {
+          "dataset": "lfw",
+          "protocol": "official-6000pairs-10fold",
+          "num_pairs": 6000,
+          "num_same": 3000,
+          "num_diff": 3000,
+          "folds": 10,
+          "num_identities": 4281,
+          "filtered": true,
+          "num_pairs_kept": 5553,
+          "num_same_kept": 2633,
+          "num_diff_kept": 2920,
+          "num_pairs_removed": 447,
+          "num_identities_kept": 4161
+        }
+      },
+      "heldout_manifest": {
+        "n_pairs": 125191,
+        "n_same": 11381,
+        "n_diff": 113810,
+        "n_images_needed": 5569,
+        "n_aligned": 5558
+      }
+    }
+  },
+  "sources": [
+    {
+      "path": "results/runs/w3-generator-comparison/comparison.json",
+      "sha256": "5fc8dab10bb68a0c73d550ea6ea27bb5d5843578d66987492ee05f0735eb5695"
+    },
+    {
+      "path": "results/runs/w4-e4-comparison/comparison.json",
+      "sha256": "566a4c634cf1d9a2719490eeade0039f3ff735e7489bfb11b8222608536c7838"
+    },
+    {
+      "path": "results/runs/e0-buffalo_l-heldout/metrics.json",
+      "sha256": "a7fb2bef44c37f1ecee740e1ddeb5d1b02434a0717058477f497cd7b9d08e12b"
+    },
+    {
+      "path": "results/runs/e0-buffalo_l-lfw/metrics.json",
+      "sha256": "7d1fc48c9eff6ba9e76366c000a72edef3a273a9a4a451cf3219a3abab27f60b"
+    },
+    {
+      "path": "results/runs/e1-real-only-seed0/metrics.json",
+      "sha256": "e182fac66f46822ad224654c6b6da77effd78a554fbd9298b758b738a7984a13"
+    },
+    {
+      "path": "results/runs/e1-real-only-seed1/metrics.json",
+      "sha256": "7a6347e43184ed087d793a563592ffc825502985d503a348368e3bbf2e55945b"
+    },
+    {
+      "path": "results/runs/e1-real-only-seed2/metrics.json",
+      "sha256": "41db6118201848acc22f11efb0d50e953970547cefc9a51cb73f7dca4adfca41"
+    },
+    {
+      "path": "results/runs/e4-highquality-synth-seed0/metrics.json",
+      "sha256": "f652eef443bb414b1151af3eee52f1c35b7dd74c8e3745f812fb014ea4120fbd"
+    },
+    {
+      "path": "results/runs/e4-real-plus-synth-seed0/metrics.json",
+      "sha256": "d22740ee0337a6f9c3d5fb49d48858249419fdfcfe53c43519fd95f2c0434bfe"
+    },
+    {
+      "path": "results/runs/e4-real-plus-synth-seed1/metrics.json",
+      "sha256": "467e11fac7ada0f8a70712d00853ea49bfda072d1110fa2bf9c4b94493343e12"
+    },
+    {
+      "path": "results/runs/e4-real-plus-synth-seed2/metrics.json",
+      "sha256": "6599e6ecbb5965e0b0a10b5a37e5d92830f99700d3fdb61240e024230ce14da1"
+    }
+  ],
+  "warnings": [],
+  "display_notes": {
+    "official": "Official pair manifest contains training identities. Accuracy here is accuracy@best, not a literature-equivalent cross-validated LFW score.",
+    "heldout": "Custom held-out protocol; identities disjoint from training. Not the official LFW number. Accuracy uses a balanced subset; TAR uses full pairs.",
+    "uncertainty": "Across-seed standard deviation and confidence interval are different. Do not label SD as CI.",
+    "statistics": "Use each Welch test's df; critical_values_n3 is not a universal critical value. Derived p and CI do not overwrite frozen source results.",
+    "generation": "The recipe comparison's small sample and the screened training corpus have different populations; their id_sim means must not be conflated."
+  }
+}

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="550" viewBox="0 0 1080 550" role="img" aria-labelledby="title desc">
+<title id="title">生成器质量：更像本人，也更一致</title><desc id="desc">圆点与横线：均值 ± 样本标准差；方块：可评分图中的最小值。</desc>
+<style>text{font-family:"Microsoft YaHei","PingFang SC","Noto Sans CJK SC",Arial,sans-serif;fill:#172c40} .muted{fill:#637588}</style>
+<rect width="100%" height="100%" fill="#ffffff" rx="14"/>
+<metadata>{&quot;generator&quot;: &quot;tools/build_site_charts.py&quot;, &quot;chart&quot;: &quot;generator_quality&quot;, &quot;input_sha256&quot;: &quot;395f67ca9e3c8433237ea323c28fd2835ddfb6545f0cb461a2235f12b10ca8bb&quot;, &quot;sources&quot;: [{&quot;path&quot;: &quot;results/runs/w3-generator-comparison/comparison.json&quot;, &quot;sha256&quot;: &quot;5fc8dab10bb68a0c73d550ea6ea27bb5d5843578d66987492ee05f0735eb5695&quot;}, {&quot;path&quot;: &quot;results/runs/w4-e4-comparison/comparison.json&quot;, &quot;sha256&quot;: &quot;566a4c634cf1d9a2719490eeade0039f3ff735e7489bfb11b8222608536c7838&quot;}, {&quot;path&quot;: &quot;results/runs/e0-buffalo_l-heldout/metrics.json&quot;, &quot;sha256&quot;: &quot;a7fb2bef44c37f1ecee740e1ddeb5d1b02434a0717058477f497cd7b9d08e12b&quot;}, {&quot;path&quot;: &quot;results/runs/e0-buffalo_l-lfw/metrics.json&quot;, &quot;sha256&quot;: &quot;7d1fc48c9eff6ba9e76366c000a72edef3a273a9a4a451cf3219a3abab27f60b&quot;}, {&quot;path&quot;: &quot;results/runs/e1-real-only-seed0/metrics.json&quot;, &quot;sha256&quot;: &quot;e182fac66f46822ad224654c6b6da77effd78a554fbd9298b758b738a7984a13&quot;}, {&quot;path&quot;: &quot;results/runs/e1-real-only-seed1/metrics.json&quot;, &quot;sha256&quot;: &quot;7a6347e43184ed087d793a563592ffc825502985d503a348368e3bbf2e55945b&quot;}, {&quot;path&quot;: &quot;results/runs/e1-real-only-seed2/metrics.json&quot;, &quot;sha256&quot;: &quot;41db6118201848acc22f11efb0d50e953970547cefc9a51cb73f7dca4adfca41&quot;}, {&quot;path&quot;: &quot;results/runs/e4-highquality-synth-seed0/metrics.json&quot;, &quot;sha256&quot;: &quot;f652eef443bb414b1151af3eee52f1c35b7dd74c8e3745f812fb014ea4120fbd&quot;}, {&quot;path&quot;: &quot;results/runs/e4-real-plus-synth-seed0/metrics.json&quot;, &quot;sha256&quot;: &quot;d22740ee0337a6f9c3d5fb49d48858249419fdfcfe53c43519fd95f2c0434bfe&quot;}, {&quot;path&quot;: &quot;results/runs/e4-real-plus-synth-seed1/metrics.json&quot;, &quot;sha256&quot;: &quot;467e11fac7ada0f8a70712d00853ea49bfda072d1110fa2bf9c4b94493343e12&quot;}, {&quot;path&quot;: &quot;results/runs/e4-real-plus-synth-seed2/metrics.json&quot;, &quot;sha256&quot;: &quot;6599e6ecbb5965e0b0a10b5a37e5d92830f99700d3fdb61240e024230ce14da1&quot;}], &quot;rows&quot;: [{&quot;label&quot;: &quot;base FaceID&quot;, &quot;key&quot;: &quot;base-faceid&quot;, &quot;mean&quot;: 0.3891, &quot;sd&quot;: 0.1121, &quot;min&quot;: 0.2035, &quot;n_scored&quot;: 11}, {&quot;label&quot;: &quot;plusv2 官方配方&quot;, &quot;key&quot;: &quot;plusv2&quot;, &quot;mean&quot;: 0.5138, &quot;sd&quot;: 0.0496, &quot;min&quot;: 0.432, &quot;n_scored&quot;: 12}, {&quot;label&quot;: &quot;plusv2 多参考平均&quot;, &quot;key&quot;: &quot;plusv2-meanref&quot;, &quot;mean&quot;: 0.6084, &quot;sd&quot;: 0.053, &quot;min&quot;: 0.5273, &quot;n_scored&quot;: 12}, {&quot;label&quot;: &quot;plusv2 + Realistic Vision&quot;, &quot;key&quot;: &quot;plusv2-realvis&quot;, &quot;mean&quot;: 0.3999, &quot;sd&quot;: 0.0841, &quot;min&quot;: 0.2836, &quot;n_scored&quot;: 12}], &quot;references&quot;: {&quot;same_person_real_photos&quot;: 0.745, &quot;different_people_below&quot;: 0.25, &quot;same_person_threshold&quot;: 0.4}, &quot;uncertainty&quot;: &quot;sample SD, not CI&quot;}</metadata>
+<text x="30.00" y="42.00" font-size="25" text-anchor="start" font-weight="700" style="fill:#172c40">生成器质量：更像本人，也更一致</text>
+<text x="30.00" y="73.00" font-size="15" text-anchor="start" font-weight="400" style="fill:#637588">圆点与横线：均值 ± 样本标准差；方块：可评分图中的最小值。</text>
+<rect x="265.00" y="128.00" width="151.56" height="305.00" fill="#f4f7f9"/>
+<line x1="265.00" y1="128.00" x2="265.00" y2="433.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="265.00" y="458.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.000</text>
+<line x1="362.00" y1="128.00" x2="362.00" y2="433.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="362.00" y="458.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.160</text>
+<line x1="459.00" y1="128.00" x2="459.00" y2="433.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="459.00" y="458.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.320</text>
+<line x1="556.00" y1="128.00" x2="556.00" y2="433.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="556.00" y="458.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.480</text>
+<line x1="653.00" y1="128.00" x2="653.00" y2="433.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="653.00" y="458.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.640</text>
+<line x1="750.00" y1="128.00" x2="750.00" y2="433.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="750.00" y="458.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.800</text>
+<line x1="265.00" y1="433.00" x2="750.00" y2="433.00" stroke="#172c40" stroke-width="1"/>
+<line x1="265.00" y1="128.00" x2="265.00" y2="433.00" stroke="#172c40" stroke-width="1.5" stroke-dasharray="5 4"/>
+<line x1="716.66" y1="119.00" x2="716.66" y2="433.00" stroke="#326da8" stroke-width="1.3" stroke-dasharray="4 4"/>
+<text x="716.66" y="111.00" font-size="12" text-anchor="middle" font-weight="400" style="fill:#326da8">同人真实参考 0.745</text>
+<line x1="507.50" y1="119.00" x2="507.50" y2="433.00" stroke="#a77818" stroke-width="1.3" stroke-dasharray="4 4"/>
+<text x="507.50" y="111.00" font-size="12" text-anchor="middle" font-weight="400" style="fill:#a77818">经验门槛 0.400</text>
+<text x="30.00" y="167.00" font-size="15" text-anchor="start" font-weight="600" style="fill:#172c40">base FaceID</text>
+<line x1="432.93" y1="162.00" x2="568.85" y2="162.00" stroke="#326da8" stroke-width="3"/>
+<line x1="432.93" y1="156.00" x2="432.93" y2="168.00" stroke="#326da8" stroke-width="2"/>
+<line x1="568.85" y1="156.00" x2="568.85" y2="168.00" stroke="#326da8" stroke-width="2"/>
+<circle cx="500.89" cy="162.00" r="6" fill="#326da8"/>
+<rect x="384.37" y="174.00" width="8" height="8" fill="#a77818"/>
+<text x="1025.00" y="161.00" font-size="16" text-anchor="end" font-weight="400" style="fill:#172c40">0.3891 ± 0.1121</text>
+<text x="1025.00" y="185.00" font-size="13" text-anchor="end" font-weight="400" style="fill:#637588">最小 0.2035 · 可评分 11 张</text>
+<text x="30.00" y="242.00" font-size="15" text-anchor="start" font-weight="600" style="fill:#172c40">plusv2 官方配方</text>
+<line x1="546.42" y1="237.00" x2="606.56" y2="237.00" stroke="#326da8" stroke-width="3"/>
+<line x1="546.42" y1="231.00" x2="546.42" y2="243.00" stroke="#326da8" stroke-width="2"/>
+<line x1="606.56" y1="231.00" x2="606.56" y2="243.00" stroke="#326da8" stroke-width="2"/>
+<circle cx="576.49" cy="237.00" r="6" fill="#326da8"/>
+<rect x="522.90" y="249.00" width="8" height="8" fill="#a77818"/>
+<text x="1025.00" y="236.00" font-size="16" text-anchor="end" font-weight="400" style="fill:#172c40">0.5138 ± 0.0496</text>
+<text x="1025.00" y="260.00" font-size="13" text-anchor="end" font-weight="400" style="fill:#637588">最小 0.4320 · 可评分 12 张</text>
+<text x="30.00" y="317.00" font-size="15" text-anchor="start" font-weight="600" style="fill:#172c40">plusv2 多参考平均</text>
+<line x1="601.71" y1="312.00" x2="665.97" y2="312.00" stroke="#326da8" stroke-width="3"/>
+<line x1="601.71" y1="306.00" x2="601.71" y2="318.00" stroke="#326da8" stroke-width="2"/>
+<line x1="665.97" y1="306.00" x2="665.97" y2="318.00" stroke="#326da8" stroke-width="2"/>
+<circle cx="633.84" cy="312.00" r="6" fill="#326da8"/>
+<rect x="580.68" y="324.00" width="8" height="8" fill="#a77818"/>
+<text x="1025.00" y="311.00" font-size="16" text-anchor="end" font-weight="400" style="fill:#172c40">0.6084 ± 0.0530</text>
+<text x="1025.00" y="335.00" font-size="13" text-anchor="end" font-weight="400" style="fill:#637588">最小 0.5273 · 可评分 12 张</text>
+<text x="30.00" y="392.00" font-size="15" text-anchor="start" font-weight="600" style="fill:#172c40">plusv2 + Realistic Vision</text>
+<line x1="456.45" y1="387.00" x2="558.42" y2="387.00" stroke="#326da8" stroke-width="3"/>
+<line x1="456.45" y1="381.00" x2="456.45" y2="393.00" stroke="#326da8" stroke-width="2"/>
+<line x1="558.42" y1="381.00" x2="558.42" y2="393.00" stroke="#326da8" stroke-width="2"/>
+<circle cx="507.44" cy="387.00" r="6" fill="#326da8"/>
+<rect x="432.93" y="399.00" width="8" height="8" fill="#a77818"/>
+<text x="1025.00" y="386.00" font-size="16" text-anchor="end" font-weight="400" style="fill:#172c40">0.3999 ± 0.0841</text>
+<text x="1025.00" y="410.00" font-size="13" text-anchor="end" font-weight="400" style="fill:#637588">最小 0.2836 · 可评分 12 张</text>
+<text x="30.00" y="486.00" font-size="14" text-anchor="start" font-weight="400" style="fill:#637588">浅色区域：不同人参考 &lt; 0.250。这些参照来自本项目，并非通用身份判定阈值。</text>
+<text x="30.00" y="516.00" font-size="14" text-anchor="start" font-weight="400" style="fill:#637588">统计包含可评分样本；检测失败不等于零分。小样本配方对照与批量训练语料应分别报告。</text>
+</svg>

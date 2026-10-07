@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="610" viewBox="0 0 1080 610" role="img" aria-labelledby="title desc">
+<title id="title">TAR：低误接受率下，提升仍有不确定性</title><desc id="desc">每方案 3 个种子；横线为均值 ± 跨种子标准差，不是置信区间。 FAR = 0.001。</desc>
+<style>text{font-family:"Microsoft YaHei","PingFang SC","Noto Sans CJK SC",Arial,sans-serif;fill:#172c40} .muted{fill:#637588}</style>
+<rect width="100%" height="100%" fill="#ffffff" rx="14"/>
+<metadata>{&quot;generator&quot;: &quot;tools/build_site_charts.py&quot;, &quot;chart&quot;: &quot;tar_mean_sd&quot;, &quot;input_sha256&quot;: &quot;395f67ca9e3c8433237ea323c28fd2835ddfb6545f0cb461a2235f12b10ca8bb&quot;, &quot;sources&quot;: [{&quot;path&quot;: &quot;results/runs/w3-generator-comparison/comparison.json&quot;, &quot;sha256&quot;: &quot;5fc8dab10bb68a0c73d550ea6ea27bb5d5843578d66987492ee05f0735eb5695&quot;}, {&quot;path&quot;: &quot;results/runs/w4-e4-comparison/comparison.json&quot;, &quot;sha256&quot;: &quot;566a4c634cf1d9a2719490eeade0039f3ff735e7489bfb11b8222608536c7838&quot;}, {&quot;path&quot;: &quot;results/runs/e0-buffalo_l-heldout/metrics.json&quot;, &quot;sha256&quot;: &quot;a7fb2bef44c37f1ecee740e1ddeb5d1b02434a0717058477f497cd7b9d08e12b&quot;}, {&quot;path&quot;: &quot;results/runs/e0-buffalo_l-lfw/metrics.json&quot;, &quot;sha256&quot;: &quot;7d1fc48c9eff6ba9e76366c000a72edef3a273a9a4a451cf3219a3abab27f60b&quot;}, {&quot;path&quot;: &quot;results/runs/e1-real-only-seed0/metrics.json&quot;, &quot;sha256&quot;: &quot;e182fac66f46822ad224654c6b6da77effd78a554fbd9298b758b738a7984a13&quot;}, {&quot;path&quot;: &quot;results/runs/e1-real-only-seed1/metrics.json&quot;, &quot;sha256&quot;: &quot;7a6347e43184ed087d793a563592ffc825502985d503a348368e3bbf2e55945b&quot;}, {&quot;path&quot;: &quot;results/runs/e1-real-only-seed2/metrics.json&quot;, &quot;sha256&quot;: &quot;41db6118201848acc22f11efb0d50e953970547cefc9a51cb73f7dca4adfca41&quot;}, {&quot;path&quot;: &quot;results/runs/e4-highquality-synth-seed0/metrics.json&quot;, &quot;sha256&quot;: &quot;f652eef443bb414b1151af3eee52f1c35b7dd74c8e3745f812fb014ea4120fbd&quot;}, {&quot;path&quot;: &quot;results/runs/e4-real-plus-synth-seed0/metrics.json&quot;, &quot;sha256&quot;: &quot;d22740ee0337a6f9c3d5fb49d48858249419fdfcfe53c43519fd95f2c0434bfe&quot;}, {&quot;path&quot;: &quot;results/runs/e4-real-plus-synth-seed1/metrics.json&quot;, &quot;sha256&quot;: &quot;467e11fac7ada0f8a70712d00853ea49bfda072d1110fa2bf9c4b94493343e12&quot;}, {&quot;path&quot;: &quot;results/runs/e4-real-plus-synth-seed2/metrics.json&quot;, &quot;sha256&quot;: &quot;6599e6ecbb5965e0b0a10b5a37e5d92830f99700d3fdb61240e024230ce14da1&quot;}], &quot;rows&quot;: [{&quot;protocol&quot;: &quot;official&quot;, &quot;arm&quot;: &quot;E1&quot;, &quot;mean&quot;: 0.420765, &quot;sd&quot;: 0.004047, &quot;per_seed&quot;: [0.423888, 0.422215, 0.416193]}, {&quot;protocol&quot;: &quot;official&quot;, &quot;arm&quot;: &quot;E4a&quot;, &quot;mean&quot;: 0.454779, &quot;sd&quot;: 0.032129, &quot;per_seed&quot;: [0.420877, 0.458682, 0.484778]}, {&quot;protocol&quot;: &quot;filtered&quot;, &quot;arm&quot;: &quot;E1&quot;, &quot;mean&quot;: 0.340193, &quot;sd&quot;: 0.00461, &quot;per_seed&quot;: [0.34375, 0.341845, 0.334985]}, {&quot;protocol&quot;: &quot;filtered&quot;, &quot;arm&quot;: &quot;E4a&quot;, &quot;mean&quot;: 0.378938, &quot;sd&quot;: 0.036598, &quot;per_seed&quot;: [0.34032, 0.383384, 0.41311]}, {&quot;protocol&quot;: &quot;heldout&quot;, &quot;arm&quot;: &quot;E1&quot;, &quot;mean&quot;: 0.310799, &quot;sd&quot;: 0.018368, &quot;per_seed&quot;: [0.330777, 0.30698, 0.294641]}, {&quot;protocol&quot;: &quot;heldout&quot;, &quot;arm&quot;: &quot;E4a&quot;, &quot;mean&quot;: 0.328897, &quot;sd&quot;: 0.00945, &quot;per_seed&quot;: [0.318879, 0.337652, 0.33016]}], &quot;uncertainty&quot;: &quot;across-seed sample SD, not CI&quot;, &quot;far&quot;: 0.001}</metadata>
+<text x="30.00" y="42.00" font-size="25" text-anchor="start" font-weight="700" style="fill:#172c40">TAR：低误接受率下，提升仍有不确定性</text>
+<text x="30.00" y="73.00" font-size="15" text-anchor="start" font-weight="400" style="fill:#637588">每方案 3 个种子；横线为均值 ± 跨种子标准差，不是置信区间。 FAR = 0.001。</text>
+<line x1="265.00" y1="120.00" x2="265.00" y2="473.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="265.00" y="498.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.000</text>
+<line x1="362.00" y1="120.00" x2="362.00" y2="473.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="362.00" y="498.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.110</text>
+<line x1="459.00" y1="120.00" x2="459.00" y2="473.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="459.00" y="498.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.220</text>
+<line x1="556.00" y1="120.00" x2="556.00" y2="473.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="556.00" y="498.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.330</text>
+<line x1="653.00" y1="120.00" x2="653.00" y2="473.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="653.00" y="498.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.440</text>
+<line x1="750.00" y1="120.00" x2="750.00" y2="473.00" stroke="#dce4eb" stroke-width="1"/>
+<text x="750.00" y="498.00" font-size="13" text-anchor="middle" font-weight="400" style="fill:#637588">0.550</text>
+<line x1="265.00" y1="473.00" x2="750.00" y2="473.00" stroke="#172c40" stroke-width="1"/>
+<line x1="265.00" y1="120.00" x2="265.00" y2="473.00" stroke="#172c40" stroke-width="1.5" stroke-dasharray="5 4"/>
+<circle cx="820.00" cy="106.00" r="5" fill="#326da8"/>
+<text x="835.00" y="111.00" font-size="13" text-anchor="start" font-weight="400" style="fill:#172c40">E1 纯真实</text>
+<circle cx="937.00" cy="106.00" r="5" fill="#bd5126"/>
+<text x="952.00" y="111.00" font-size="13" text-anchor="start" font-weight="400" style="fill:#172c40">E4a 加合成</text>
+<text x="30.00" y="177.00" font-size="14" text-anchor="start" font-weight="600" style="fill:#172c40">Official 官方对子</text>
+<text x="236.00" y="159.00" font-size="13" text-anchor="end" font-weight="400" style="fill:#326da8">E1</text>
+<line x1="632.47" y1="154.00" x2="639.61" y2="154.00" stroke="#326da8" stroke-width="3"/>
+<line x1="632.47" y1="148.00" x2="632.47" y2="160.00" stroke="#326da8" stroke-width="2"/>
+<line x1="639.61" y1="148.00" x2="639.61" y2="160.00" stroke="#326da8" stroke-width="2"/>
+<circle cx="636.04" cy="154.00" r="6" fill="#326da8"/>
+<text x="1025.00" y="159.00" font-size="16" text-anchor="end" font-weight="400" style="fill:#326da8">0.4208 ± 0.0040</text>
+<text x="236.00" y="197.00" font-size="13" text-anchor="end" font-weight="400" style="fill:#bd5126">E4a</text>
+<line x1="637.70" y1="192.00" x2="694.36" y2="192.00" stroke="#bd5126" stroke-width="3"/>
+<line x1="637.70" y1="186.00" x2="637.70" y2="198.00" stroke="#bd5126" stroke-width="2"/>
+<line x1="694.36" y1="186.00" x2="694.36" y2="198.00" stroke="#bd5126" stroke-width="2"/>
+<circle cx="666.03" cy="192.00" r="6" fill="#bd5126"/>
+<text x="1025.00" y="197.00" font-size="16" text-anchor="end" font-weight="400" style="fill:#bd5126">0.4548 ± 0.0321</text>
+<line x1="30.00" y1="229.00" x2="1025.00" y2="229.00" stroke="#edf1f5" stroke-width="1"/>
+<text x="30.00" y="296.00" font-size="14" text-anchor="start" font-weight="600" style="fill:#172c40">Filtered 剔除训练身份</text>
+<text x="236.00" y="278.00" font-size="13" text-anchor="end" font-weight="400" style="fill:#326da8">E1</text>
+<line x1="560.92" y1="273.00" x2="569.05" y2="273.00" stroke="#326da8" stroke-width="3"/>
+<line x1="560.92" y1="267.00" x2="560.92" y2="279.00" stroke="#326da8" stroke-width="2"/>
+<line x1="569.05" y1="267.00" x2="569.05" y2="279.00" stroke="#326da8" stroke-width="2"/>
+<circle cx="564.99" cy="273.00" r="6" fill="#326da8"/>
+<text x="1025.00" y="278.00" font-size="16" text-anchor="end" font-weight="400" style="fill:#326da8">0.3402 ± 0.0046</text>
+<text x="236.00" y="316.00" font-size="13" text-anchor="end" font-weight="400" style="fill:#bd5126">E4a</text>
+<line x1="566.88" y1="311.00" x2="631.43" y2="311.00" stroke="#bd5126" stroke-width="3"/>
+<line x1="566.88" y1="305.00" x2="566.88" y2="317.00" stroke="#bd5126" stroke-width="2"/>
+<line x1="631.43" y1="305.00" x2="631.43" y2="317.00" stroke="#bd5126" stroke-width="2"/>
+<circle cx="599.15" cy="311.00" r="6" fill="#bd5126"/>
+<text x="1025.00" y="316.00" font-size="16" text-anchor="end" font-weight="400" style="fill:#bd5126">0.3789 ± 0.0366</text>
+<line x1="30.00" y1="348.00" x2="1025.00" y2="348.00" stroke="#edf1f5" stroke-width="1"/>
+<text x="30.00" y="415.00" font-size="14" text-anchor="start" font-weight="600" style="fill:#172c40">Held-out 自定义协议</text>
+<text x="236.00" y="397.00" font-size="13" text-anchor="end" font-weight="400" style="fill:#326da8">E1</text>
+<line x1="522.87" y1="392.00" x2="555.27" y2="392.00" stroke="#326da8" stroke-width="3"/>
+<line x1="522.87" y1="386.00" x2="522.87" y2="398.00" stroke="#326da8" stroke-width="2"/>
+<line x1="555.27" y1="386.00" x2="555.27" y2="398.00" stroke="#326da8" stroke-width="2"/>
+<circle cx="539.07" cy="392.00" r="6" fill="#326da8"/>
+<text x="1025.00" y="397.00" font-size="16" text-anchor="end" font-weight="400" style="fill:#326da8">0.3108 ± 0.0184</text>
+<text x="236.00" y="435.00" font-size="13" text-anchor="end" font-weight="400" style="fill:#bd5126">E4a</text>
+<line x1="546.69" y1="430.00" x2="563.36" y2="430.00" stroke="#bd5126" stroke-width="3"/>
+<line x1="546.69" y1="424.00" x2="546.69" y2="436.00" stroke="#bd5126" stroke-width="2"/>
+<line x1="563.36" y1="424.00" x2="563.36" y2="436.00" stroke="#bd5126" stroke-width="2"/>
+<circle cx="555.03" cy="430.00" r="6" fill="#bd5126"/>
+<text x="1025.00" y="435.00" font-size="16" text-anchor="end" font-weight="400" style="fill:#bd5126">0.3289 ± 0.0095</text>
+<text x="30.00" y="535.00" font-size="14" text-anchor="start" font-weight="400" style="fill:#637588">Held-out TAR 使用全量配对；不使用 accuracy 平衡子集上的 TAR。当前全部协议的 TAR 均未达双侧显著。</text>
+<text x="30.00" y="566.00" font-size="13" text-anchor="start" font-weight="400" style="fill:#637588">Official 包含训练身份；Filtered 为剔除训练身份的官方对子子集；Held-out 是自定义协议，非官方 LFW 数字。</text>
+</svg>
